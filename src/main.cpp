@@ -375,7 +375,7 @@ int mainFunc (const vector<string>& arguments) {
         first = false;
 
         ipc->sendToPrimaryInstance(packet);
-        } 
+        }
       catch (const runtime_error& e) {
         tlog::error() << tfm::format("Unexpected error %s: %s", imagePath, e.what());
         }
@@ -581,9 +581,8 @@ TEV_NAMESPACE_END
         // OSX sometimes (seemingly sporadically) passes the
         // process serial number via a command line parameter.
         // We would like to ignore this.
-        if (arg.find ("-psn") != 0) {
+        if (arg.find ("-psn") != 0) 
           arguments.emplace_back (tev::ensureUtf8(argv[i]));
-          }
       #endif
       }
 

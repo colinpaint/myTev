@@ -1,6 +1,6 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
-
+//{{{  includes
 #include <tev/ImageViewer.h>
 
 #include <clip.h>
@@ -23,11 +23,12 @@
 
 using namespace nanogui;
 using namespace std;
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
 static const int SIDEBAR_MIN_WIDTH = 230;
 
+//{{{
 ImageViewer::ImageViewer(const shared_ptr<BackgroundImagesLoader>& imagesLoader, bool maximize, bool floatBuffer, bool /*supportsHdr*/)
 : nanogui::Screen{nanogui::Vector2i{1024, 799}, "tev", true, maximize, false, true, true, floatBuffer}, mImagesLoader{imagesLoader} {
     if (floatBuffer && !m_float_buffer) {
@@ -462,14 +463,17 @@ ImageViewer::ImageViewer(const shared_ptr<BackgroundImagesLoader>& imagesLoader,
 
     updateLayout();
 }
-
+//}}}
+//{{{
 ImageViewer::~ImageViewer() {
     mShallRunPlaybackThread = false;
     if (mPlaybackThread.joinable()) {
         mPlaybackThread.join();
     }
 }
+//}}}
 
+//{{{
 bool ImageViewer::mouse_button_event(const nanogui::Vector2i &p, int button, bool down, int modifiers) {
     redraw();
 
@@ -519,7 +523,8 @@ bool ImageViewer::mouse_button_event(const nanogui::Vector2i &p, int button, boo
 
     return false;
 }
-
+//}}}
+//{{{
 bool ImageViewer::mouse_motion_event(const nanogui::Vector2i& p, const nanogui::Vector2i& rel, int button, int modifiers) {
     if (Screen::mouse_motion_event(p, rel, button, modifiers)) {
         return true;
@@ -586,7 +591,8 @@ bool ImageViewer::mouse_motion_event(const nanogui::Vector2i& p, const nanogui::
 
     return false;
 }
-
+//}}}
+//{{{
 bool ImageViewer::drop_event(const vector<string>& filenames) {
     if (Screen::drop_event(filenames)) {
         return true;
@@ -601,7 +607,8 @@ bool ImageViewer::drop_event(const vector<string>& filenames) {
     redraw();
     return true;
 }
-
+//}}}
+//{{{
 bool ImageViewer::keyboard_event(int key, int scancode, int action, int modifiers) {
     if (Screen::keyboard_event(key, scancode, action, modifiers)) {
         return true;
@@ -872,11 +879,15 @@ bool ImageViewer::keyboard_event(int key, int scancode, int action, int modifier
 
     return false;
 }
+//}}}
 
+//{{{
 void ImageViewer::focusWindow() {
     glfwFocusWindow(m_glfw_window);
 }
+//}}}
 
+//{{{
 void ImageViewer::draw_contents() {
     // HACK HACK HACK: on Windows, when restoring a window from maximization,
     //                 the old window size is restored _several times_, necessitating
@@ -1001,7 +1012,9 @@ void ImageViewer::draw_contents() {
         );
     }
 }
+//}}}
 
+//{{{
 void ImageViewer::insertImage(shared_ptr<Image> image, size_t index, bool shallSelect) {
     if (!image) {
         throw invalid_argument{"Image may not be null."};
@@ -1052,7 +1065,8 @@ void ImageViewer::insertImage(shared_ptr<Image> image, size_t index, bool shallS
         }
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::moveImageInList(size_t oldIndex, size_t newIndex) {
     if (oldIndex == newIndex) {
         return;
@@ -1080,7 +1094,8 @@ void ImageViewer::moveImageInList(size_t oldIndex, size_t newIndex) {
 
     requestLayoutUpdate();
 }
-
+//}}}
+//{{{
 void ImageViewer::removeImage(shared_ptr<Image> image) {
     int id = imageId(image);
     if (id == -1) {
@@ -1131,7 +1146,8 @@ void ImageViewer::removeImage(shared_ptr<Image> image) {
         selectReference(nextCandidate);
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::removeAllImages() {
     if (mImages.empty())
         return;
@@ -1152,7 +1168,8 @@ void ImageViewer::removeAllImages() {
         button->set_enabled(false);
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::replaceImage(shared_ptr<Image> image, shared_ptr<Image> replacement, bool shallSelect) {
     if (replacement == nullptr) {
         throw std::runtime_error{"Must not replace image with nullptr."};
@@ -1193,7 +1210,8 @@ void ImageViewer::reloadAllImages() {
         reloadImage(mImages[i]);
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::reloadImagesWhoseFileChanged() {
     for (size_t i = 0; i < mImages.size(); ++i) {
         auto& image = mImages[i];
@@ -1220,7 +1238,8 @@ void ImageViewer::reloadImagesWhoseFileChanged() {
         }
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::updateImage(
     const string& imageName,
     bool shallSelect,
@@ -1250,7 +1269,8 @@ void ImageViewer::updateImage(
         mToBump.insert(image);
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::selectImage(const shared_ptr<Image>& image, bool stopPlayback) {
     if (stopPlayback) {
         mPlayButton->set_pushed(false);
@@ -1338,7 +1358,8 @@ void ImageViewer::selectImage(const shared_ptr<Image>& image, bool stopPlayback)
         }
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::selectGroup(string group) {
     // If the group does not exist, select the first group.
     size_t id = (size_t)max(0, groupId(group));
@@ -1372,7 +1393,8 @@ void ImageViewer::selectGroup(string group) {
         });
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::selectReference(const shared_ptr<Image>& image) {
     if (!image) {
         auto& buttons = mImageButtonContainer->children();
@@ -1425,7 +1447,8 @@ void ImageViewer::selectReference(const shared_ptr<Image>& image) {
         }
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::setExposure(float value) {
     value = round(value, 1.0f);
     mExposureSlider->set_value(value);
@@ -1433,7 +1456,8 @@ void ImageViewer::setExposure(float value) {
 
     mImageCanvas->setExposure(value);
 }
-
+//}}}
+//{{{
 void ImageViewer::setOffset(float value) {
     value = round(value, 2.0f);
     mOffsetSlider->set_value(value);
@@ -1441,7 +1465,8 @@ void ImageViewer::setOffset(float value) {
 
     mImageCanvas->setOffset(value);
 }
-
+//}}}
+//{{{
 void ImageViewer::setGamma(float value) {
     value = round(value, 2.0f);
     mGammaSlider->set_value(value);
@@ -1449,7 +1474,8 @@ void ImageViewer::setGamma(float value) {
 
     mImageCanvas->setGamma(value);
 }
-
+//}}}
+//{{{
 void ImageViewer::normalizeExposureAndOffset() {
     if (!mCurrentImage) {
         return;
@@ -1470,14 +1496,16 @@ void ImageViewer::normalizeExposureAndOffset() {
     setExposure(log2(factor));
     setOffset(-minimum * factor);
 }
-
+//}}}
+//{{{
 void ImageViewer::resetImage() {
     setExposure(0);
     setOffset(0);
     setGamma(2.2f);
     mImageCanvas->resetTransform();
 }
-
+//}}}
+//{{{
 void ImageViewer::setTonemap(ETonemap tonemap) {
     mImageCanvas->setTonemap(tonemap);
     auto& buttons = mTonemapButtonContainer->children();
@@ -1491,7 +1519,8 @@ void ImageViewer::setTonemap(ETonemap tonemap) {
         tonemap == ETonemap::Gamma ? mGammaLabel->theme()->m_text_color : Color{0.5f, 1.0f}
     );
 }
-
+//}}}
+//{{{
 void ImageViewer::setMetric(EMetric metric) {
     mImageCanvas->setMetric(metric);
     auto& buttons = mMetricButtonContainer->children();
@@ -1500,7 +1529,8 @@ void ImageViewer::setMetric(EMetric metric) {
         b->set_pushed((EMetric)i == metric);
     }
 }
-
+//}}}
+//{{{
 nanogui::Vector2i ImageViewer::sizeToFitImage(const shared_ptr<Image>& image) {
     if (!image) {
         return m_size;
@@ -1523,7 +1553,8 @@ nanogui::Vector2i ImageViewer::sizeToFitImage(const shared_ptr<Image>& image) {
     // Only increase our current size if we are larger than the current size of the window.
     return max(m_size, requiredSize);
 }
-
+//}}}
+//{{{
 nanogui::Vector2i ImageViewer::sizeToFitAllImages() {
     nanogui::Vector2i result = m_size;
     for (const auto& image : mImages) {
@@ -1531,38 +1562,46 @@ nanogui::Vector2i ImageViewer::sizeToFitAllImages() {
     }
     return result;
 }
-
+//}}}
+//{{{
 bool ImageViewer::setFilter(const string& filter) {
     mFilter->set_value(filter);
     mRequiresFilterUpdate = true;
     return true;
 }
-
+//}}}
+//{{{
 bool ImageViewer::useRegex() const {
     return mRegexButton->pushed();
 }
-
+//}}}
+//{{{
 void ImageViewer::setUseRegex(bool value) {
     mRegexButton->set_pushed(value);
     mRequiresFilterUpdate = true;
 }
-
+//}}}
+//{{{
 bool ImageViewer::watchFilesForChanges() const {
     return mWatchFilesForChangesButton->pushed();
 }
-
+//}}}
+//{{{
 void ImageViewer::setWatchFilesForChanges(bool value) {
     mWatchFilesForChangesButton->set_pushed(value);
 }
-
+//}}}
+//{{{
 void ImageViewer::maximize() {
     glfwMaximizeWindow(m_glfw_window);
 }
-
+//}}}
+//{{{
 bool ImageViewer::isMaximized() {
     return glfwGetWindowAttrib(m_glfw_window, GLFW_MAXIMIZED) != 0;
 }
-
+//}}}
+//{{{
 void ImageViewer::toggleMaximized() {
     if (isMaximized()) {
         glfwRestoreWindow(m_glfw_window);
@@ -1570,7 +1609,8 @@ void ImageViewer::toggleMaximized() {
         maximize();
     }
 }
-
+//}}}
+//{{{
 void ImageViewer::setUiVisible(bool shouldBeVisible) {
     if (!shouldBeVisible) {
         mIsDraggingSidebar = false;
@@ -1592,7 +1632,8 @@ void ImageViewer::setUiVisible(bool shouldBeVisible) {
 
     requestLayoutUpdate();
 }
-
+//}}}
+//{{{
 void ImageViewer::toggleHelpWindow() {
     if (mHelpWindow) {
         mHelpWindow->dispose();
@@ -1605,7 +1646,8 @@ void ImageViewer::toggleHelpWindow() {
 
     requestLayoutUpdate();
 }
-
+//}}}
+//{{{
 void ImageViewer::openImageDialog() {
     vector<string> paths = file_dialog(
     {
@@ -1636,7 +1678,8 @@ void ImageViewer::openImageDialog() {
     // Make sure we gain focus after seleting a file to be loaded.
     focusWindow();
 }
-
+//}}}
+//{{{
 void ImageViewer::saveImageDialog() {
     if (!mCurrentImage) {
         return;
@@ -1676,7 +1719,8 @@ void ImageViewer::saveImageDialog() {
     // Make sure we gain focus after seleting a file to be loaded.
     focusWindow();
 }
-
+//}}}
+//{{{
 void ImageViewer::updateFilter() {
     string filter = mFilter->value();
     string imagePart = filter;
@@ -1807,7 +1851,8 @@ void ImageViewer::updateFilter() {
 
     requestLayoutUpdate();
 }
-
+//}}}
+//{{{
 void ImageViewer::updateLayout() {
     int sidebarWidth = visibleSidebarWidth();
     int footerHeight = visibleFooterHeight();
@@ -1839,7 +1884,8 @@ void ImageViewer::updateLayout() {
     glfwGetCursorPos(m_glfw_window, &x, &y);
     cursor_pos_callback_event(x, y);
 }
-
+//}}}
+//{{{
 void ImageViewer::updateTitle() {
     string caption = "tev";
     if (mCurrentImage) {
@@ -1876,7 +1922,8 @@ void ImageViewer::updateTitle() {
 
     set_caption(caption);
 }
-
+//}}}
+//{{{
 string ImageViewer::groupName(size_t index) {
     if (!mCurrentImage) {
         return "";
@@ -1884,7 +1931,8 @@ string ImageViewer::groupName(size_t index) {
 
     return mCurrentImage->channelGroups().at(index).name;
 }
-
+//}}}
+//{{{
 int ImageViewer::groupId(const string& groupName) const {
     if (!mCurrentImage) {
         return 0;
@@ -1900,19 +1948,22 @@ int ImageViewer::groupId(const string& groupName) const {
 
     return pos >= groups.size() ? -1 : (int)pos;
 }
-
+//}}}
+//{{{
 int ImageViewer::imageId(const shared_ptr<Image>& image) const {
     auto pos = static_cast<size_t>(distance(begin(mImages), find(begin(mImages), end(mImages), image)));
     return pos >= mImages.size() ? -1 : (int)pos;
 }
-
+//}}}
+//{{{
 int ImageViewer::imageId(const string& imageName) const {
     auto pos = static_cast<size_t>(distance(begin(mImages), find_if(begin(mImages), end(mImages), [&](const shared_ptr<Image>& image) {
         return image->name() == imageName;
     })));
     return pos >= mImages.size() ? -1 : (int)pos;
 }
-
+//}}}
+//{{{
 string ImageViewer::nextGroup(const string& group, EDirection direction) {
     if (mGroupButtonContainer->child_count() == 0) {
         return mCurrentGroup;
@@ -1930,7 +1981,8 @@ string ImageViewer::nextGroup(const string& group, EDirection direction) {
 
     return groupName(id);
 }
-
+//}}}
+//{{{
 string ImageViewer::nthVisibleGroup(size_t n) {
     string lastVisible = mCurrentGroup;
     for (int i = 0; i < mGroupButtonContainer->child_count(); ++i) {
@@ -1944,7 +1996,8 @@ string ImageViewer::nthVisibleGroup(size_t n) {
     }
     return lastVisible;
 }
-
+//}}}
+//{{{
 shared_ptr<Image> ImageViewer::nextImage(const shared_ptr<Image>& image, EDirection direction) {
     if (mImages.empty()) {
         return nullptr;
@@ -1962,7 +2015,8 @@ shared_ptr<Image> ImageViewer::nextImage(const shared_ptr<Image>& image, EDirect
 
     return mImages[id];
 }
-
+//}}}
+//{{{
 shared_ptr<Image> ImageViewer::nthVisibleImage(size_t n) {
     shared_ptr<Image> lastVisible = nullptr;
     for (size_t i = 0; i < mImages.size(); ++i) {
@@ -1976,7 +2030,8 @@ shared_ptr<Image> ImageViewer::nthVisibleImage(size_t n) {
     }
     return lastVisible;
 }
-
+//}}}
+//{{{
 shared_ptr<Image> ImageViewer::imageByName(const string& imageName) {
     int id = imageId(imageName);
     if (id != -1) {
@@ -1985,5 +2040,6 @@ shared_ptr<Image> ImageViewer::imageByName(const string& imageName) {
         return nullptr;
     }
 }
+//}}}
 
 TEV_NAMESPACE_END

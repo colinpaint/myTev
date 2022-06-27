@@ -1,18 +1,21 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 
 #include <tev/ThreadPool.h>
 
 #include <chrono>
 
 using namespace std;
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
+//{{{
 ThreadPool::ThreadPool()
 : ThreadPool{thread::hardware_concurrency()} {
 }
-
+//}}}
+//{{{
 ThreadPool::ThreadPool(size_t maxNumThreads, bool force) {
     if (!force) {
         maxNumThreads = min((size_t)thread::hardware_concurrency(), maxNumThreads);
@@ -20,12 +23,15 @@ ThreadPool::ThreadPool(size_t maxNumThreads, bool force) {
     startThreads(maxNumThreads);
     mNumTasksInSystem.store(0);
 }
-
+//}}}
+//{{{
 ThreadPool::~ThreadPool() {
     waitUntilFinished();
     shutdownThreads(mThreads.size());
 }
+//}}}
 
+//{{{
 void ThreadPool::startThreads(size_t num) {
     mNumThreads += num;
     for (size_t i = mThreads.size(); i < mNumThreads; ++i) {
@@ -64,7 +70,8 @@ void ThreadPool::startThreads(size_t num) {
         });
     }
 }
-
+//}}}
+//{{{
 void ThreadPool::shutdownThreads(size_t num) {
     auto numToClose = min(num, mNumThreads);
 
@@ -80,7 +87,9 @@ void ThreadPool::shutdownThreads(size_t num) {
         mThreads.pop_back();
     }
 }
+//}}}
 
+//{{{
 void ThreadPool::waitUntilFinished() {
     unique_lock lock{mSystemBusyMutex};
 
@@ -90,7 +99,8 @@ void ThreadPool::waitUntilFinished() {
 
     mSystemBusyCondition.wait(lock);
 }
-
+//}}}
+//{{{
 void ThreadPool::waitUntilFinishedFor(const chrono::microseconds Duration) {
     unique_lock lock{mSystemBusyMutex};
 
@@ -100,7 +110,9 @@ void ThreadPool::waitUntilFinishedFor(const chrono::microseconds Duration) {
 
     mSystemBusyCondition.wait_for(lock, Duration);
 }
+//}}}
 
+//{{{
 void ThreadPool::flushQueue() {
     lock_guard lock{mTaskQueueMutex};
 
@@ -109,5 +121,6 @@ void ThreadPool::flushQueue() {
         mTaskQueue.pop();
     }
 }
+//}}}
 
 TEV_NAMESPACE_END

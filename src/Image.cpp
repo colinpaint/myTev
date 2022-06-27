@@ -1,5 +1,6 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 
 #include <tev/Image.h>
 #include <tev/imageio/ImageLoader.h>
@@ -15,9 +16,11 @@
 
 using namespace nanogui;
 using namespace std;
+//}}}
 
 TEV_NAMESPACE_BEGIN
 
+//{{{
 vector<string> ImageData::channelsInLayer(string layerName) const {
     vector<string> result;
 
@@ -35,7 +38,8 @@ vector<string> ImageData::channelsInLayer(string layerName) const {
 
     return result;
 }
-
+//}}}
+//{{{
 Task<void> ImageData::convertToRec709(int priority) {
     // No need to do anything for identity transforms
     if (toRec709 == Matrix4f{1.0f}) {
@@ -77,7 +81,8 @@ Task<void> ImageData::convertToRec709(int priority) {
     // converting to Rec709 is the identity transform.
     toRec709 = Matrix4f{1.0f};
 }
-
+//}}}
+//{{{
 void ImageData::alphaOperation(const function<void(Channel&, const Channel&)>& func) {
     for (const auto& layer : layers) {
         string alphaChannelName = layer + "A";
@@ -94,7 +99,8 @@ void ImageData::alphaOperation(const function<void(Channel&, const Channel&)>& f
         }
     }
 }
-
+//}}}
+//{{{
 Task<void> ImageData::multiplyAlpha(int priority) {
     if (hasPremultipliedAlpha) {
         throw runtime_error{"Can't multiply with alpha twice."};
@@ -110,7 +116,8 @@ Task<void> ImageData::multiplyAlpha(int priority) {
 
     hasPremultipliedAlpha = true;
 }
-
+//}}}
+//{{{
 Task<void> ImageData::unmultiplyAlpha(int priority) {
     if (!hasPremultipliedAlpha) {
         throw runtime_error{"Can't divide by alpha twice."};
@@ -126,7 +133,8 @@ Task<void> ImageData::unmultiplyAlpha(int priority) {
 
     hasPremultipliedAlpha = false;
 }
-
+//}}}
+//{{{
 Task<void> ImageData::ensureValid(const string& channelSelector, int taskPriority) {
     if (channels.empty()) {
         throw runtime_error{"Images must have at least one channel."};
@@ -190,9 +198,10 @@ Task<void> ImageData::ensureValid(const string& channelSelector, int taskPriorit
     TEV_ASSERT(hasPremultipliedAlpha, "tev assumes an internal pre-multiplied-alpha representation.");
     TEV_ASSERT(toRec709 == Matrix4f{1.0f}, "tev assumes an images to be internally represented in sRGB/Rec709 space.");
 }
+//}}}
 
 atomic<int> Image::sId(0);
-
+//{{{
 Image::Image(const fs::path& path, fs::file_time_type fileLastModified, ImageData&& data, const string& channelSelector)
 : mPath{path}, mFileLastModified{fileLastModified}, mChannelSelector{channelSelector}, mData{std::move(data)}, mId{Image::drawId()} {
     mName = channelSelector.empty() ? tev::toString(path) : tfm::format("%s:%s", tev::toString(path), channelSelector);
@@ -202,7 +211,8 @@ Image::Image(const fs::path& path, fs::file_time_type fileLastModified, ImageDat
         mChannelGroups.insert(end(mChannelGroups), begin(groups), end(groups));
     }
 }
-
+//}}}
+//{{{
 Image::~Image() {
     // Move the texture pointers to the main thread such that their reference count
     // hits zero there. This is required, because OpenGL calls must always happen
@@ -213,7 +223,9 @@ Image::~Image() {
         mStaleIdCallback(mId);
     }
 }
+//}}}
 
+//{{{
 string Image::shortName() const {
     string result = mName;
 
@@ -229,11 +241,13 @@ string Image::shortName() const {
 
     return result;
 }
-
+//}}}
+//{{{
 Texture* Image::texture(const string& channelGroupName) {
     return texture(channelsInGroup(channelGroupName));
 }
-
+//}}}
+//{{{
 Texture* Image::texture(const vector<string>& channelNames) {
     string lookup = join(channelNames, ",");
     auto iter = mTextures.find(lookup);
@@ -295,7 +309,9 @@ Texture* Image::texture(const vector<string>& channelNames) {
     texture->generate_mipmap();
     return texture.get();
 }
+//}}}
 
+//{{{
 vector<string> Image::channelsInGroup(const string& groupName) const {
     for (const auto& group : mChannelGroups) {
         if (group.name == groupName) {
@@ -305,7 +321,8 @@ vector<string> Image::channelsInGroup(const string& groupName) const {
 
     return {};
 }
-
+//}}}
+//{{{
 vector<ChannelGroup> Image::getGroupedChannels(const string& layerName) const {
     vector<vector<string>> groups = {
         { "R", "G", "B" },
@@ -398,7 +415,8 @@ vector<ChannelGroup> Image::getGroupedChannels(const string& layerName) const {
 
     return result;
 }
-
+//}}}
+//{{{
 vector<string> Image::getSortedChannels(const string& layerName) const {
     string alphaChannelName = layerName + "A";
 
@@ -420,7 +438,8 @@ vector<string> Image::getSortedChannels(const string& layerName) const {
 
     return result;
 }
-
+//}}}
+//{{{
 void Image::updateChannel(const string& channelName, int x, int y, int width, int height, const vector<float>& data) {
     Channel* chan = mutableChannel(channelName);
     if (!chan) {
@@ -465,16 +484,18 @@ void Image::updateChannel(const string& channelName, int x, int y, int width, in
         imageTexture.mipmapDirty = true;
     }
 }
+//}}}
 
-template <typename T>
-time_t to_time_t(T timePoint) {
+//{{{
+template <typename T> time_t to_time_t(T timePoint) {
     // `clock_cast` appears to throw errors on some systems, so we're using this slightly hacky
     // inaccurate/random time conversion (now() is not called simultaneously for both clocks)
     // in order to convert to system time.
     using namespace chrono;
     return system_clock::to_time_t(time_point_cast<system_clock::duration>(timePoint - T::clock::now() + system_clock::now()));
 }
-
+//}}}
+//{{{
 string Image::toString() const {
     stringstream sstream;
     sstream << mName << "\n\n";
@@ -510,7 +531,9 @@ string Image::toString() const {
     sstream << join(localLayers, "\n");
     return sstream.str();
 }
+//}}}
 
+//{{{
 Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, istream& iStream, string channelSelector) {
     auto handleException = [&](const exception& e) {
         if (channelSelector.empty()) {
@@ -598,11 +621,13 @@ Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, is
 
     co_return {};
 }
-
+//}}}
+//{{{
 Task<vector<shared_ptr<Image>>> tryLoadImage(fs::path path, istream& iStream, string channelSelector) {
     co_return co_await tryLoadImage(-Image::drawId(), path, iStream, channelSelector);
 }
-
+//}}}
+//{{{
 Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, string channelSelector) {
     try {
         path = fs::absolute(path);
@@ -614,11 +639,14 @@ Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, st
     ifstream fileStream{path, ios_base::binary};
     co_return co_await tryLoadImage(taskPriority, path, fileStream, channelSelector);
 }
-
+//}}}
+//{{{
 Task<vector<shared_ptr<Image>>> tryLoadImage(fs::path path, string channelSelector) {
     co_return co_await tryLoadImage(-Image::drawId(), path, channelSelector);
 }
+//}}}
 
+//{{{
 void BackgroundImagesLoader::enqueue(const fs::path& path, const string& channelSelector, bool shallSelect, const shared_ptr<Image>& toReplace) {
     // If we're trying to open a directory, try loading all the images inside of that directory
     if (fs::exists(path) && fs::is_directory(path)) {
@@ -655,7 +683,8 @@ void BackgroundImagesLoader::enqueue(const fs::path& path, const string& channel
         }
     });
 }
-
+//}}}
+//{{{
 void BackgroundImagesLoader::checkDirectoriesForNewFilesAndLoadThose() {
     for (const auto& dir : mDirectories) {
         forEachFileInDir(mRecursiveDirectories, dir.first, [&](auto const& entry) {
@@ -671,7 +700,8 @@ void BackgroundImagesLoader::checkDirectoriesForNewFilesAndLoadThose() {
         });
     }
 }
-
+//}}}
+//{{{
 bool BackgroundImagesLoader::publishSortedLoads() {
     std::lock_guard lock{mPendingLoadedImagesMutex};
     bool pushed = false;
@@ -688,5 +718,6 @@ bool BackgroundImagesLoader::publishSortedLoads() {
     }
     return pushed;
 }
+//}}}
 
 TEV_NAMESPACE_END

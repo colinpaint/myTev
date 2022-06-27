@@ -2,12 +2,9 @@
 # PBRT-v3 can be found here: https://github.com/mmp/pbrt-v3
 cmake_minimum_required(VERSION 3.13)
 
-project(
-    tev
-    VERSION 1.24
-    DESCRIPTION "High dynamic range (HDR) image comparison tool for graphics people. With an emphasis on OpenEXR images."
-    LANGUAGES C CXX
-)
+project (tev VERSION 1.24
+         DESCRIPTION "High dynamic range (HDR) image comparison tool for graphics people. With an emphasis on OpenEXR images."
+         LANGUAGES C CXX)
 set(TEV_VERSION "${CMAKE_PROJECT_VERSION}")
 
 if (NOT TEV_DEPLOY)
@@ -127,7 +124,7 @@ endif()
 
 set(TEV_LIBS clip IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
 if (MSVC)
-    set(TEV_LIBS ${TEV_LIBS} zlibstatic DirectXTex wsock32 ws2_32)
+    set(TEV_LIBS ${TEV_LIBS} zlibstatic wsock32 ws2_32)
 endif()
 
 set(TEV_SOURCES
@@ -164,49 +161,48 @@ set(TEV_SOURCES
     src/main.cpp
 )
 if (MSVC)
-    set(TEV_SOURCES ${TEV_SOURCES} resources/icon.rc)
-    set(TEV_SOURCES ${TEV_SOURCES} resources/tev.manifest)
-    set(TEV_SOURCES ${TEV_SOURCES} include/tev/imageio/DdsImageLoader.h src/imageio/DdsImageLoader.cpp)
+    set (TEV_SOURCES ${TEV_SOURCES} resources/icon.rc)
+    set (TEV_SOURCES ${TEV_SOURCES} resources/tev.manifest)
+    set (TEV_SOURCES ${TEV_SOURCES} include/tev/imageio/DdsImageLoader.h src/imageio/DdsImageLoader.cpp)
 endif()
 
-add_executable(tev ${TEV_SOURCES})
+add_executable (tev ${TEV_SOURCES})
 
 include_directories(
-    ${ARGS_INCLUDE}
-    ${CLIP_INCLUDE}
-    ${DIRECTXTEX_INCLUDE}
-    ${GLFW_INCLUDE}
-    ${NANOGUI_EXTRA_INCS}
-    ${NANOGUI_INCLUDE}
-    ${OPENEXR_INCLUDE_DIRS}
-    ${QOI_INCLUDE}
-    ${STB_INCLUDE}
-    ${TINYFORMAT_INCLUDE}
-    ${TINYLOGGER_INCLUDE}
-    ${UTFCPP_INCLUDE}
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-)
+  ${ARGS_INCLUDE}
+  ${CLIP_INCLUDE}
+  ${GLFW_INCLUDE}
+  ${NANOGUI_EXTRA_INCS}
+  ${NANOGUI_INCLUDE}
+  ${OPENEXR_INCLUDE_DIRS}
+  ${QOI_INCLUDE}
+  ${STB_INCLUDE}
+  ${TINYFORMAT_INCLUDE}
+  ${TINYLOGGER_INCLUDE}
+  ${UTFCPP_INCLUDE}
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  )
 
-set(TEV_DEFINITIONS -DTEV_VERSION="${TEV_VERSION}")
+set (TEV_DEFINITIONS -DTEV_VERSION="${TEV_VERSION}")
 
-add_definitions(${TEV_DEFINITIONS} ${NANOGUI_EXTRA_DEFS})
+add_definitions (${TEV_DEFINITIONS} ${NANOGUI_EXTRA_DEFS})
 
-target_link_libraries(tev ${TEV_LIBS})
+target_link_libraries (tev ${TEV_LIBS})
 
 if (WIN32)
-    install(TARGETS tev RUNTIME DESTINATION "bin")
+  install (TARGETS tev RUNTIME DESTINATION "bin")
 else()
-    install(TARGETS tev)
+  install (TARGETS tev)
 
-    configure_file(resources/tev.desktop resources/tev.desktop)
-    install(FILES ${CMAKE_BINARY_DIR}/resources/tev.desktop DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications")
-    install(FILES resources/icon-512.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/512x512/apps" RENAME tev.png)
-    install(FILES resources/icon-256.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/256x256/apps" RENAME tev.png)
-    install(FILES resources/icon-128.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/128x128/apps" RENAME tev.png)
-    install(FILES resources/icon-96.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/96x96/apps" RENAME tev.png)
-    install(FILES resources/icon-64.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/64x64/apps" RENAME tev.png)
-    install(FILES resources/icon-48.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/48x48/apps" RENAME tev.png)
-    install(FILES resources/icon-32.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/32x32/apps" RENAME tev.png)
-    install(FILES resources/icon-24.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/24x24/apps" RENAME tev.png)
-    install(FILES resources/icon-16.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/16x16/apps" RENAME tev.png)
+  configure_file(resources/tev.desktop resources/tev.desktop)
+  install(FILES ${CMAKE_BINARY_DIR}/resources/tev.desktop DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications")
+  install(FILES resources/icon-512.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/512x512/apps" RENAME tev.png)
+  install(FILES resources/icon-256.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/256x256/apps" RENAME tev.png)
+  install(FILES resources/icon-128.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/128x128/apps" RENAME tev.png)
+  install(FILES resources/icon-96.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/96x96/apps" RENAME tev.png)
+  install(FILES resources/icon-64.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/64x64/apps" RENAME tev.png)
+  install(FILES resources/icon-48.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/48x48/apps" RENAME tev.png)
+  install(FILES resources/icon-32.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/32x32/apps" RENAME tev.png)
+  install(FILES resources/icon-24.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/24x24/apps" RENAME tev.png)
+  install(FILES resources/icon-16.png DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/16x16/apps" RENAME tev.png)
 endif()

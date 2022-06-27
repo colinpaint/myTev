@@ -1,5 +1,6 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 
 #include <tev/FalseColor.h>
 #include <tev/ImageCanvas.h>
@@ -18,15 +19,18 @@
 
 using namespace nanogui;
 using namespace std;
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
+//{{{
 ImageCanvas::ImageCanvas(Widget* parent, float pixelRatio)
 : Canvas{parent, 1, false, false, false}, mPixelRatio{pixelRatio} {
     mShader.reset(new UberShader{render_pass()});
     set_draw_border(false);
 }
+//}}}
 
+//{{{
 bool ImageCanvas::scroll_event(const Vector2i& p, const Vector2f& rel) {
     if (Canvas::scroll_event(p, rel)) {
         return true;
@@ -45,7 +49,9 @@ bool ImageCanvas::scroll_event(const Vector2i& p, const Vector2f& rel) {
     scale(scaleAmount, Vector2f{p});
     return true;
 }
+//}}}
 
+//{{{
 void ImageCanvas::draw_contents() {
     auto* glfwWindow = screen()->glfw_window();
     bool altHeld = glfwGetKey(glfwWindow, GLFW_KEY_LEFT_ALT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_ALT);
@@ -94,7 +100,8 @@ void ImageCanvas::draw_contents() {
         mMetric
     );
 }
-
+//}}}
+//{{{
 void ImageCanvas::drawPixelValuesAsText(NVGcontext* ctx) {
     TEV_ASSERT(mImage, "Can only draw pixel values if there exists an image.");
 
@@ -180,7 +187,8 @@ void ImageCanvas::drawPixelValuesAsText(NVGcontext* ctx) {
         }
     }
 }
-
+//}}}
+//{{{
 void ImageCanvas::drawCoordinateSystem(NVGcontext* ctx) {
     TEV_ASSERT(mImage, "Can only draw coordinate system if there exists an image.");
 
@@ -273,7 +281,8 @@ void ImageCanvas::drawCoordinateSystem(NVGcontext* ctx) {
     draw(Region);
     draw(Label);
 }
-
+//}}}
+//{{{
 void ImageCanvas::drawEdgeShadows(NVGcontext* ctx) {
     int ds = m_theme->m_window_drop_shadow_size, cr = m_theme->m_window_corner_radius;
     NVGpaint shadowPaint = nvgBoxGradient(
@@ -291,7 +300,8 @@ void ImageCanvas::drawEdgeShadows(NVGcontext* ctx) {
     nvgFill(ctx);
     nvgRestore(ctx);
 }
-
+//}}}
+//{{{
 void ImageCanvas::draw(NVGcontext* ctx) {
     Canvas::draw(ctx);
 
@@ -310,11 +320,14 @@ void ImageCanvas::draw(NVGcontext* ctx) {
         drawEdgeShadows(ctx);
     }
 }
+//}}}
 
+//{{{
 void ImageCanvas::translate(const Vector2f& amount) {
     mTransform = Matrix3f::translate(amount) * mTransform;
 }
-
+//}}}
+//{{{
 void ImageCanvas::scale(float amount, const Vector2f& origin) {
     float scaleFactor = pow(1.1f, amount);
 
@@ -327,11 +340,14 @@ void ImageCanvas::scale(float amount, const Vector2f& origin) {
 
     mTransform = scaleTransform * mTransform;
 }
-
+//}}}
+//{{{
 float ImageCanvas::applyExposureAndOffset(float value) const {
     return pow(2.0f, mExposure) * value + mOffset;
 }
+//}}}
 
+//{{{
 Vector2i ImageCanvas::getImageCoords(const Image& image, Vector2i nanoPos) {
     Vector2f imagePos = inverse(textureToNanogui(&image)) * Vector2f{nanoPos};
     return {
@@ -339,7 +355,8 @@ Vector2i ImageCanvas::getImageCoords(const Image& image, Vector2i nanoPos) {
         static_cast<int>(floor(imagePos.y())),
     };
 }
-
+//}}}
+//{{{
 void ImageCanvas::getValuesAtNanoPos(Vector2i nanoPos, vector<float>& result, const vector<string>& channels) {
     result.clear();
     if (!mImage) {
@@ -366,7 +383,9 @@ void ImageCanvas::getValuesAtNanoPos(Vector2i nanoPos, vector<float>& result, co
         }
     }
 }
+//}}}
 
+//{{{
 Vector3f ImageCanvas::applyTonemap(const Vector3f& value, float gamma, ETonemap tonemap) {
     Vector3f result;
     switch (tonemap) {
@@ -402,7 +421,8 @@ Vector3f ImageCanvas::applyTonemap(const Vector3f& value, float gamma, ETonemap 
 
     return min(max(result, Vector3f{0.0f}), Vector3f{1.0f});
 }
-
+//}}}
+//{{{
 float ImageCanvas::applyMetric(float image, float reference, EMetric metric) {
     float diff = image - reference;
     switch (metric) {
@@ -415,16 +435,21 @@ float ImageCanvas::applyMetric(float image, float reference, EMetric metric) {
             throw runtime_error{"Invalid metric selected."};
     }
 }
+//}}}
 
+//{{{
 void ImageCanvas::fitImageToScreen(const Image& image) {
     Vector2f nanoguiImageSize = Vector2f{image.displayWindow().size()} / mPixelRatio;
     mTransform = Matrix3f::scale(Vector2f{min(m_size.x() / nanoguiImageSize.x(), m_size.y() / nanoguiImageSize.y())});
 }
-
+//}}}
+//{{{
 void ImageCanvas::resetTransform() {
     mTransform = Matrix3f::scale(Vector2f{1.0f});
 }
+//}}}
 
+//{{{
 std::vector<float> ImageCanvas::getHdrImageData(bool divideAlpha, int priority) const {
     std::vector<float> result;
 
@@ -474,7 +499,8 @@ std::vector<float> ImageCanvas::getHdrImageData(bool divideAlpha, int priority) 
 
     return result;
 }
-
+//}}}
+//{{{
 std::vector<char> ImageCanvas::getLdrImageData(bool divideAlpha, int priority) const {
     std::vector<char> result;
 
@@ -505,7 +531,8 @@ std::vector<char> ImageCanvas::getLdrImageData(bool divideAlpha, int priority) c
 
     return result;
 }
-
+//}}}
+//{{{
 void ImageCanvas::saveImage(const fs::path& path) const {
     if (!mImage) {
         return;
@@ -554,7 +581,9 @@ void ImageCanvas::saveImage(const fs::path& path) const {
 
     throw invalid_argument{tfm::format("No save routine for image type %s found.", path.extension())};
 }
+//}}}
 
+//{{{
 shared_ptr<Lazy<shared_ptr<CanvasStatistics>>> ImageCanvas::canvasStatistics() {
     if (!mImage) {
         return nullptr;
@@ -599,7 +628,8 @@ shared_ptr<Lazy<shared_ptr<CanvasStatistics>>> ImageCanvas::canvasStatistics() {
 
     return mCanvasStatistics.at(key);
 }
-
+//}}}
+//{{{
 void ImageCanvas::purgeCanvasStatistics(int imageId) {
     for (const auto& key : mImageIdToCanvasStatisticsKey[imageId]) {
         mCanvasStatistics.erase(key);
@@ -607,7 +637,8 @@ void ImageCanvas::purgeCanvasStatistics(int imageId) {
 
     mImageIdToCanvasStatisticsKey.erase(imageId);
 }
-
+//}}}
+//{{{
 vector<Channel> ImageCanvas::channelsFromImages(
     shared_ptr<Image> image,
     shared_ptr<Image> reference,
@@ -685,7 +716,8 @@ vector<Channel> ImageCanvas::channelsFromImages(
 
     return result;
 }
-
+//}}}
+//{{{
 Task<shared_ptr<CanvasStatistics>> ImageCanvas::computeCanvasStatistics(
     std::shared_ptr<Image> image,
     std::shared_ptr<Image> reference,
@@ -806,7 +838,9 @@ Task<shared_ptr<CanvasStatistics>> ImageCanvas::computeCanvasStatistics(
 
     co_return result;
 }
+//}}}
 
+//{{{
 Vector2f ImageCanvas::pixelOffset(const Vector2i& size) const {
     // Translate by half of a pixel to avoid pixel boundaries aligning perfectly with texels.
     // The translation only needs to happen for axes with even resolution. Odd-resolution
@@ -819,7 +853,8 @@ Vector2f ImageCanvas::pixelOffset(const Vector2i& size) const {
     // } + Vector2f{0.1111111f};
     return Vector2f{0.1111111f};
 }
-
+//}}}
+//{{{
 Matrix3f ImageCanvas::transform(const Image* image) {
     if (!image) {
         return Matrix3f::scale(Vector2f{1.0f});
@@ -837,7 +872,8 @@ Matrix3f ImageCanvas::transform(const Image* image) {
         Matrix3f::scale(Vector2f{image->size()}) *
         Matrix3f::translate(Vector2f{-0.5f});
 }
-
+//}}}
+//{{{
 Matrix3f ImageCanvas::textureToNanogui(const Image* image) {
     if (!image) {
         return Matrix3f::scale(Vector2f{1.0f});
@@ -852,7 +888,8 @@ Matrix3f ImageCanvas::textureToNanogui(const Image* image) {
         Matrix3f::scale(Vector2f{1.0f / mPixelRatio}) *
         Matrix3f::translate(-0.5f * Vector2f{image->size()} + image->centerDisplayOffset(mImage->displayWindow()) + pixelOffset(image->size()));
 }
-
+//}}}
+//{{{
 Matrix3f ImageCanvas::displayWindowToNanogui(const Image* image) {
     if (!image) {
         return Matrix3f::scale(Vector2f{1.0f});
@@ -862,5 +899,6 @@ Matrix3f ImageCanvas::displayWindowToNanogui(const Image* image) {
     // It's that simple.
     return textureToNanogui(image) * Matrix3f::translate(-image->dataWindow().min);
 }
+//}}}
 
 TEV_NAMESPACE_END
