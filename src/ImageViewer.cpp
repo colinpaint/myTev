@@ -29,587 +29,597 @@ TEV_NAMESPACE_BEGIN
 static const int SIDEBAR_MIN_WIDTH = 230;
 
 //{{{
-ImageViewer::ImageViewer(const shared_ptr<BackgroundImagesLoader>& imagesLoader, bool maximize, bool floatBuffer, bool /*supportsHdr*/)
-: nanogui::Screen{nanogui::Vector2i{1024, 799}, "tev", true, maximize, false, true, true, floatBuffer}, mImagesLoader{imagesLoader} {
-    if (floatBuffer && !m_float_buffer) {
-        tlog::warning() << "Failed to create floating point frame buffer.";
-    }
-    mSupportsHdr = m_float_buffer;
+ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader, bool maximize, bool floatBuffer, bool /*supportsHdr*/)
+  : nanogui::Screen{nanogui::Vector2i{1024, 799}, "tev", true, maximize, false, true, true, floatBuffer}, mImagesLoader{imagesLoader} {
 
-    // At this point we no longer need the standalone console (if it exists).
-    toggleConsole();
+  if (floatBuffer && !m_float_buffer)
+    tlog::warning() << "Failed to create floating point frame buffer.";
 
-    m_background = Color{0.23f, 1.0f};
+  mSupportsHdr = m_float_buffer;
 
-    mVerticalScreenSplit = new Widget{this};
-    mVerticalScreenSplit->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill});
+  // At this point we no longer need the standalone console (if it exists).
+  toggleConsole();
 
-    auto horizontalScreenSplit = new Widget(mVerticalScreenSplit);
-    horizontalScreenSplit->set_layout(new BoxLayout{Orientation::Horizontal, Alignment::Fill});
+  m_background = Color {0.23f, 1.0f};
 
-    mSidebar = new VScrollPanel{horizontalScreenSplit};
-    mSidebar->set_fixed_width(SIDEBAR_MIN_WIDTH);
+  mVerticalScreenSplit = new Widget {this};
+  mVerticalScreenSplit->set_layout(new BoxLayout {Orientation::Vertical, Alignment::Fill});
 
-    auto tmp = new Widget{mSidebar};
-    mHelpButton = new Button{tmp, "", FA_QUESTION};
-    mHelpButton->set_callback([this]() { toggleHelpWindow(); });
-    mHelpButton->set_font_size(15);
-    mHelpButton->set_tooltip("Information about using tev.");
+  auto horizontalScreenSplit = new Widget (mVerticalScreenSplit);
+  horizontalScreenSplit->set_layout (new BoxLayout {Orientation::Horizontal, Alignment::Fill});
 
-    mSidebarLayout = new Widget{tmp};
-    mSidebarLayout->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 0, 0});
+  mSidebar = new VScrollPanel {horizontalScreenSplit};
+  mSidebar->set_fixed_width (SIDEBAR_MIN_WIDTH);
 
-    mImageCanvas = new ImageCanvas{horizontalScreenSplit, pixel_ratio()};
+  auto tmp = new Widget {mSidebar};
+  mHelpButton = new Button {tmp, "", FA_QUESTION};
+  mHelpButton->set_callback ([this]() { toggleHelpWindow(); });
+  mHelpButton->set_font_size (15);
+  mHelpButton->set_tooltip ("Information about using tev.");
 
-    // Tonemapping sectionim
-    {
-        auto panel = new Widget{mSidebarLayout};
-        panel->set_layout(new BoxLayout{Orientation::Horizontal, Alignment::Fill, 5});
-        new Label{panel, "Tonemapping", "sans-bold", 25};
-        panel->set_tooltip(
-            "Various tonemapping options. Hover the individual controls to learn more!"
-        );
+  mSidebarLayout = new Widget {tmp};
+  mSidebarLayout->set_layout (new BoxLayout{Orientation::Vertical, Alignment::Fill, 0, 0});
 
-        // Exposure label and slider
-        {
-            panel = new Widget{mSidebarLayout};
-            panel->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 5});
+  mImageCanvas = new ImageCanvas {horizontalScreenSplit, pixel_ratio()};
 
-            mExposureLabel = new Label{panel, "", "sans-bold", 15};
+  //{{{  Tonemapping sectionim
+  {
+      auto panel = new Widget{mSidebarLayout};
+      panel->set_layout (new BoxLayout{Orientation::Horizontal, Alignment::Fill, 5});
+      new Label {panel, "Tonemapping", "sans-bold", 25};
+      panel->set_tooltip(
+          "Various tonemapping options. Hover the individual controls to learn more!"
+      );
 
-            mExposureSlider = new Slider{panel};
-            mExposureSlider->set_range({-5.0f, 5.0f});
-            mExposureSlider->set_callback([this](float value) {
-                setExposure(value);
+      //{{{  Exposure label and slider
+      {
+          panel = new Widget {mSidebarLayout};
+          panel->set_layout (new BoxLayout{Orientation::Vertical, Alignment::Fill, 5});
+
+          mExposureLabel = new Label {panel, "", "sans-bold", 15};
+
+          mExposureSlider = new Slider {panel};
+          mExposureSlider->set_range ({-5.0f, 5.0f});
+          mExposureSlider->set_callback ([this](float value) {
+            setExposure(value);
             });
-            setExposure(0);
+          setExposure(0);
 
-            panel->set_tooltip(
-                "Exposure scales the brightness of an image prior to tonemapping by 2^Exposure.\n\n"
-                "Keyboard shortcuts:\nE and Shift+E"
+          panel->set_tooltip(
+            "Exposure scales the brightness of an image prior to tonemapping by 2^Exposure.\n\n"
+            "Keyboard shortcuts:\nE and Shift+E"
             );
-        }
+      }
+      //}}}
+      //{{{  Offset/Gamma label and slider
+      {
+          panel = new Widget{mSidebarLayout};
+          panel->set_layout(new GridLayout{Orientation::Vertical, 2, Alignment::Fill, 5, 0});
 
-        // Offset/Gamma label and slider
-        {
-            panel = new Widget{mSidebarLayout};
-            panel->set_layout(new GridLayout{Orientation::Vertical, 2, Alignment::Fill, 5, 0});
+          mOffsetLabel = new Label{panel, "", "sans-bold", 15};
 
-            mOffsetLabel = new Label{panel, "", "sans-bold", 15};
+          mOffsetSlider = new Slider{panel};
+          mOffsetSlider->set_range({-1.0f, 1.0f});
+          mOffsetSlider->set_callback([this](float value) {
+              setOffset(value);
+          });
+          setOffset(0);
 
-            mOffsetSlider = new Slider{panel};
-            mOffsetSlider->set_range({-1.0f, 1.0f});
-            mOffsetSlider->set_callback([this](float value) {
-                setOffset(value);
-            });
-            setOffset(0);
+          mGammaLabel = new Label{panel, "", "sans-bold", 15};
 
-            mGammaLabel = new Label{panel, "", "sans-bold", 15};
+          mGammaSlider = new Slider{panel};
+          mGammaSlider->set_range({0.01f, 5.0f});
+          mGammaSlider->set_callback([this](float value) {
+              setGamma(value);
+          });
+          setGamma(2.2f);
 
-            mGammaSlider = new Slider{panel};
-            mGammaSlider->set_range({0.01f, 5.0f});
-            mGammaSlider->set_callback([this](float value) {
-                setGamma(value);
-            });
-            setGamma(2.2f);
+          panel->set_tooltip(
+              "The offset is added to the image after exposure has been applied.\n"
+              "Keyboard shortcuts: O and Shift+O\n\n"
+              "Gamma is the exponent used when gamma-tonemapping.\n"
+              "Keyboard shortcuts: G and Shift+G\n\n"
+          );
+      }
+      //}}}
+  }
+  //}}}
+  //{{{  Exposure/offset buttons
+  {
+      auto buttonContainer = new Widget{mSidebarLayout};
+      buttonContainer->set_layout(new GridLayout{Orientation::Horizontal, mSupportsHdr ? 4 : 3, Alignment::Fill, 5, 2});
 
-            panel->set_tooltip(
-                "The offset is added to the image after exposure has been applied.\n"
-                "Keyboard shortcuts: O and Shift+O\n\n"
-                "Gamma is the exponent used when gamma-tonemapping.\n"
-                "Keyboard shortcuts: G and Shift+G\n\n"
-            );
-        }
+      auto makeButton = [&](const string& name, function<void()> callback, int icon = 0, string tooltip = "") {
+          auto button = new Button{buttonContainer, name, icon};
+          button->set_font_size(15);
+          button->set_callback(callback);
+          button->set_tooltip(tooltip);
+          return button;
+      };
+
+      mCurrentImageButtons.push_back(
+          makeButton("Normalize", [this]() { normalizeExposureAndOffset(); }, 0, "Shortcut: N")
+      );
+      makeButton("Reset", [this]() { resetImage(); }, 0, "Shortcut: R");
+
+      if (mSupportsHdr) {
+          mClipToLdrButton = new Button{buttonContainer, "LDR", 0};
+          mClipToLdrButton->set_font_size(15);
+          mClipToLdrButton->set_change_callback([this](bool value) {
+              mImageCanvas->setClipToLdr(value);
+          });
+          mClipToLdrButton->set_tooltip(
+              "Clips the image to [0,1] as if displayed on an LDR screen.\n\n"
+              "Shortcut: L"
+          );
+          mClipToLdrButton->set_flags(Button::ToggleButton);
+      }
+
+      auto popupBtn = new PopupButton{buttonContainer, "", FA_PAINT_BRUSH};
+      popupBtn->set_font_size(15);
+      popupBtn->set_chevron_icon(0);
+      popupBtn->set_tooltip("Background Color");
+
+      //{{{  Background color popup
+      {
+          auto popup = popupBtn->popup();
+          popup->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 10});
+
+          new Label{popup, "Background Color"};
+          auto colorwheel = new ColorWheel{popup, mImageCanvas->backgroundColor()};
+          colorwheel->set_color(popupBtn->background_color());
+
+          new Label{popup, "Background Alpha"};
+          auto bgAlphaSlider = new Slider{popup};
+          bgAlphaSlider->set_range({0.0f, 1.0f});
+          bgAlphaSlider->set_callback([this](float value) {
+              auto col = mImageCanvas->backgroundColor();
+              mImageCanvas->setBackgroundColor(Color{
+                  col.r(),
+                  col.g(),
+                  col.b(),
+                  value,
+              });
+          });
+
+          bgAlphaSlider->set_value(0);
+
+          colorwheel->set_callback([bgAlphaSlider, this](const Color& value) {
+              //popupBtn->set_background_color(value);
+              mImageCanvas->setBackgroundColor(Color{
+                  value.r(),
+                  value.g(),
+                  value.b(),
+                  bgAlphaSlider->value(),
+              });
+          });
+      }
+      //}}}
+  }
+  //}}}
+  //{{{  Tonemap options
+  {
+      mTonemapButtonContainer = new Widget{mSidebarLayout};
+      mTonemapButtonContainer->set_layout(new GridLayout{Orientation::Horizontal, 4, Alignment::Fill, 5, 2});
+
+      auto makeTonemapButton = [&](const string& name, function<void()> callback) {
+          auto button = new Button{mTonemapButtonContainer, name};
+          button->set_flags(Button::RadioButton);
+          button->set_font_size(15);
+          button->set_callback(callback);
+          return button;
+      };
+
+      makeTonemapButton("sRGB",  [this]() { setTonemap(ETonemap::SRGB); });
+      makeTonemapButton("Gamma", [this]() { setTonemap(ETonemap::Gamma); });
+      makeTonemapButton("FC",    [this]() { setTonemap(ETonemap::FalseColor); });
+      makeTonemapButton("+/-",   [this]() { setTonemap(ETonemap::PositiveNegative); });
+
+      setTonemap(ETonemap::SRGB);
+
+      mTonemapButtonContainer->set_tooltip(
+          "Tonemap operator selection:\n\n"
+
+          "sRGB\n"
+          "Linear to sRGB conversion\n\n"
+
+          "Gamma\n"
+          "Inverse power gamma correction\n\n"
+
+          "FC\n"
+          "False-color visualization\n\n"
+
+          "+/-\n"
+          "Positive=Green, Negative=Red"
+      );
+  }
+  //}}}
+  //{{{  Error metrics
+  {
+      mMetricButtonContainer = new Widget{mSidebarLayout};
+      mMetricButtonContainer->set_layout(new GridLayout{Orientation::Horizontal, 5, Alignment::Fill, 5, 2});
+
+      auto makeMetricButton = [&](const string& name, function<void()> callback) {
+          auto button = new Button{mMetricButtonContainer, name};
+          button->set_flags(Button::RadioButton);
+          button->set_font_size(15);
+          button->set_callback(callback);
+          return button;
+      };
+
+      makeMetricButton("E",   [this]() { setMetric(EMetric::Error); });
+      makeMetricButton("AE",  [this]() { setMetric(EMetric::AbsoluteError); });
+      makeMetricButton("SE",  [this]() { setMetric(EMetric::SquaredError); });
+      makeMetricButton("RAE", [this]() { setMetric(EMetric::RelativeAbsoluteError); });
+      makeMetricButton("RSE", [this]() { setMetric(EMetric::RelativeSquaredError); });
+
+      setMetric(EMetric::AbsoluteError);
+
+      mMetricButtonContainer->set_tooltip(
+          "Error metric selection. Given a reference image r and the selected image i, "
+          "the following operators are available:\n\n"
+
+          "E (Error)\n"
+          "i - r\n\n"
+
+          "AE (Absolute Error)\n"
+          "|i - r|\n\n"
+
+          "SE (Squared Error)\n"
+          "(i - r)²\n\n"
+
+          "RAE (Relative Absolute Error)\n"
+          "|i - r| / (r + 0.01)\n\n"
+
+          "RSE (Relative Squared Error)\n"
+          "(i - r)² / (r² + 0.01)"
+      );
+  }
+  //}}}
+  //{{{  Image selection
+  {
+      auto spacer = new Widget{mSidebarLayout};
+      spacer->set_height(10);
+
+      auto panel = new Widget{mSidebarLayout};
+      panel->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 5});
+      auto label = new Label{panel, "Images", "sans-bold", 25};
+      label->set_tooltip(
+          "Select images either by left-clicking on them or by pressing arrow/number keys on your keyboard.\n"
+          "Right-clicking an image marks it as the 'reference' image. "
+          "While a reference image is set, the currently selected image is not simply displayed, but compared to the reference image."
+      );
+
+      //{{{  Histogram of selected image
+      {
+          panel = new Widget{mSidebarLayout};
+          panel->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 5});
+
+          mHistogram = new MultiGraph{panel, ""};
+      }
+      //}}}
+      //{{{  Fuzzy filter of open images
+      {
+          panel = new Widget{mSidebarLayout};
+          panel->set_layout(new GridLayout{Orientation::Horizontal, 2, Alignment::Fill, 5, 2});
+
+          mFilter = new TextBox{panel, ""};
+          mFilter->set_editable(true);
+          mFilter->set_alignment(TextBox::Alignment::Left);
+          mFilter->set_callback([this](const string& filter) {
+              return setFilter(filter);
+          });
+
+          mFilter->set_placeholder("Find");
+          mFilter->set_tooltip(tfm::format(
+              "Filters visible images and channel groups according to a supplied string. "
+              "The string must have the format 'image:group'. "
+              "Only images whose name contains 'image' and groups whose name contains 'group' will be visible.\n\n"
+              "Keyboard shortcut:\n%s+P",
+              HelpWindow::COMMAND
+          ));
+
+          mRegexButton = new Button{panel, "", FA_SEARCH};
+          mRegexButton->set_tooltip("Treat filter as regular expression");
+          mRegexButton->set_pushed(false);
+          mRegexButton->set_flags(Button::ToggleButton);
+          mRegexButton->set_font_size(15);
+          mRegexButton->set_change_callback([this](bool value) {
+              setUseRegex(value);
+          });
+      }
+      //}}}
+      //{{{  Playback controls
+      {
+          auto playback = new Widget{mSidebarLayout};
+          playback->set_layout(new GridLayout{Orientation::Horizontal, 4, Alignment::Fill, 5, 2});
+
+          auto makePlaybackButton = [&](const string& name, bool enabled, function<void()> callback, int icon = 0, string tooltip = "") {
+              auto button = new Button{playback, name, icon};
+              button->set_callback(callback);
+              button->set_tooltip(tooltip);
+              button->set_font_size(15);
+              button->set_enabled(enabled);
+              return button;
+          };
+
+          mPlayButton = makePlaybackButton("", true, []{}, FA_PLAY, "Play (Space)");
+          mPlayButton->set_flags(Button::ToggleButton);
+
+          mAnyImageButtons.push_back(makePlaybackButton("", false, [this] {
+              selectImage(nthVisibleImage(0));
+          }, FA_FAST_BACKWARD, "Front (Home)"));
+
+          mAnyImageButtons.push_back(makePlaybackButton("", false, [this] {
+              selectImage(nthVisibleImage(mImages.size()));
+          }, FA_FAST_FORWARD, "Back (End)"));
+
+          mFpsTextBox = new IntBox<int>{playback, 24};
+          mFpsTextBox->set_default_value("24");
+          mFpsTextBox->set_units("fps");
+          mFpsTextBox->set_editable(true);
+          mFpsTextBox->set_alignment(TextBox::Alignment::Right);
+          mFpsTextBox->set_min_max_values(1, 1000);
+          mFpsTextBox->set_spinnable(true);
+
+          mPlaybackThread = thread{[&]() {
+              while (mShallRunPlaybackThread) {
+                  auto fps = clamp(mFpsTextBox->value(), 1, 1000);
+                  auto microseconds = 1000000.0f / fps;
+                  this_thread::sleep_for(chrono::microseconds{std::max((size_t)microseconds, (size_t)1)});
+
+                  if (mPlayButton->pushed() && mTaskQueue.empty()) {
+                      mTaskQueue.push([&]() {
+                          selectImage(nextImage(mCurrentImage, Forward), false);
+                      });
+                      redraw();
+                  }
+              }
+          }};
+      }
+      //}}}
+      //{{{  Save, refresh, load, close
+      {
+          auto tools = new Widget{mSidebarLayout};
+          tools->set_layout(new GridLayout{Orientation::Horizontal, 6, Alignment::Fill, 5, 1});
+
+          auto makeImageButton = [&](const string& name, bool enabled, function<void()> callback, int icon = 0, string tooltip = "") {
+              auto button = new Button{tools, name, icon};
+              button->set_callback(callback);
+              button->set_tooltip(tooltip);
+              button->set_font_size(15);
+              button->set_enabled(enabled);
+              return button;
+          };
+
+          makeImageButton("", true, [this] {
+              openImageDialog();
+          }, FA_FOLDER, tfm::format("Open (%s+O)", HelpWindow::COMMAND));
+
+          mCurrentImageButtons.push_back(makeImageButton("", false, [this] {
+              saveImageDialog();
+          }, FA_SAVE, tfm::format("Save (%s+S)", HelpWindow::COMMAND)));
+
+          mCurrentImageButtons.push_back(makeImageButton("", false, [this] {
+              reloadImage(mCurrentImage);
+          }, FA_RECYCLE, tfm::format("Reload (%s+R or F5)", HelpWindow::COMMAND)));
+
+          mAnyImageButtons.push_back(makeImageButton("A", false, [this] {
+              reloadAllImages();
+          }, 0, tfm::format("Reload All (%s+Shift+R or %s+F5)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
+
+          mWatchFilesForChangesButton = makeImageButton("W", true, {}, 0, "Watch image files and directories for changes and reload them automatically.");
+          mWatchFilesForChangesButton->set_flags(Button::Flags::ToggleButton);
+          mWatchFilesForChangesButton->set_change_callback([this](bool value) {
+              setWatchFilesForChanges(value);
+          });
+
+          mCurrentImageButtons.push_back(makeImageButton("", false, [this] {
+              auto* glfwWindow = screen()->glfw_window();
+              // There is no explicit access to the currently pressed modifier keys here, so we
+              // need to directly ask GLFW. In case this is needed more often, it may be worth
+              // inheriting Button and overriding mouse_button_event (similar to ImageButton).
+              if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT)) {
+                  removeAllImages();
+              } else {
+                  removeImage(mCurrentImage);
+              }
+          }, FA_TIMES, tfm::format("Close (%s+W); Close All (%s+Shift+W)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
+
+          spacer = new Widget{mSidebarLayout};
+          spacer->set_height(3);
+      }
+      //}}}
+      //{{{  List of open images
+      {
+          mImageScrollContainer = new VScrollPanel{mSidebarLayout};
+          mImageScrollContainer->set_fixed_width(mSidebarLayout->fixed_width());
+
+          mScrollContent = new Widget{mImageScrollContainer};
+          mScrollContent->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill});
+
+          mImageButtonContainer = new Widget{mScrollContent};
+          mImageButtonContainer->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill});
+      }
+      //}}}
+  }
+  //}}}
+  //{{{  Group selection
+  {
+      mFooter = new Widget{mVerticalScreenSplit};
+
+      mGroupButtonContainer = new Widget{mFooter};
+      mGroupButtonContainer->set_layout(new BoxLayout{Orientation::Horizontal, Alignment::Fill});
+      mGroupButtonContainer->set_fixed_height(25);
+      mFooter->set_fixed_height(25);
+      mFooter->set_visible(false);
+  }
+  //}}}
+
+  set_resize_callback([this](nanogui::Vector2i) { requestLayoutUpdate(); });
+
+  selectImage(nullptr);
+  selectReference(nullptr);
+
+  if (!maximize) {
+    this->set_size(nanogui::Vector2i(1024, 800));
+    mDidFitToImage = 3;
     }
 
-    // Exposure/offset buttons
-    {
-        auto buttonContainer = new Widget{mSidebarLayout};
-        buttonContainer->set_layout(new GridLayout{Orientation::Horizontal, mSupportsHdr ? 4 : 3, Alignment::Fill, 5, 2});
-
-        auto makeButton = [&](const string& name, function<void()> callback, int icon = 0, string tooltip = "") {
-            auto button = new Button{buttonContainer, name, icon};
-            button->set_font_size(15);
-            button->set_callback(callback);
-            button->set_tooltip(tooltip);
-            return button;
-        };
-
-        mCurrentImageButtons.push_back(
-            makeButton("Normalize", [this]() { normalizeExposureAndOffset(); }, 0, "Shortcut: N")
-        );
-        makeButton("Reset", [this]() { resetImage(); }, 0, "Shortcut: R");
-
-        if (mSupportsHdr) {
-            mClipToLdrButton = new Button{buttonContainer, "LDR", 0};
-            mClipToLdrButton->set_font_size(15);
-            mClipToLdrButton->set_change_callback([this](bool value) {
-                mImageCanvas->setClipToLdr(value);
-            });
-            mClipToLdrButton->set_tooltip(
-                "Clips the image to [0,1] as if displayed on an LDR screen.\n\n"
-                "Shortcut: L"
-            );
-            mClipToLdrButton->set_flags(Button::ToggleButton);
-        }
-
-        auto popupBtn = new PopupButton{buttonContainer, "", FA_PAINT_BRUSH};
-        popupBtn->set_font_size(15);
-        popupBtn->set_chevron_icon(0);
-        popupBtn->set_tooltip("Background Color");
-
-        // Background color popup
-        {
-            auto popup = popupBtn->popup();
-            popup->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 10});
-
-            new Label{popup, "Background Color"};
-            auto colorwheel = new ColorWheel{popup, mImageCanvas->backgroundColor()};
-            colorwheel->set_color(popupBtn->background_color());
-
-            new Label{popup, "Background Alpha"};
-            auto bgAlphaSlider = new Slider{popup};
-            bgAlphaSlider->set_range({0.0f, 1.0f});
-            bgAlphaSlider->set_callback([this](float value) {
-                auto col = mImageCanvas->backgroundColor();
-                mImageCanvas->setBackgroundColor(Color{
-                    col.r(),
-                    col.g(),
-                    col.b(),
-                    value,
-                });
-            });
-
-            bgAlphaSlider->set_value(0);
-
-            colorwheel->set_callback([bgAlphaSlider, this](const Color& value) {
-                //popupBtn->set_background_color(value);
-                mImageCanvas->setBackgroundColor(Color{
-                    value.r(),
-                    value.g(),
-                    value.b(),
-                    bgAlphaSlider->value(),
-                });
-            });
-        }
-    }
-
-    // Tonemap options
-    {
-        mTonemapButtonContainer = new Widget{mSidebarLayout};
-        mTonemapButtonContainer->set_layout(new GridLayout{Orientation::Horizontal, 4, Alignment::Fill, 5, 2});
-
-        auto makeTonemapButton = [&](const string& name, function<void()> callback) {
-            auto button = new Button{mTonemapButtonContainer, name};
-            button->set_flags(Button::RadioButton);
-            button->set_font_size(15);
-            button->set_callback(callback);
-            return button;
-        };
-
-        makeTonemapButton("sRGB",  [this]() { setTonemap(ETonemap::SRGB); });
-        makeTonemapButton("Gamma", [this]() { setTonemap(ETonemap::Gamma); });
-        makeTonemapButton("FC",    [this]() { setTonemap(ETonemap::FalseColor); });
-        makeTonemapButton("+/-",   [this]() { setTonemap(ETonemap::PositiveNegative); });
-
-        setTonemap(ETonemap::SRGB);
-
-        mTonemapButtonContainer->set_tooltip(
-            "Tonemap operator selection:\n\n"
-
-            "sRGB\n"
-            "Linear to sRGB conversion\n\n"
-
-            "Gamma\n"
-            "Inverse power gamma correction\n\n"
-
-            "FC\n"
-            "False-color visualization\n\n"
-
-            "+/-\n"
-            "Positive=Green, Negative=Red"
-        );
-    }
-
-    // Error metrics
-    {
-        mMetricButtonContainer = new Widget{mSidebarLayout};
-        mMetricButtonContainer->set_layout(new GridLayout{Orientation::Horizontal, 5, Alignment::Fill, 5, 2});
-
-        auto makeMetricButton = [&](const string& name, function<void()> callback) {
-            auto button = new Button{mMetricButtonContainer, name};
-            button->set_flags(Button::RadioButton);
-            button->set_font_size(15);
-            button->set_callback(callback);
-            return button;
-        };
-
-        makeMetricButton("E",   [this]() { setMetric(EMetric::Error); });
-        makeMetricButton("AE",  [this]() { setMetric(EMetric::AbsoluteError); });
-        makeMetricButton("SE",  [this]() { setMetric(EMetric::SquaredError); });
-        makeMetricButton("RAE", [this]() { setMetric(EMetric::RelativeAbsoluteError); });
-        makeMetricButton("RSE", [this]() { setMetric(EMetric::RelativeSquaredError); });
-
-        setMetric(EMetric::AbsoluteError);
-
-        mMetricButtonContainer->set_tooltip(
-            "Error metric selection. Given a reference image r and the selected image i, "
-            "the following operators are available:\n\n"
-
-            "E (Error)\n"
-            "i - r\n\n"
-
-            "AE (Absolute Error)\n"
-            "|i - r|\n\n"
-
-            "SE (Squared Error)\n"
-            "(i - r)²\n\n"
-
-            "RAE (Relative Absolute Error)\n"
-            "|i - r| / (r + 0.01)\n\n"
-
-            "RSE (Relative Squared Error)\n"
-            "(i - r)² / (r² + 0.01)"
-        );
-    }
-
-    // Image selection
-    {
-        auto spacer = new Widget{mSidebarLayout};
-        spacer->set_height(10);
-
-        auto panel = new Widget{mSidebarLayout};
-        panel->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 5});
-        auto label = new Label{panel, "Images", "sans-bold", 25};
-        label->set_tooltip(
-            "Select images either by left-clicking on them or by pressing arrow/number keys on your keyboard.\n"
-            "Right-clicking an image marks it as the 'reference' image. "
-            "While a reference image is set, the currently selected image is not simply displayed, but compared to the reference image."
-        );
-
-        // Histogram of selected image
-        {
-            panel = new Widget{mSidebarLayout};
-            panel->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 5});
-
-            mHistogram = new MultiGraph{panel, ""};
-        }
-
-        // Fuzzy filter of open images
-        {
-            panel = new Widget{mSidebarLayout};
-            panel->set_layout(new GridLayout{Orientation::Horizontal, 2, Alignment::Fill, 5, 2});
-
-            mFilter = new TextBox{panel, ""};
-            mFilter->set_editable(true);
-            mFilter->set_alignment(TextBox::Alignment::Left);
-            mFilter->set_callback([this](const string& filter) {
-                return setFilter(filter);
-            });
-
-            mFilter->set_placeholder("Find");
-            mFilter->set_tooltip(tfm::format(
-                "Filters visible images and channel groups according to a supplied string. "
-                "The string must have the format 'image:group'. "
-                "Only images whose name contains 'image' and groups whose name contains 'group' will be visible.\n\n"
-                "Keyboard shortcut:\n%s+P",
-                HelpWindow::COMMAND
-            ));
-
-            mRegexButton = new Button{panel, "", FA_SEARCH};
-            mRegexButton->set_tooltip("Treat filter as regular expression");
-            mRegexButton->set_pushed(false);
-            mRegexButton->set_flags(Button::ToggleButton);
-            mRegexButton->set_font_size(15);
-            mRegexButton->set_change_callback([this](bool value) {
-                setUseRegex(value);
-            });
-        }
-
-        // Playback controls
-        {
-            auto playback = new Widget{mSidebarLayout};
-            playback->set_layout(new GridLayout{Orientation::Horizontal, 4, Alignment::Fill, 5, 2});
-
-            auto makePlaybackButton = [&](const string& name, bool enabled, function<void()> callback, int icon = 0, string tooltip = "") {
-                auto button = new Button{playback, name, icon};
-                button->set_callback(callback);
-                button->set_tooltip(tooltip);
-                button->set_font_size(15);
-                button->set_enabled(enabled);
-                return button;
-            };
-
-            mPlayButton = makePlaybackButton("", true, []{}, FA_PLAY, "Play (Space)");
-            mPlayButton->set_flags(Button::ToggleButton);
-
-            mAnyImageButtons.push_back(makePlaybackButton("", false, [this] {
-                selectImage(nthVisibleImage(0));
-            }, FA_FAST_BACKWARD, "Front (Home)"));
-
-            mAnyImageButtons.push_back(makePlaybackButton("", false, [this] {
-                selectImage(nthVisibleImage(mImages.size()));
-            }, FA_FAST_FORWARD, "Back (End)"));
-
-            mFpsTextBox = new IntBox<int>{playback, 24};
-            mFpsTextBox->set_default_value("24");
-            mFpsTextBox->set_units("fps");
-            mFpsTextBox->set_editable(true);
-            mFpsTextBox->set_alignment(TextBox::Alignment::Right);
-            mFpsTextBox->set_min_max_values(1, 1000);
-            mFpsTextBox->set_spinnable(true);
-
-            mPlaybackThread = thread{[&]() {
-                while (mShallRunPlaybackThread) {
-                    auto fps = clamp(mFpsTextBox->value(), 1, 1000);
-                    auto microseconds = 1000000.0f / fps;
-                    this_thread::sleep_for(chrono::microseconds{std::max((size_t)microseconds, (size_t)1)});
-
-                    if (mPlayButton->pushed() && mTaskQueue.empty()) {
-                        mTaskQueue.push([&]() {
-                            selectImage(nextImage(mCurrentImage, Forward), false);
-                        });
-                        redraw();
-                    }
-                }
-            }};
-        }
-
-        // Save, refresh, load, close
-        {
-            auto tools = new Widget{mSidebarLayout};
-            tools->set_layout(new GridLayout{Orientation::Horizontal, 6, Alignment::Fill, 5, 1});
-
-            auto makeImageButton = [&](const string& name, bool enabled, function<void()> callback, int icon = 0, string tooltip = "") {
-                auto button = new Button{tools, name, icon};
-                button->set_callback(callback);
-                button->set_tooltip(tooltip);
-                button->set_font_size(15);
-                button->set_enabled(enabled);
-                return button;
-            };
-
-            makeImageButton("", true, [this] {
-                openImageDialog();
-            }, FA_FOLDER, tfm::format("Open (%s+O)", HelpWindow::COMMAND));
-
-            mCurrentImageButtons.push_back(makeImageButton("", false, [this] {
-                saveImageDialog();
-            }, FA_SAVE, tfm::format("Save (%s+S)", HelpWindow::COMMAND)));
-
-            mCurrentImageButtons.push_back(makeImageButton("", false, [this] {
-                reloadImage(mCurrentImage);
-            }, FA_RECYCLE, tfm::format("Reload (%s+R or F5)", HelpWindow::COMMAND)));
-
-            mAnyImageButtons.push_back(makeImageButton("A", false, [this] {
-                reloadAllImages();
-            }, 0, tfm::format("Reload All (%s+Shift+R or %s+F5)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
-
-            mWatchFilesForChangesButton = makeImageButton("W", true, {}, 0, "Watch image files and directories for changes and reload them automatically.");
-            mWatchFilesForChangesButton->set_flags(Button::Flags::ToggleButton);
-            mWatchFilesForChangesButton->set_change_callback([this](bool value) {
-                setWatchFilesForChanges(value);
-            });
-
-            mCurrentImageButtons.push_back(makeImageButton("", false, [this] {
-                auto* glfwWindow = screen()->glfw_window();
-                // There is no explicit access to the currently pressed modifier keys here, so we
-                // need to directly ask GLFW. In case this is needed more often, it may be worth
-                // inheriting Button and overriding mouse_button_event (similar to ImageButton).
-                if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT)) {
-                    removeAllImages();
-                } else {
-                    removeImage(mCurrentImage);
-                }
-            }, FA_TIMES, tfm::format("Close (%s+W); Close All (%s+Shift+W)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
-
-            spacer = new Widget{mSidebarLayout};
-            spacer->set_height(3);
-        }
-
-        // List of open images
-        {
-            mImageScrollContainer = new VScrollPanel{mSidebarLayout};
-            mImageScrollContainer->set_fixed_width(mSidebarLayout->fixed_width());
-
-            mScrollContent = new Widget{mImageScrollContainer};
-            mScrollContent->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill});
-
-            mImageButtonContainer = new Widget{mScrollContent};
-            mImageButtonContainer->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill});
-        }
-    }
-
-    // Group selection
-    {
-        mFooter = new Widget{mVerticalScreenSplit};
-
-        mGroupButtonContainer = new Widget{mFooter};
-        mGroupButtonContainer->set_layout(new BoxLayout{Orientation::Horizontal, Alignment::Fill});
-        mGroupButtonContainer->set_fixed_height(25);
-        mFooter->set_fixed_height(25);
-        mFooter->set_visible(false);
-    }
-
-    set_resize_callback([this](nanogui::Vector2i) { requestLayoutUpdate(); });
-
-    selectImage(nullptr);
-    selectReference(nullptr);
-
-    if (!maximize) {
-        this->set_size(nanogui::Vector2i(1024, 800));
-        mDidFitToImage = 3;
-    }
-
-    updateLayout();
-}
+  updateLayout();
+  }
 //}}}
 //{{{
 ImageViewer::~ImageViewer() {
-    mShallRunPlaybackThread = false;
-    if (mPlaybackThread.joinable()) {
-        mPlaybackThread.join();
-    }
-}
+
+  mShallRunPlaybackThread = false;
+  if (mPlaybackThread.joinable()) 
+    mPlaybackThread.join();
+  }
 //}}}
 
 //{{{
-bool ImageViewer::mouse_button_event(const nanogui::Vector2i &p, int button, bool down, int modifiers) {
-    redraw();
+bool ImageViewer::mouse_button_event (const nanogui::Vector2i &p, int button, bool down, int modifiers) {
 
-    // Check if the user performed mousedown on an imagebutton so we can mark it as being dragged.
-    // This has to occur before Screen::mouse_button_event as the button would absorb the event.
-    if (down) {
-        if (mImageScrollContainer->contains(p - mSidebarLayout->parent()->position())) {
-            auto& buttons = mImageButtonContainer->children();
+  redraw();
 
-            nanogui::Vector2i relMousePos = (absolute_position() + p) - mImageButtonContainer->absolute_position();
+  // Check if the user performed mousedown on an imagebutton so we can mark it as being dragged.
+  // This has to occur before Screen::mouse_button_event as the button would absorb the event.
+  if (down) {
+    if (mImageScrollContainer->contains(p - mSidebarLayout->parent()->position())) {
+      auto& buttons = mImageButtonContainer->children();
 
-            for (size_t i = 0; i < buttons.size(); ++i) {
-                const auto* imgButton = dynamic_cast<ImageButton*>(buttons[i]);
-                if (imgButton->contains(relMousePos)) {
-                    mDraggedImageButtonId = i;
-                    mIsDraggingImageButton = true;
-                    mDraggingStartPosition = nanogui::Vector2f(relMousePos - imgButton->position());
-                    break;
-                }
-            }
+      nanogui::Vector2i relMousePos = (absolute_position() + p) - mImageButtonContainer->absolute_position();
+
+      for (size_t i = 0; i < buttons.size(); ++i) {
+        const auto* imgButton = dynamic_cast<ImageButton*>(buttons[i]);
+        if (imgButton->contains(relMousePos)) {
+          mDraggedImageButtonId = i;
+          mIsDraggingImageButton = true;
+          mDraggingStartPosition = nanogui::Vector2f(relMousePos - imgButton->position());
+          break;
+          }
         }
+      }
     }
 
-    if (Screen::mouse_button_event(p, button, down, modifiers)) {
-        return true;
-    }
-
-    if (down && !mIsDraggingImageButton) {
-        if (canDragSidebarFrom(p)) {
-            mIsDraggingSidebar = true;
-            mDraggingStartPosition = nanogui::Vector2f(p);
-            return true;
-        } else if (mImageCanvas->contains(p)) {
-            mIsDraggingImage = true;
-            mDraggingStartPosition = nanogui::Vector2f(p);
-            return true;
-        }
-    } else {
-        if (mIsDraggingImageButton) {
-            requestLayoutUpdate();
-        }
-
-        mIsDraggingSidebar = false;
-        mIsDraggingImage = false;
-        mIsDraggingImageButton = false;
-    }
-
-    return false;
-}
-//}}}
-//{{{
-bool ImageViewer::mouse_motion_event(const nanogui::Vector2i& p, const nanogui::Vector2i& rel, int button, int modifiers) {
-    if (Screen::mouse_motion_event(p, rel, button, modifiers)) {
-        return true;
-    }
-
-    // Only need high refresh rate responsiveness if tev is actually in focus.
-    if (focused()) {
-        redraw();
-    }
-
-    if (mIsDraggingSidebar || canDragSidebarFrom(p)) {
-        mSidebarLayout->set_cursor(Cursor::HResize);
-        mImageCanvas->set_cursor(Cursor::HResize);
-    } else {
-        mSidebarLayout->set_cursor(Cursor::Arrow);
-        mImageCanvas->set_cursor(Cursor::Arrow);
-    }
-
-    if (mIsDraggingSidebar) {
-        mSidebar->set_fixed_width(clamp(p.x(), SIDEBAR_MIN_WIDTH, m_size.x() - 10));
-        requestLayoutUpdate();
-    } else if (mIsDraggingImage) {
-        nanogui::Vector2f relativeMovement = {rel};
-        auto* glfwWindow = screen()->glfw_window();
-        // There is no explicit access to the currently pressed modifier keys here, so we
-        // need to directly ask GLFW.
-        if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT)) {
-            relativeMovement /= 10;
-        } else if (glfwGetKey(glfwWindow, SYSTEM_COMMAND_LEFT) || glfwGetKey(glfwWindow, SYSTEM_COMMAND_RIGHT)) {
-            relativeMovement /= std::log2(1.1f);
-        }
-
-        // If left mouse button is held, move the image with mouse movement
-        if ((button & 1) != 0) {
-            mImageCanvas->translate(relativeMovement);
-        }
-
-        // If middle mouse button is held, zoom in-out with up-down mouse movement
-        if ((button & 4) != 0) {
-            mImageCanvas->scale(relativeMovement.y() / 10.0f, {mDraggingStartPosition.x(), mDraggingStartPosition.y()});
-        }
-    } else if (mIsDraggingImageButton) {
-        auto& buttons = mImageButtonContainer->children();
-        nanogui::Vector2i relMousePos = (absolute_position() + p) - mImageButtonContainer->absolute_position();
-        for (size_t i = 0; i < buttons.size(); ++i) {
-            if (i == mDraggedImageButtonId) {
-                continue;
-            }
-            auto* imgButton = dynamic_cast<ImageButton*>(buttons[i]);
-            if (imgButton->contains(relMousePos)) {
-                nanogui::Vector2i pos = imgButton->position();
-                pos.y() += ((int)mDraggedImageButtonId - (int)i) * imgButton->size().y();
-                imgButton->set_position(pos);
-                imgButton->mouse_enter_event(relMousePos, false);
-
-                moveImageInList(mDraggedImageButtonId, i);
-                mDraggedImageButtonId = i;
-                break;
-            }
-        }
-
-        dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position(relMousePos - nanogui::Vector2i(mDraggingStartPosition));
-    }
-
-    return false;
-}
-//}}}
-//{{{
-bool ImageViewer::drop_event(const vector<string>& filenames) {
-    if (Screen::drop_event(filenames)) {
-        return true;
-    }
-
-    for (size_t i = 0; i < filenames.size(); ++i) {
-        mImagesLoader->enqueue(toPath(filenames[i]), "", i == filenames.size() - 1);
-    }
-
-    // Make sure we gain focus after dragging files into here.
-    focusWindow();
-    redraw();
+  if (Screen::mouse_button_event(p, button, down, modifiers)) {
     return true;
-}
+    }
+
+  if (down && !mIsDraggingImageButton) {
+    if (canDragSidebarFrom(p)) {
+      mIsDraggingSidebar = true;
+      mDraggingStartPosition = nanogui::Vector2f(p);
+      return true;
+      } 
+    else if (mImageCanvas->contains(p)) {
+      mIsDraggingImage = true;
+      mDraggingStartPosition = nanogui::Vector2f(p);
+      return true;
+      }
+    } 
+  else {
+    if (mIsDraggingImageButton) 
+      requestLayoutUpdate();
+
+    mIsDraggingSidebar = false;
+    mIsDraggingImage = false;
+    mIsDraggingImageButton = false;
+    }
+
+  return false;
+  }
 //}}}
 //{{{
-bool ImageViewer::keyboard_event(int key, int scancode, int action, int modifiers) {
+bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui::Vector2i& rel, int button, int modifiers) {
+
+  if (Screen::mouse_motion_event(p, rel, button, modifiers))
+    return true;
+
+  // Only need high refresh rate responsiveness if tev is actually in focus.
+  if (focused())
+    redraw();
+
+  if (mIsDraggingSidebar || canDragSidebarFrom(p)) {
+    mSidebarLayout->set_cursor(Cursor::HResize);
+    mImageCanvas->set_cursor(Cursor::HResize);
+    } 
+  else {
+    mSidebarLayout->set_cursor(Cursor::Arrow);
+    mImageCanvas->set_cursor(Cursor::Arrow);
+    }
+
+  if (mIsDraggingSidebar) {
+    mSidebar->set_fixed_width(clamp(p.x(), SIDEBAR_MIN_WIDTH, m_size.x() - 10));
+    requestLayoutUpdate();
+    } 
+  else if (mIsDraggingImage) {
+    nanogui::Vector2f relativeMovement = {rel};
+    auto* glfwWindow = screen()->glfw_window();
+    // There is no explicit access to the currently pressed modifier keys here, so we
+    // need to directly ask GLFW.
+    if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT)) {
+        relativeMovement /= 10;
+    } else if (glfwGetKey(glfwWindow, SYSTEM_COMMAND_LEFT) || glfwGetKey(glfwWindow, SYSTEM_COMMAND_RIGHT)) {
+        relativeMovement /= std::log2(1.1f);
+    }
+
+    // If left mouse button is held, move the image with mouse movement
+    if ((button & 1) != 0) {
+        mImageCanvas->translate(relativeMovement);
+    }
+
+    // If middle mouse button is held, zoom in-out with up-down mouse movement
+    if ((button & 4) != 0) {
+      mImageCanvas->scale(relativeMovement.y() / 10.0f, {mDraggingStartPosition.x(), mDraggingStartPosition.y()});
+      }
+    } 
+  else if (mIsDraggingImageButton) {
+    auto& buttons = mImageButtonContainer->children();
+    nanogui::Vector2i relMousePos = (absolute_position() + p) - mImageButtonContainer->absolute_position();
+    for (size_t i = 0; i < buttons.size(); ++i) {
+      if (i == mDraggedImageButtonId) {
+        continue;
+        }
+      auto* imgButton = dynamic_cast<ImageButton*>(buttons[i]);
+      if (imgButton->contains(relMousePos)) {
+        nanogui::Vector2i pos = imgButton->position();
+        pos.y() += ((int)mDraggedImageButtonId - (int)i) * imgButton->size().y();
+        imgButton->set_position(pos);
+        imgButton->mouse_enter_event(relMousePos, false);
+
+        moveImageInList(mDraggedImageButtonId, i);
+        mDraggedImageButtonId = i;
+        break;
+        }
+      }
+
+    dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position(relMousePos - nanogui::Vector2i(mDraggingStartPosition));
+    }
+
+  return false;
+  }
+//}}}
+//{{{
+bool ImageViewer::drop_event (const vector<string>& filenames) {
+
+  if (Screen::drop_event(filenames)) {
+    return true;
+    }
+
+  for (size_t i = 0; i < filenames.size(); ++i) {
+    mImagesLoader->enqueue(toPath(filenames[i]), "", i == filenames.size() - 1);
+    }
+
+  // Make sure we gain focus after dragging files into here.
+  focusWindow();
+  redraw();
+  return true;
+  }
+//}}}
+//{{{
+bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifiers) {
     if (Screen::keyboard_event(key, scancode, action, modifiers)) {
         return true;
     }
@@ -883,139 +893,141 @@ bool ImageViewer::keyboard_event(int key, int scancode, int action, int modifier
 
 //{{{
 void ImageViewer::focusWindow() {
-    glfwFocusWindow(m_glfw_window);
-}
+
+  glfwFocusWindow(m_glfw_window);
+  }
 //}}}
 
 //{{{
 void ImageViewer::draw_contents() {
-    // HACK HACK HACK: on Windows, when restoring a window from maximization,
-    //                 the old window size is restored _several times_, necessitating
-    //                 a repeated resize to the actually desired window size.
-    if (mDidFitToImage < 3 && !isMaximized()) {
-        set_size(sizeToFitAllImages());
-        ++mDidFitToImage;
+
+  // HACK HACK HACK: on Windows, when restoring a window from maximization,
+  //                 the old window size is restored _several times_, necessitating
+  //                 a repeated resize to the actually desired window size.
+  if (mDidFitToImage < 3 && !isMaximized()) {
+    set_size(sizeToFitAllImages());
+    ++mDidFitToImage;
     }
 
-    clear();
+  clear();
 
-    // If watching files for changes, do so every 100ms
-    if (watchFilesForChanges()) {
-        auto now = chrono::steady_clock::now();
-        if (now - mLastFileChangesCheck > 100ms) {
-            reloadImagesWhoseFileChanged();
-            mImagesLoader->checkDirectoriesForNewFilesAndLoadThose();
-            mLastFileChangesCheck = now;
-        }
+  // If watching files for changes, do so every 100ms
+  if (watchFilesForChanges()) {
+    auto now = chrono::steady_clock::now();
+    if (now - mLastFileChangesCheck > 100ms) {
+      reloadImagesWhoseFileChanged();
+      mImagesLoader->checkDirectoriesForNewFilesAndLoadThose();
+      mLastFileChangesCheck = now;
+      }
     }
 
-    // In case any images got loaded in the background, they sit around in mImagesLoader. Here is the
-    // place where we actually add them to the GUI. Focus the application in case one of the
-    // new images is meant to override the current selection.
-    bool newFocus = false;
-    while (auto addition = mImagesLoader->tryPop()) {
-        newFocus |= addition->shallSelect;
+  // In case any images got loaded in the background, they sit around in mImagesLoader. Here is the
+  // place where we actually add them to the GUI. Focus the application in case one of the
+  // new images is meant to override the current selection.
+  bool newFocus = false;
+  while (auto addition = mImagesLoader->tryPop()) {
+      newFocus |= addition->shallSelect;
 
-        bool first = true;
-        for (auto& image : addition->images) {
-            // If the loaded file consists of multiple images (such as multi-part EXRs),
-            // select the first part if selection is desired.
-            bool shallSelect = first ? addition->shallSelect : false;
-            if (addition->toReplace) {
-                replaceImage(addition->toReplace, image, shallSelect);
-            } else {
-                addImage(image, shallSelect);
-            }
-            first = false;
-        }
-    }
+      bool first = true;
+      for (auto& image : addition->images) {
+          // If the loaded file consists of multiple images (such as multi-part EXRs),
+          // select the first part if selection is desired.
+          bool shallSelect = first ? addition->shallSelect : false;
+          if (addition->toReplace) {
+              replaceImage(addition->toReplace, image, shallSelect);
+          } else {
+              addImage(image, shallSelect);
+          }
+          first = false;
+      }
+  }
 
-    if (newFocus) {
-        focusWindow();
-    }
+  if (newFocus) {
+      focusWindow();
+  }
 
-    // mTaskQueue contains jobs that should be executed on the main thread. It is useful for handling
-    // callbacks from background threads
-    while (auto task = mTaskQueue.tryPop()) {
-        (*task)();
-    }
+  // mTaskQueue contains jobs that should be executed on the main thread. It is useful for handling
+  // callbacks from background threads
+  while (auto task = mTaskQueue.tryPop()) {
+      (*task)();
+  }
 
-    for (auto it = begin(mToBump); it != end(mToBump); ) {
-        auto& image = *it;
-        bool isShown = image == mCurrentImage || image == mCurrentReference;
+  for (auto it = begin(mToBump); it != end(mToBump); ) {
+      auto& image = *it;
+      bool isShown = image == mCurrentImage || image == mCurrentReference;
 
-        // If the image is no longer shown, bump ID immediately. Otherwise, wait until canvas statistics were ready for over 200 ms.
-        if (!isShown || std::chrono::steady_clock::now() - mImageCanvas->canvasStatistics()->becameReadyAt() > 200ms) {
-            image->bumpId();
-            auto localIt = it;
-            ++it;
-            mToBump.erase(localIt);
-        } else {
-            ++it;
-        }
-    }
+      // If the image is no longer shown, bump ID immediately. Otherwise, wait until canvas statistics were ready for over 200 ms.
+      if (!isShown || std::chrono::steady_clock::now() - mImageCanvas->canvasStatistics()->becameReadyAt() > 200ms) {
+          image->bumpId();
+          auto localIt = it;
+          ++it;
+          mToBump.erase(localIt);
+      } else {
+          ++it;
+      }
+  }
 
-    if (mRequiresFilterUpdate) {
-        updateFilter();
-        mRequiresFilterUpdate = false;
-    }
+  if (mRequiresFilterUpdate) {
+      updateFilter();
+      mRequiresFilterUpdate = false;
+  }
 
-    if (mRequiresLayoutUpdate) {
-        nanogui::Vector2i oldDraggedImageButtonPos{0, 0};
-        auto& buttons = mImageButtonContainer->children();
-        if (mIsDraggingImageButton) {
-            oldDraggedImageButtonPos = dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->position();
-        }
+  if (mRequiresLayoutUpdate) {
+      nanogui::Vector2i oldDraggedImageButtonPos{0, 0};
+      auto& buttons = mImageButtonContainer->children();
+      if (mIsDraggingImageButton) {
+          oldDraggedImageButtonPos = dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->position();
+      }
 
-        updateLayout();
-        mRequiresLayoutUpdate = false;
+      updateLayout();
+      mRequiresLayoutUpdate = false;
 
-        if (mIsDraggingImageButton) {
-            dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position(oldDraggedImageButtonPos);
-        }
-    }
+      if (mIsDraggingImageButton) {
+          dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position(oldDraggedImageButtonPos);
+      }
+  }
 
-    updateTitle();
+  updateTitle();
 
-    // Update histogram
-    static const string histogramTooltipBase = "Histogram of color values. Adapts to the currently chosen channel group and error metric.";
-    auto lazyCanvasStatistics = mImageCanvas->canvasStatistics();
-    if (lazyCanvasStatistics) {
-        if (lazyCanvasStatistics->isReady()) {
-            auto statistics = lazyCanvasStatistics->get();
-            mHistogram->setNChannels(statistics->nChannels);
-            mHistogram->setValues(statistics->histogram);
-            mHistogram->setMinimum(statistics->minimum);
-            mHistogram->setMean(statistics->mean);
-            mHistogram->setMaximum(statistics->maximum);
-            mHistogram->setZero(statistics->histogramZero);
-            mHistogram->set_tooltip(tfm::format(
-                "%s\n\n"
-                "Minimum: %.3f\n"
-                "Mean: %.3f\n"
-                "Maximum: %.3f",
-                histogramTooltipBase,
-                statistics->minimum,
-                statistics->mean,
-                statistics->maximum)
-            );
-        }
-    } else {
-        mHistogram->setNChannels(1);
-        mHistogram->setValues({0.0f});
-        mHistogram->setMinimum(0);
-        mHistogram->setMean(0);
-        mHistogram->setMaximum(0);
-        mHistogram->setZero(0);
-        mHistogram->set_tooltip(
-            tfm::format("%s", histogramTooltipBase)
-        );
-    }
+  // Update histogram
+  static const string histogramTooltipBase = "Histogram of color values. Adapts to the currently chosen channel group and error metric.";
+  auto lazyCanvasStatistics = mImageCanvas->canvasStatistics();
+  if (lazyCanvasStatistics) {
+      if (lazyCanvasStatistics->isReady()) {
+          auto statistics = lazyCanvasStatistics->get();
+          mHistogram->setNChannels(statistics->nChannels);
+          mHistogram->setValues(statistics->histogram);
+          mHistogram->setMinimum(statistics->minimum);
+          mHistogram->setMean(statistics->mean);
+          mHistogram->setMaximum(statistics->maximum);
+          mHistogram->setZero(statistics->histogramZero);
+          mHistogram->set_tooltip(tfm::format(
+              "%s\n\n"
+              "Minimum: %.3f\n"
+              "Mean: %.3f\n"
+              "Maximum: %.3f",
+              histogramTooltipBase,
+              statistics->minimum,
+              statistics->mean,
+              statistics->maximum)
+          );
+      }
+  } else {
+      mHistogram->setNChannels(1);
+      mHistogram->setValues({0.0f});
+      mHistogram->setMinimum(0);
+      mHistogram->setMean(0);
+      mHistogram->setMaximum(0);
+      mHistogram->setZero(0);
+      mHistogram->set_tooltip(
+          tfm::format("%s", histogramTooltipBase)
+      );
+  }
 }
 //}}}
 
 //{{{
-void ImageViewer::insertImage(shared_ptr<Image> image, size_t index, bool shallSelect) {
+void ImageViewer::insertImage (shared_ptr<Image> image, size_t index, bool shallSelect) {
     if (!image) {
         throw invalid_argument{"Image may not be null."};
     }
@@ -1067,7 +1079,7 @@ void ImageViewer::insertImage(shared_ptr<Image> image, size_t index, bool shallS
 }
 //}}}
 //{{{
-void ImageViewer::moveImageInList(size_t oldIndex, size_t newIndex) {
+void ImageViewer::moveImageInList (size_t oldIndex, size_t newIndex) {
     if (oldIndex == newIndex) {
         return;
     }
@@ -1096,7 +1108,7 @@ void ImageViewer::moveImageInList(size_t oldIndex, size_t newIndex) {
 }
 //}}}
 //{{{
-void ImageViewer::removeImage(shared_ptr<Image> image) {
+void ImageViewer::removeImage (shared_ptr<Image> image) {
     int id = imageId(image);
     if (id == -1) {
         return;
@@ -1170,7 +1182,7 @@ void ImageViewer::removeAllImages() {
 }
 //}}}
 //{{{
-void ImageViewer::replaceImage(shared_ptr<Image> image, shared_ptr<Image> replacement, bool shallSelect) {
+void ImageViewer::replaceImage (shared_ptr<Image> image, shared_ptr<Image> replacement, bool shallSelect) {
     if (replacement == nullptr) {
         throw std::runtime_error{"Must not replace image with nullptr."};
     }
@@ -1271,7 +1283,7 @@ void ImageViewer::updateImage(
 }
 //}}}
 //{{{
-void ImageViewer::selectImage(const shared_ptr<Image>& image, bool stopPlayback) {
+void ImageViewer::selectImage (const shared_ptr<Image>& image, bool stopPlayback) {
     if (stopPlayback) {
         mPlayButton->set_pushed(false);
     }
@@ -1360,7 +1372,7 @@ void ImageViewer::selectImage(const shared_ptr<Image>& image, bool stopPlayback)
 }
 //}}}
 //{{{
-void ImageViewer::selectGroup(string group) {
+void ImageViewer::selectGroup (string group) {
     // If the group does not exist, select the first group.
     size_t id = (size_t)max(0, groupId(group));
 
@@ -1395,7 +1407,7 @@ void ImageViewer::selectGroup(string group) {
 }
 //}}}
 //{{{
-void ImageViewer::selectReference(const shared_ptr<Image>& image) {
+void ImageViewer::selectReference (const shared_ptr<Image>& image) {
     if (!image) {
         auto& buttons = mImageButtonContainer->children();
         for (size_t i = 0; i < buttons.size(); ++i) {
@@ -1448,8 +1460,9 @@ void ImageViewer::selectReference(const shared_ptr<Image>& image) {
     }
 }
 //}}}
+
 //{{{
-void ImageViewer::setExposure(float value) {
+void ImageViewer::setExposure (float value) {
     value = round(value, 1.0f);
     mExposureSlider->set_value(value);
     mExposureLabel->set_caption(tfm::format("Exposure: %+.1f", value));
@@ -1458,7 +1471,7 @@ void ImageViewer::setExposure(float value) {
 }
 //}}}
 //{{{
-void ImageViewer::setOffset(float value) {
+void ImageViewer::setOffset (float value) {
     value = round(value, 2.0f);
     mOffsetSlider->set_value(value);
     mOffsetLabel->set_caption(tfm::format("Offset: %+.2f", value));
@@ -1467,7 +1480,7 @@ void ImageViewer::setOffset(float value) {
 }
 //}}}
 //{{{
-void ImageViewer::setGamma(float value) {
+void ImageViewer::setGamma (float value) {
     value = round(value, 2.0f);
     mGammaSlider->set_value(value);
     mGammaLabel->set_caption(tfm::format("Gamma: %+.2f", value));
@@ -1497,6 +1510,7 @@ void ImageViewer::normalizeExposureAndOffset() {
     setOffset(-minimum * factor);
 }
 //}}}
+
 //{{{
 void ImageViewer::resetImage() {
     setExposure(0);
@@ -1506,7 +1520,7 @@ void ImageViewer::resetImage() {
 }
 //}}}
 //{{{
-void ImageViewer::setTonemap(ETonemap tonemap) {
+void ImageViewer::setTonemap (ETonemap tonemap) {
     mImageCanvas->setTonemap(tonemap);
     auto& buttons = mTonemapButtonContainer->children();
     for (size_t i = 0; i < buttons.size(); ++i) {
@@ -1521,7 +1535,7 @@ void ImageViewer::setTonemap(ETonemap tonemap) {
 }
 //}}}
 //{{{
-void ImageViewer::setMetric(EMetric metric) {
+void ImageViewer::setMetric (EMetric metric) {
     mImageCanvas->setMetric(metric);
     auto& buttons = mMetricButtonContainer->children();
     for (size_t i = 0; i < buttons.size(); ++i) {
@@ -1530,8 +1544,9 @@ void ImageViewer::setMetric(EMetric metric) {
     }
 }
 //}}}
+
 //{{{
-nanogui::Vector2i ImageViewer::sizeToFitImage(const shared_ptr<Image>& image) {
+nanogui::Vector2i ImageViewer::sizeToFitImage (const shared_ptr<Image>& image) {
     if (!image) {
         return m_size;
     }
@@ -1563,8 +1578,9 @@ nanogui::Vector2i ImageViewer::sizeToFitAllImages() {
     return result;
 }
 //}}}
+
 //{{{
-bool ImageViewer::setFilter(const string& filter) {
+bool ImageViewer::setFilter (const string& filter) {
     mFilter->set_value(filter);
     mRequiresFilterUpdate = true;
     return true;
@@ -1576,21 +1592,23 @@ bool ImageViewer::useRegex() const {
 }
 //}}}
 //{{{
-void ImageViewer::setUseRegex(bool value) {
+void ImageViewer::setUseRegex (bool value) {
     mRegexButton->set_pushed(value);
     mRequiresFilterUpdate = true;
 }
 //}}}
+
 //{{{
 bool ImageViewer::watchFilesForChanges() const {
     return mWatchFilesForChangesButton->pushed();
 }
 //}}}
 //{{{
-void ImageViewer::setWatchFilesForChanges(bool value) {
+void ImageViewer::setWatchFilesForChanges (bool value) {
     mWatchFilesForChangesButton->set_pushed(value);
 }
 //}}}
+
 //{{{
 void ImageViewer::maximize() {
     glfwMaximizeWindow(m_glfw_window);
@@ -1611,7 +1629,7 @@ void ImageViewer::toggleMaximized() {
 }
 //}}}
 //{{{
-void ImageViewer::setUiVisible(bool shouldBeVisible) {
+void ImageViewer::setUiVisible (bool shouldBeVisible) {
     if (!shouldBeVisible) {
         mIsDraggingSidebar = false;
     }
@@ -1647,6 +1665,7 @@ void ImageViewer::toggleHelpWindow() {
     requestLayoutUpdate();
 }
 //}}}
+
 //{{{
 void ImageViewer::openImageDialog() {
     vector<string> paths = file_dialog(
@@ -1720,6 +1739,7 @@ void ImageViewer::saveImageDialog() {
     focusWindow();
 }
 //}}}
+
 //{{{
 void ImageViewer::updateFilter() {
     string filter = mFilter->value();
@@ -1923,8 +1943,9 @@ void ImageViewer::updateTitle() {
     set_caption(caption);
 }
 //}}}
+
 //{{{
-string ImageViewer::groupName(size_t index) {
+string ImageViewer::groupName (size_t index) {
     if (!mCurrentImage) {
         return "";
     }
@@ -1933,7 +1954,7 @@ string ImageViewer::groupName(size_t index) {
 }
 //}}}
 //{{{
-int ImageViewer::groupId(const string& groupName) const {
+int ImageViewer::groupId (const string& groupName) const {
     if (!mCurrentImage) {
         return 0;
     }
@@ -1950,13 +1971,13 @@ int ImageViewer::groupId(const string& groupName) const {
 }
 //}}}
 //{{{
-int ImageViewer::imageId(const shared_ptr<Image>& image) const {
+int ImageViewer::imageId (const shared_ptr<Image>& image) const {
     auto pos = static_cast<size_t>(distance(begin(mImages), find(begin(mImages), end(mImages), image)));
     return pos >= mImages.size() ? -1 : (int)pos;
 }
 //}}}
 //{{{
-int ImageViewer::imageId(const string& imageName) const {
+int ImageViewer::imageId (const string& imageName) const {
     auto pos = static_cast<size_t>(distance(begin(mImages), find_if(begin(mImages), end(mImages), [&](const shared_ptr<Image>& image) {
         return image->name() == imageName;
     })));
@@ -1964,7 +1985,7 @@ int ImageViewer::imageId(const string& imageName) const {
 }
 //}}}
 //{{{
-string ImageViewer::nextGroup(const string& group, EDirection direction) {
+string ImageViewer::nextGroup (const string& group, EDirection direction) {
     if (mGroupButtonContainer->child_count() == 0) {
         return mCurrentGroup;
     }
@@ -1983,7 +2004,7 @@ string ImageViewer::nextGroup(const string& group, EDirection direction) {
 }
 //}}}
 //{{{
-string ImageViewer::nthVisibleGroup(size_t n) {
+string ImageViewer::nthVisibleGroup (size_t n) {
     string lastVisible = mCurrentGroup;
     for (int i = 0; i < mGroupButtonContainer->child_count(); ++i) {
         if (mGroupButtonContainer->child_at(i)->visible()) {
@@ -1998,7 +2019,7 @@ string ImageViewer::nthVisibleGroup(size_t n) {
 }
 //}}}
 //{{{
-shared_ptr<Image> ImageViewer::nextImage(const shared_ptr<Image>& image, EDirection direction) {
+shared_ptr<Image> ImageViewer::nextImage (const shared_ptr<Image>& image, EDirection direction) {
     if (mImages.empty()) {
         return nullptr;
     }
@@ -2017,7 +2038,7 @@ shared_ptr<Image> ImageViewer::nextImage(const shared_ptr<Image>& image, EDirect
 }
 //}}}
 //{{{
-shared_ptr<Image> ImageViewer::nthVisibleImage(size_t n) {
+shared_ptr<Image> ImageViewer::nthVisibleImage (size_t n) {
     shared_ptr<Image> lastVisible = nullptr;
     for (size_t i = 0; i < mImages.size(); ++i) {
         if (mImageButtonContainer->children()[i]->visible()) {
@@ -2032,7 +2053,7 @@ shared_ptr<Image> ImageViewer::nthVisibleImage(size_t n) {
 }
 //}}}
 //{{{
-shared_ptr<Image> ImageViewer::imageByName(const string& imageName) {
+shared_ptr<Image> ImageViewer::imageByName (const string& imageName) {
     int id = imageId(imageName);
     if (id != -1) {
         return mImages[id];

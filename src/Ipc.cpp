@@ -1,5 +1,6 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 
 #ifdef _WIN32
 #   define NOMINMAX
@@ -31,9 +32,10 @@ using socklen_t = int;
 #endif
 
 using namespace std;
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
+//{{{
 enum SocketError : int {
 #ifdef _WIN32
     Again = EAGAIN,
@@ -45,14 +47,19 @@ enum SocketError : int {
     WouldBlock = EWOULDBLOCK,
 #endif
 };
+//}}}
 
+// IpcPacket
+//{{{
 IpcPacket::IpcPacket(const char* data, size_t length) {
     if (length <= 0) {
         throw runtime_error{"Cannot construct an IPC packet from no data."};
     }
     mPayload.assign(data, data+length);
 }
+//}}}
 
+//{{{
 void IpcPacket::setOpenImage(const string& imagePath, const string& channelSelector, bool grabFocus) {
     OStream payload{mPayload};
     payload << Type::OpenImageV2;
@@ -60,20 +67,23 @@ void IpcPacket::setOpenImage(const string& imagePath, const string& channelSelec
     payload << imagePath;
     payload << channelSelector;
 }
-
+//}}}
+//{{{
 void IpcPacket::setReloadImage(const string& imageName, bool grabFocus) {
     OStream payload{mPayload};
     payload << Type::ReloadImage;
     payload << grabFocus;
     payload << imageName;
 }
-
+//}}}
+//{{{
 void IpcPacket::setCloseImage(const string& imageName) {
     OStream payload{mPayload};
     payload << Type::CloseImage;
     payload << imageName;
 }
-
+//}}}
+//{{{
 void IpcPacket::setUpdateImage(const string& imageName, bool grabFocus, const std::vector<IpcPacket::ChannelDesc>& channelDescs, int32_t x, int32_t y, int32_t width, int32_t height, const vector<float>& stridedImageData) {
     if (channelDescs.empty()) {
         throw runtime_error{"UpdateImage IPC packet must have a non-zero channel count."};
@@ -113,7 +123,8 @@ void IpcPacket::setUpdateImage(const string& imageName, bool grabFocus, const st
 
     payload << stridedImageData;
 }
-
+//}}}
+//{{{
 void IpcPacket::setCreateImage(const string& imageName, bool grabFocus, int32_t width, int32_t height, int32_t nChannels, const std::vector<std::string>& channelNames) {
     if ((int32_t)channelNames.size() != nChannels) {
         throw runtime_error{"CreateImage IPC packet's channel names size does not match number of channels."};
@@ -127,7 +138,9 @@ void IpcPacket::setCreateImage(const string& imageName, bool grabFocus, int32_t 
     payload << nChannels;
     payload << channelNames;
 }
+//}}}
 
+//{{{
 IpcPacketOpenImage IpcPacket::interpretAsOpenImage() const {
     IpcPacketOpenImage result;
     IStream payload{mPayload};
@@ -163,7 +176,8 @@ IpcPacketOpenImage IpcPacket::interpretAsOpenImage() const {
 
     return result;
 }
-
+//}}}
+//{{{
 IpcPacketReloadImage IpcPacket::interpretAsReloadImage() const {
     IpcPacketReloadImage result;
     IStream payload{mPayload};
@@ -178,7 +192,8 @@ IpcPacketReloadImage IpcPacket::interpretAsReloadImage() const {
     payload >> result.imageName;
     return result;
 }
-
+//}}}
+//{{{
 IpcPacketCloseImage IpcPacket::interpretAsCloseImage() const {
     IpcPacketCloseImage result;
     IStream payload{mPayload};
@@ -192,7 +207,8 @@ IpcPacketCloseImage IpcPacket::interpretAsCloseImage() const {
     payload >> result.imageName;
     return result;
 }
-
+//}}}
+//{{{
 IpcPacketUpdateImage IpcPacket::interpretAsUpdateImage() const {
     IpcPacketUpdateImage result;
     IStream payload{mPayload};
@@ -255,7 +271,8 @@ IpcPacketUpdateImage IpcPacket::interpretAsUpdateImage() const {
 
     return result;
 }
-
+//}}}
+//{{{
 IpcPacketCreateImage IpcPacket::interpretAsCreateImage() const {
     IpcPacketCreateImage result;
     IStream payload{mPayload};
@@ -276,8 +293,9 @@ IpcPacketCreateImage IpcPacket::interpretAsCreateImage() const {
 
     return result;
 }
+//}}}
 
-
+//{{{
 static void makeSocketNonBlocking(Ipc::socket_t socketFd) {
 #ifdef _WIN32
     u_long mode = 1;
@@ -291,7 +309,8 @@ static void makeSocketNonBlocking(Ipc::socket_t socketFd) {
     }
 #endif
 }
-
+//}}}
+//{{{
 static int closeSocket(Ipc::socket_t socket) {
 #ifdef _WIN32
     return closesocket(socket);
@@ -299,7 +318,10 @@ static int closeSocket(Ipc::socket_t socket) {
     return close(socket);
 #endif
 }
+//}}}
 
+// Ipc
+//{{{
 Ipc::Ipc(const string& hostname) : mSocketFd{INVALID_SOCKET} {
     mLockName = ".tev-lock."s + hostname;
 
@@ -369,7 +391,8 @@ Ipc::Ipc(const string& hostname) : mSocketFd{INVALID_SOCKET} {
         mIsPrimaryInstance = true;
     }
 }
-
+//}}}
+//{{{
 Ipc::~Ipc() {
     // Lock
 #ifdef _WIN32
@@ -400,7 +423,9 @@ Ipc::~Ipc() {
     WSACleanup();
 #endif
 }
+//}}}
 
+//{{{
 bool Ipc::attemptToBecomePrimaryInstance() {
 #ifdef _WIN32
     // Make sure at most one instance of tev is running
@@ -478,7 +503,9 @@ bool Ipc::attemptToBecomePrimaryInstance() {
     tlog::success() << "Initialized IPC, listening on " << mIp << ":" << mPort;
     return true;
 }
+//}}}
 
+//{{{
 void Ipc::sendToPrimaryInstance(const IpcPacket& message) {
     if (mIsPrimaryInstance) {
         throw runtime_error{"Must be a secondary instance to send to the primary instance."};
@@ -489,7 +516,8 @@ void Ipc::sendToPrimaryInstance(const IpcPacket& message) {
         throw runtime_error{tfm::format("send() failed: %s", errorString(lastSocketError()))};
     }
 }
-
+//}}}
+//{{{
 void Ipc::receiveFromSecondaryInstance(function<void(const IpcPacket&)> callback) {
     if (!mIsPrimaryInstance) {
         throw runtime_error{"Must be the primary instance to receive from a secondary instance."};
@@ -525,7 +553,9 @@ void Ipc::receiveFromSecondaryInstance(function<void(const IpcPacket&)> callback
         }
     }
 }
+//}}}
 
+//{{{
 Ipc::SocketConnection::SocketConnection(Ipc::socket_t fd, const string& name)
 : mSocketFd{fd}, mName{name}
 {
@@ -536,7 +566,8 @@ Ipc::SocketConnection::SocketConnection(Ipc::socket_t fd, const string& name)
     // 1 MiB is a good default buffer size. If larger is required, it'll be automatizally resized.
     mBuffer.resize(1024 * 1024);
 }
-
+//}}}
+//{{{
 void Ipc::SocketConnection::service(function<void(const IpcPacket&)> callback) {
     if (isClosed()) {
         // Client disconnected, so don't bother.
@@ -604,16 +635,20 @@ void Ipc::SocketConnection::service(function<void(const IpcPacket&)> callback) {
         }
     }
 }
-
+//}}}
+//{{{
 void Ipc::SocketConnection::close() {
     if (!isClosed()) {
         closeSocket(mSocketFd);
         mSocketFd = INVALID_SOCKET;
     }
 }
+//}}}
 
+//{{{
 bool Ipc::SocketConnection::isClosed() const {
     return mSocketFd == INVALID_SOCKET;
 }
+//}}}
 
 TEV_NAMESPACE_END

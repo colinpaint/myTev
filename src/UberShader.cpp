@@ -1,15 +1,18 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 
 #include <tev/FalseColor.h>
 #include <tev/UberShader.h>
 
 using namespace nanogui;
 using namespace std;
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
-UberShader::UberShader(RenderPass* renderPass) {
+//{{{
+UberShader::UberShader (RenderPass* renderPass) {
+
     try {
 #if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
 #   if defined(NANOGUI_USE_OPENGL)
@@ -403,10 +406,12 @@ UberShader::UberShader(RenderPass* renderPass) {
     };
     mColorMap->upload((uint8_t*)fcd.data());
 }
+//}}}
+UberShader::~UberShader() {}
 
-UberShader::~UberShader() { }
+//{{{
+void UberShader::draw (const Vector2f& pixelSize, const Vector2f& checkerSize) {
 
-void UberShader::draw(const Vector2f& pixelSize, const Vector2f& checkerSize) {
     draw(
         pixelSize, checkerSize,
         nullptr, Matrix3f{0.0f},
@@ -414,101 +419,102 @@ void UberShader::draw(const Vector2f& pixelSize, const Vector2f& checkerSize) {
         ETonemap::SRGB
     );
 }
-
-void UberShader::draw(
-    const Vector2f& pixelSize,
-    const Vector2f& checkerSize,
-    Texture* textureImage,
-    const Matrix3f& transformImage,
-    float exposure,
-    float offset,
-    float gamma,
-    bool clipToLdr,
-    ETonemap tonemap
-) {
-    draw(
-        pixelSize, checkerSize,
+//}}}
+//{{{
+void UberShader::draw (const Vector2f& pixelSize,
+                       const Vector2f& checkerSize,
+                       Texture* textureImage,
+                       const Matrix3f& transformImage,
+                       float exposure,
+                       float offset,
+                       float gamma,
+                       bool clipToLdr,
+                       ETonemap tonemap) {
+  draw (pixelSize, checkerSize,
         textureImage, transformImage,
         nullptr, Matrix3f{0.0f},
         exposure, offset, gamma, clipToLdr,
-        tonemap, EMetric::Error
-    );
-}
+        tonemap, EMetric::Error);
+  }
+//}}}
+//{{{
+void UberShader::draw (const Vector2f& pixelSize,
+                       const Vector2f& checkerSize,
+                       Texture* textureImage,
+                       const Matrix3f& transformImage,
+                       Texture* textureReference,
+                       const Matrix3f& transformReference,
+                       float exposure,
+                       float offset,
+                       float gamma,
+                       bool clipToLdr,
+                       ETonemap tonemap,
+                       EMetric metric) {
 
-void UberShader::draw(
-    const Vector2f& pixelSize,
-    const Vector2f& checkerSize,
-    Texture* textureImage,
-    const Matrix3f& transformImage,
-    Texture* textureReference,
-    const Matrix3f& transformReference,
-    float exposure,
-    float offset,
-    float gamma,
-    bool clipToLdr,
-    ETonemap tonemap,
-    EMetric metric
-) {
-    bool hasImage = textureImage;
-    if (!hasImage) {
-        // Just to have _some_ valid texture to bind. Will be ignored.
-        textureImage = mColorMap.get();
+  bool hasImage = textureImage;
+  if (!hasImage) {
+    // Just to have _some_ valid texture to bind. Will be ignored.
+    textureImage = mColorMap.get();
     }
 
-    bool hasReference = textureReference;
-    if (!hasReference) {
-        // Just to have _some_ valid texture to bind. Will be ignored.
-        textureReference = textureImage;
+  bool hasReference = textureReference;
+  if (!hasReference) {
+    // Just to have _some_ valid texture to bind. Will be ignored.
+    textureReference = textureImage;
     }
 
-    bindCheckerboardData(pixelSize, checkerSize);
-    bindImageData(textureImage, transformImage, exposure, offset, gamma, tonemap);
-    bindReferenceData(textureReference, transformReference, metric);
-    mShader->set_uniform("hasImage", hasImage);
-    mShader->set_uniform("hasReference", hasReference);
-    mShader->set_uniform("clipToLdr", clipToLdr);
+  bindCheckerboardData (pixelSize, checkerSize);
+  bindImageData (textureImage, transformImage, exposure, offset, gamma, tonemap);
+  bindReferenceData (textureReference, transformReference, metric);
+  mShader->set_uniform ("hasImage", hasImage);
+  mShader->set_uniform ("hasReference", hasReference);
+  mShader->set_uniform ("clipToLdr", clipToLdr);
 
-    mShader->begin();
-    mShader->draw_array(Shader::PrimitiveType::Triangle, 0, 6, true);
-    mShader->end();
-}
+  mShader->begin();
+  mShader->draw_array (Shader::PrimitiveType::Triangle, 0, 6, true);
+  mShader->end();
+ }
+//}}}
 
-void UberShader::bindCheckerboardData(const Vector2f& pixelSize, const Vector2f& checkerSize) {
-    mShader->set_uniform("pixelSize", pixelSize);
-    mShader->set_uniform("checkerSize", checkerSize);
-    mShader->set_uniform("bgColor", mBackgroundColor);
-}
+//{{{
+void UberShader::bindCheckerboardData (const Vector2f& pixelSize, const Vector2f& checkerSize) {
 
-void UberShader::bindImageData(
-    Texture* textureImage,
-    const Matrix3f& transformImage,
-    float exposure,
-    float offset,
-    float gamma,
-    ETonemap tonemap
-) {
-    mShader->set_texture("image", textureImage);
-    mShader->set_uniform("imageScale", Vector2f{transformImage.m[0][0], transformImage.m[1][1]});
-    mShader->set_uniform("imageOffset", Vector2f{transformImage.m[2][0], transformImage.m[2][1]});
+  mShader->set_uniform("pixelSize", pixelSize);
+  mShader->set_uniform("checkerSize", checkerSize);
+  mShader->set_uniform("bgColor", mBackgroundColor);
+  }
+//}}}
+//{{{
+void UberShader::bindImageData (Texture* textureImage,
+                                const Matrix3f& transformImage,
+                                float exposure,
+                                float offset,
+                                float gamma,
+                                ETonemap tonemap) {
 
-    mShader->set_uniform("exposure", exposure);
-    mShader->set_uniform("offset", offset);
-    mShader->set_uniform("gamma", gamma);
-    mShader->set_uniform("tonemap", static_cast<int>(tonemap));
+  mShader->set_texture("image", textureImage);
+  mShader->set_uniform("imageScale", Vector2f{transformImage.m[0][0], transformImage.m[1][1]});
+  mShader->set_uniform("imageOffset", Vector2f{transformImage.m[2][0], transformImage.m[2][1]});
 
-    mShader->set_texture("colormap", mColorMap.get());
-}
+  mShader->set_uniform("exposure", exposure);
+  mShader->set_uniform("offset", offset);
+  mShader->set_uniform("gamma", gamma);
+  mShader->set_uniform("tonemap", static_cast<int>(tonemap));
 
-void UberShader::bindReferenceData(
-    Texture* textureReference,
-    const Matrix3f& transformReference,
-    EMetric metric
-) {
-    mShader->set_texture("reference", textureReference);
-    mShader->set_uniform("referenceScale", Vector2f{transformReference.m[0][0], transformReference.m[1][1]});
-    mShader->set_uniform("referenceOffset", Vector2f{transformReference.m[2][0], transformReference.m[2][1]});
+  mShader->set_texture("colormap", mColorMap.get());
+  }
+//}}}
+//{{{
+void UberShader::bindReferenceData (Texture* textureReference,
+                                    const Matrix3f& transformReference,
+                                    EMetric metric) {
 
-    mShader->set_uniform("metric", static_cast<int>(metric));
-}
+  mShader->set_texture("reference", textureReference);
+  mShader->set_uniform("referenceScale", Vector2f{transformReference.m[0][0], transformReference.m[1][1]});
+  mShader->set_uniform("referenceOffset", Vector2f{transformReference.m[2][0], transformReference.m[2][1]});
+
+   mShader->set_uniform("metric", static_cast<int>(metric));
+  }
+//}}}
 
 TEV_NAMESPACE_END

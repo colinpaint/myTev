@@ -1,6 +1,6 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
-
+//{{{  includes
 #include <tev/HelpWindow.h>
 
 #include <nanogui/button.h>
@@ -13,21 +13,13 @@
 
 using namespace nanogui;
 using namespace std;
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
-#ifdef __APPLE__
-string HelpWindow::COMMAND = "Cmd";
-#else
 string HelpWindow::COMMAND = "Ctrl";
-#endif
-
-#ifdef __APPLE__
-string HelpWindow::ALT = "Opt";
-#else
 string HelpWindow::ALT = "Alt";
-#endif
 
+//{{{
 HelpWindow::HelpWindow(Widget *parent, bool supportsHdr, function<void()> closeCallback)
     : Window{parent, "Help"}, mCloseCallback{closeCallback} {
 
@@ -181,7 +173,8 @@ HelpWindow::HelpWindow(Widget *parent, bool supportsHdr, function<void()> closeC
         tabWidget->set_selected_id(id);
     });
 }
-
+//}}}
+//{{{
 bool HelpWindow::keyboard_event(int key, int scancode, int action, int modifiers) {
     if (Window::keyboard_event(key, scancode, action, modifiers)) {
         return true;
@@ -194,5 +187,6 @@ bool HelpWindow::keyboard_event(int key, int scancode, int action, int modifiers
 
     return false;
 }
+//}}}
 
 TEV_NAMESPACE_END

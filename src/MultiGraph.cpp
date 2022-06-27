@@ -2,7 +2,7 @@
 // by Wenzel Jakob <wenzel.jakob@epfl.ch> and based on the NanoVG demo application
 // by Mikko Mononen. Modifications were developed by Thomas Müller <thomas94@gmx.net>.
 // This file is published under the BSD 3-Clause License within the LICENSE file.
-
+//{{{  includes
 #include <tev/MultiGraph.h>
 
 #include <nanogui/theme.h>
@@ -12,21 +12,24 @@
 
 using namespace nanogui;
 using namespace std;
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
-MultiGraph::MultiGraph(Widget *parent, const std::string &caption)
+//{{{
+MultiGraph::MultiGraph (Widget *parent, const std::string &caption)
 : Widget(parent), mCaption(caption) {
     mBackgroundColor = Color(20, 128);
     mForegroundColor = Color(255, 192, 0, 128);
     mTextColor = Color(240, 192);
 }
-
-Vector2i MultiGraph::preferred_size(NVGcontext *) const {
+//}}}
+//{{{
+Vector2i MultiGraph::preferred_size (NVGcontext *) const {
     return Vector2i(180, 80);
 }
-
-void MultiGraph::draw(NVGcontext *ctx) {
+//}}}
+//{{{
+void MultiGraph::draw (NVGcontext *ctx) {
     Widget::draw(ctx);
 
     NVGpaint bg = nvgBoxGradient(ctx,
@@ -136,5 +139,6 @@ void MultiGraph::draw(NVGcontext *ctx) {
     nvgStrokeColor(ctx, Color(0, 48));
     nvgStroke(ctx);
 }
+//}}}
 
 TEV_NAMESPACE_END

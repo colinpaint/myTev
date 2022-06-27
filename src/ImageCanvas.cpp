@@ -23,7 +23,7 @@ using namespace std;
 TEV_NAMESPACE_BEGIN
 
 //{{{
-ImageCanvas::ImageCanvas(Widget* parent, float pixelRatio)
+ImageCanvas::ImageCanvas (Widget* parent, float pixelRatio)
 : Canvas{parent, 1, false, false, false}, mPixelRatio{pixelRatio} {
     mShader.reset(new UberShader{render_pass()});
     set_draw_border(false);
@@ -31,7 +31,7 @@ ImageCanvas::ImageCanvas(Widget* parent, float pixelRatio)
 //}}}
 
 //{{{
-bool ImageCanvas::scroll_event(const Vector2i& p, const Vector2f& rel) {
+bool ImageCanvas::scroll_event (const Vector2i& p, const Vector2f& rel) {
     if (Canvas::scroll_event(p, rel)) {
         return true;
     }
@@ -102,7 +102,7 @@ void ImageCanvas::draw_contents() {
 }
 //}}}
 //{{{
-void ImageCanvas::drawPixelValuesAsText(NVGcontext* ctx) {
+void ImageCanvas::drawPixelValuesAsText (NVGcontext* ctx) {
     TEV_ASSERT(mImage, "Can only draw pixel values if there exists an image.");
 
     auto texToNano = textureToNanogui(mImage.get());
@@ -189,7 +189,7 @@ void ImageCanvas::drawPixelValuesAsText(NVGcontext* ctx) {
 }
 //}}}
 //{{{
-void ImageCanvas::drawCoordinateSystem(NVGcontext* ctx) {
+void ImageCanvas::drawCoordinateSystem (NVGcontext* ctx) {
     TEV_ASSERT(mImage, "Can only draw coordinate system if there exists an image.");
 
     auto displayWindowToNano = displayWindowToNanogui(mImage.get());
@@ -283,7 +283,7 @@ void ImageCanvas::drawCoordinateSystem(NVGcontext* ctx) {
 }
 //}}}
 //{{{
-void ImageCanvas::drawEdgeShadows(NVGcontext* ctx) {
+void ImageCanvas::drawEdgeShadows (NVGcontext* ctx) {
     int ds = m_theme->m_window_drop_shadow_size, cr = m_theme->m_window_corner_radius;
     NVGpaint shadowPaint = nvgBoxGradient(
         ctx, m_pos.x(), m_pos.y(), m_size.x(), m_size.y(), cr * 2, ds * 2,
@@ -302,7 +302,7 @@ void ImageCanvas::drawEdgeShadows(NVGcontext* ctx) {
 }
 //}}}
 //{{{
-void ImageCanvas::draw(NVGcontext* ctx) {
+void ImageCanvas::draw (NVGcontext* ctx) {
     Canvas::draw(ctx);
 
     if (mImage) {
@@ -323,12 +323,12 @@ void ImageCanvas::draw(NVGcontext* ctx) {
 //}}}
 
 //{{{
-void ImageCanvas::translate(const Vector2f& amount) {
+void ImageCanvas::translate (const Vector2f& amount) {
     mTransform = Matrix3f::translate(amount) * mTransform;
 }
 //}}}
 //{{{
-void ImageCanvas::scale(float amount, const Vector2f& origin) {
+void ImageCanvas::scale (float amount, const Vector2f& origin) {
     float scaleFactor = pow(1.1f, amount);
 
     // Use the current cursor position as the origin to scale around.
@@ -342,13 +342,13 @@ void ImageCanvas::scale(float amount, const Vector2f& origin) {
 }
 //}}}
 //{{{
-float ImageCanvas::applyExposureAndOffset(float value) const {
+float ImageCanvas::applyExposureAndOffset (float value) const {
     return pow(2.0f, mExposure) * value + mOffset;
 }
 //}}}
 
 //{{{
-Vector2i ImageCanvas::getImageCoords(const Image& image, Vector2i nanoPos) {
+Vector2i ImageCanvas::getImageCoords (const Image& image, Vector2i nanoPos) {
     Vector2f imagePos = inverse(textureToNanogui(&image)) * Vector2f{nanoPos};
     return {
         static_cast<int>(floor(imagePos.x())),
@@ -357,7 +357,7 @@ Vector2i ImageCanvas::getImageCoords(const Image& image, Vector2i nanoPos) {
 }
 //}}}
 //{{{
-void ImageCanvas::getValuesAtNanoPos(Vector2i nanoPos, vector<float>& result, const vector<string>& channels) {
+void ImageCanvas::getValuesAtNanoPos (Vector2i nanoPos, vector<float>& result, const vector<string>& channels) {
     result.clear();
     if (!mImage) {
         return;
@@ -386,7 +386,7 @@ void ImageCanvas::getValuesAtNanoPos(Vector2i nanoPos, vector<float>& result, co
 //}}}
 
 //{{{
-Vector3f ImageCanvas::applyTonemap(const Vector3f& value, float gamma, ETonemap tonemap) {
+Vector3f ImageCanvas::applyTonemap (const Vector3f& value, float gamma, ETonemap tonemap) {
     Vector3f result;
     switch (tonemap) {
         case ETonemap::SRGB:
@@ -423,7 +423,7 @@ Vector3f ImageCanvas::applyTonemap(const Vector3f& value, float gamma, ETonemap 
 }
 //}}}
 //{{{
-float ImageCanvas::applyMetric(float image, float reference, EMetric metric) {
+float ImageCanvas::applyMetric (float image, float reference, EMetric metric) {
     float diff = image - reference;
     switch (metric) {
         case EMetric::Error:                 return diff;
@@ -438,7 +438,7 @@ float ImageCanvas::applyMetric(float image, float reference, EMetric metric) {
 //}}}
 
 //{{{
-void ImageCanvas::fitImageToScreen(const Image& image) {
+void ImageCanvas::fitImageToScreen (const Image& image) {
     Vector2f nanoguiImageSize = Vector2f{image.displayWindow().size()} / mPixelRatio;
     mTransform = Matrix3f::scale(Vector2f{min(m_size.x() / nanoguiImageSize.x(), m_size.y() / nanoguiImageSize.y())});
 }
@@ -450,7 +450,7 @@ void ImageCanvas::resetTransform() {
 //}}}
 
 //{{{
-std::vector<float> ImageCanvas::getHdrImageData(bool divideAlpha, int priority) const {
+std::vector<float> ImageCanvas::getHdrImageData (bool divideAlpha, int priority) const {
     std::vector<float> result;
 
     if (!mImage) {
@@ -501,7 +501,7 @@ std::vector<float> ImageCanvas::getHdrImageData(bool divideAlpha, int priority) 
 }
 //}}}
 //{{{
-std::vector<char> ImageCanvas::getLdrImageData(bool divideAlpha, int priority) const {
+std::vector<char> ImageCanvas::getLdrImageData (bool divideAlpha, int priority) const {
     std::vector<char> result;
 
     if (!mImage) {
@@ -533,7 +533,7 @@ std::vector<char> ImageCanvas::getLdrImageData(bool divideAlpha, int priority) c
 }
 //}}}
 //{{{
-void ImageCanvas::saveImage(const fs::path& path) const {
+void ImageCanvas::saveImage (const fs::path& path) const {
     if (!mImage) {
         return;
     }
@@ -630,7 +630,7 @@ shared_ptr<Lazy<shared_ptr<CanvasStatistics>>> ImageCanvas::canvasStatistics() {
 }
 //}}}
 //{{{
-void ImageCanvas::purgeCanvasStatistics(int imageId) {
+void ImageCanvas::purgeCanvasStatistics (int imageId) {
     for (const auto& key : mImageIdToCanvasStatisticsKey[imageId]) {
         mCanvasStatistics.erase(key);
     }
@@ -639,209 +639,207 @@ void ImageCanvas::purgeCanvasStatistics(int imageId) {
 }
 //}}}
 //{{{
-vector<Channel> ImageCanvas::channelsFromImages(
-    shared_ptr<Image> image,
-    shared_ptr<Image> reference,
-    const string& requestedChannelGroup,
-    EMetric metric,
-    int priority
-) {
-    if (!image) {
-        return {};
+vector<Channel> ImageCanvas::channelsFromImages (shared_ptr<Image> image,
+                                                 shared_ptr<Image> reference,
+                                                 const string& requestedChannelGroup,
+                                                 EMetric metric,
+                                                 int priority) {
+  if (!image)
+    return {};
+
+  vector<Channel> result;
+  auto channelNames = image->channelsInGroup(requestedChannelGroup);
+  for (size_t i = 0; i < channelNames.size(); ++i) {
+    result.emplace_back(toUpper(Channel::tail(channelNames[i])), image->size());
     }
 
-    vector<Channel> result;
-    auto channelNames = image->channelsInGroup(requestedChannelGroup);
-    for (size_t i = 0; i < channelNames.size(); ++i) {
-        result.emplace_back(toUpper(Channel::tail(channelNames[i])), image->size());
-    }
+  bool onlyAlpha = all_of(begin(result), end(result), [](const Channel& c) { return c.name() == "A"; });
 
-    bool onlyAlpha = all_of(begin(result), end(result), [](const Channel& c) { return c.name() == "A"; });
+  if (!reference) {
+      ThreadPool::global().parallelFor(0, (int)channelNames.size(), [&](int i) {
+          const auto* chan = image->channel(channelNames[i]);
+          for (size_t j = 0; j < chan->numPixels(); ++j) {
+              result[i].at(j) = chan->eval(j);
+          }
+      }, priority);
 
-    if (!reference) {
-        ThreadPool::global().parallelFor(0, (int)channelNames.size(), [&](int i) {
-            const auto* chan = image->channel(channelNames[i]);
-            for (size_t j = 0; j < chan->numPixels(); ++j) {
-                result[i].at(j) = chan->eval(j);
-            }
-        }, priority);
-    } else {
-        Vector2i size = Vector2i{image->size().x(), image->size().y()};
-        Vector2i offset = (Vector2i{reference->size().x(), reference->size().y()} - size) / 2;
-        auto referenceChannels = reference->channelsInGroup(requestedChannelGroup);
+  } else {
+      Vector2i size = Vector2i{image->size().x(), image->size().y()};
+      Vector2i offset = (Vector2i{reference->size().x(), reference->size().y()} - size) / 2;
+      auto referenceChannels = reference->channelsInGroup(requestedChannelGroup);
 
-        ThreadPool::global().parallelFor<size_t>(0, channelNames.size(), [&](size_t i) {
-            const auto* chan = image->channel(channelNames[i]);
-            bool isAlpha = !onlyAlpha && result[i].name() == "A";
+      ThreadPool::global().parallelFor<size_t>(0, channelNames.size(), [&](size_t i) {
+          const auto* chan = image->channel(channelNames[i]);
+          bool isAlpha = !onlyAlpha && result[i].name() == "A";
 
-            if (i < referenceChannels.size()) {
-                const Channel* referenceChan = reference->channel(referenceChannels[i]);
-                if (isAlpha) {
-                    for (int y = 0; y < size.y(); ++y) {
-                        for (int x = 0; x < size.x(); ++x) {
-                            result[i].at({x, y}) = 0.5f * (
-                                chan->eval({x, y}) +
-                                referenceChan->eval({x + offset.x(), y + offset.y()})
-                            );
-                        }
-                    }
-                } else {
-                    for (int y = 0; y < size.y(); ++y) {
-                        for (int x = 0; x < size.x(); ++x) {
-                            result[i].at({x, y}) = ImageCanvas::applyMetric(
-                                chan->eval({x, y}),
-                                referenceChan->eval({x + offset.x(), y + offset.y()}),
-                                metric
-                            );
-                        }
-                    }
-                }
-            } else {
-                if (isAlpha) {
-                    for (int y = 0; y < size.y(); ++y) {
-                        for (int x = 0; x < size.x(); ++x) {
-                            result[i].at({x, y}) = chan->eval({x, y});
-                        }
-                    }
-                } else {
-                    for (int y = 0; y < size.y(); ++y) {
-                        for (int x = 0; x < size.x(); ++x) {
-                            result[i].at({x, y}) = ImageCanvas::applyMetric(chan->eval({x, y}), 0, metric);
-                        }
-                    }
-                }
-            }
-        }, priority);
-    }
+          if (i < referenceChannels.size()) {
+              const Channel* referenceChan = reference->channel(referenceChannels[i]);
+              if (isAlpha) {
+                  for (int y = 0; y < size.y(); ++y) {
+                      for (int x = 0; x < size.x(); ++x) {
+                          result[i].at({x, y}) = 0.5f * (
+                              chan->eval({x, y}) +
+                              referenceChan->eval({x + offset.x(), y + offset.y()})
+                          );
+                      }
+                  }
+              } else {
+                  for (int y = 0; y < size.y(); ++y) {
+                      for (int x = 0; x < size.x(); ++x) {
+                          result[i].at({x, y}) = ImageCanvas::applyMetric(
+                              chan->eval({x, y}),
+                              referenceChan->eval({x + offset.x(), y + offset.y()}),
+                              metric
+                          );
+                      }
+                  }
+              }
+          } else {
+              if (isAlpha) {
+                  for (int y = 0; y < size.y(); ++y) {
+                      for (int x = 0; x < size.x(); ++x) {
+                          result[i].at({x, y}) = chan->eval({x, y});
+                      }
+                  }
+              } else {
+                  for (int y = 0; y < size.y(); ++y) {
+                      for (int x = 0; x < size.x(); ++x) {
+                          result[i].at({x, y}) = ImageCanvas::applyMetric(chan->eval({x, y}), 0, metric);
+                      }
+                  }
+              }
+          }
+      }, priority);
+  }
 
-    return result;
+  return result;
 }
 //}}}
 //{{{
-Task<shared_ptr<CanvasStatistics>> ImageCanvas::computeCanvasStatistics(
-    std::shared_ptr<Image> image,
-    std::shared_ptr<Image> reference,
-    const string& requestedChannelGroup,
-    EMetric metric,
-    int priority
-) {
-    auto flattened = channelsFromImages(image, reference, requestedChannelGroup, metric, priority);
+Task<shared_ptr<CanvasStatistics>> ImageCanvas::computeCanvasStatistics (std::shared_ptr<Image> image,
+                                                                         std::shared_ptr<Image> reference,
+                                                                         const string& requestedChannelGroup,
+                                                                         EMetric metric,
+                                                                         int priority) {
 
-    float mean = 0;
-    float maximum = -numeric_limits<float>::infinity();
-    float minimum = numeric_limits<float>::infinity();
+  auto flattened = channelsFromImages (image, reference, requestedChannelGroup, metric, priority);
 
-    const Channel* alphaChannel = nullptr;
-    // Only treat the alpha channel specially if it is not the only channel of the image.
-    if (!all_of(begin(flattened), end(flattened), [](const Channel& c) { return c.name() == "A"; })) {
-        for (auto& channel : flattened) {
-            if (channel.name() == "A") {
-                alphaChannel = &channel;
-                // The following code expects the alpha channel to be the last, so let's make sure it is.
-                if (alphaChannel != &flattened.back()) {
-                    swap(channel, flattened.back());
-                }
-                break;
-            }
+  float mean = 0;
+  float maximum = -numeric_limits<float>::infinity();
+  float minimum = numeric_limits<float>::infinity();
+
+  const Channel* alphaChannel = nullptr;
+  // Only treat the alpha channel specially if it is not the only channel of the image.
+  if (!all_of (begin (flattened), end (flattened), [](const Channel& c) { return c.name() == "A"; })) {
+    for (auto& channel : flattened) {
+      if (channel.name() == "A") {
+        alphaChannel = &channel;
+        // The following code expects the alpha channel to be the last, so let's make sure it is.
+        if (alphaChannel != &flattened.back()) {
+          swap(channel, flattened.back());
+          }
+        break;
         }
+      }
     }
 
-    auto result = make_shared<CanvasStatistics>();
+  auto result = make_shared<CanvasStatistics>();
 
-    int nChannels = result->nChannels = alphaChannel ? (int)flattened.size() - 1 : (int)flattened.size();
+  int nChannels = result->nChannels = alphaChannel ? (int)flattened.size() - 1 : (int)flattened.size();
 
-    for (int i = 0; i < nChannels; ++i) {
-        const auto& channel = flattened[i];
-        auto [cmin, cmax, cmean] = channel.minMaxMean();
-        mean += cmean;
-        maximum = max(maximum, cmax);
-        minimum = min(minimum, cmin);
+  for (int i = 0; i < nChannels; ++i) {
+    const auto& channel = flattened[i];
+    auto [cmin, cmax, cmean] = channel.minMaxMean();
+    mean += cmean;
+    maximum = max(maximum, cmax);
+    minimum = min(minimum, cmin);
     }
 
-    result->mean = nChannels > 0 ? (mean / nChannels) : 0;
-    result->maximum = maximum;
-    result->minimum = minimum;
+  result->mean = nChannels > 0 ? (mean / nChannels) : 0;
+  result->maximum = maximum;
+  result->minimum = minimum;
 
-    // Now that we know the maximum and minimum value we can define our histogram bin size.
-    static const int NUM_BINS = 400;
-    result->histogram.resize(NUM_BINS*nChannels);
+  // Now that we know the maximum and minimum value we can define our histogram bin size.
+  static const int NUM_BINS = 400;
+  result->histogram.resize(NUM_BINS*nChannels);
 
-    // We're going to draw our histogram in log space.
-    static const float addition = 0.001f;
-    static const float smallest = log(addition);
-    auto symmetricLog = [](float val) {
-        return val > 0 ? (log(val + addition) - smallest) : -(log(-val + addition) - smallest);
-    };
-    auto symmetricLogInverse = [](float val) {
-        return val > 0 ? (exp(val + smallest) - addition) : -(exp(-val + smallest) - addition);
+  // We're going to draw our histogram in log space.
+  static const float addition = 0.001f;
+  static const float smallest = log(addition);
+
+  auto symmetricLog = [](float val) {
+    return val > 0 ? (log(val + addition) - smallest) : -(log(-val + addition) - smallest);
     };
 
-    float minLog = symmetricLog(minimum);
-    float diffLog = symmetricLog(maximum) - minLog;
-
-    auto valToBin = [&](float val) {
-        return clamp((int)(NUM_BINS * (symmetricLog(val) - minLog) / diffLog), 0, NUM_BINS - 1);
+  auto symmetricLogInverse = [](float val) {
+    return val > 0 ? (exp(val + smallest) - addition) : -(exp(-val + smallest) - addition);
     };
 
-    result->histogramZero = valToBin(0);
+  float minLog = symmetricLog(minimum);
+  float diffLog = symmetricLog(maximum) - minLog;
 
-    auto binToVal = [&](float val) {
-        return symmetricLogInverse((diffLog * val / NUM_BINS) + minLog);
+  auto valToBin = [&](float val) {
+    return clamp((int)(NUM_BINS * (symmetricLog(val) - minLog) / diffLog), 0, NUM_BINS - 1);
     };
 
-    // In the strange case that we have 0 channels, early return, because the histogram makes no sense.
-    if (nChannels == 0) {
-        co_return result;
+  result->histogramZero = valToBin(0);
+
+  auto binToVal = [&](float val) {
+    return symmetricLogInverse((diffLog * val / NUM_BINS) + minLog);
+    };
+
+  // In the strange case that we have 0 channels, early return, because the histogram makes no sense.
+  if (nChannels == 0) {
+    co_return result;
     }
 
-    auto numPixels = image->numPixels();
-    std::vector<int> indices(numPixels * nChannels);
+  auto numPixels = image->numPixels();
+  std::vector<int> indices(numPixels * nChannels);
 
-    vector<Task<void>> tasks;
-    for (int i = 0; i < nChannels; ++i) {
-        const auto& channel = flattened[i];
-        tasks.emplace_back(
-            ThreadPool::global().parallelForAsync<size_t>(0, numPixels, [&, i](size_t j) {
-                indices[j + i * numPixels] = valToBin(channel.eval(j));
-            }, priority)
+  vector<Task<void>> tasks;
+  for (int i = 0; i < nChannels; ++i) {
+      const auto& channel = flattened[i];
+      tasks.emplace_back (ThreadPool::global().parallelForAsync<size_t> (0, numPixels, [&, i](size_t j) {
+                          indices[j + i * numPixels] = valToBin(channel.eval(j));
+                          }, priority)
         );
     }
 
-    for (auto& task : tasks) {
-        co_await task;
-    }
+  for (auto& task : tasks) {
+      co_await task;
+  }
 
-    co_await ThreadPool::global().parallelForAsync(0, nChannels, [&](int i) {
-        for (size_t j = 0; j < numPixels; ++j) {
-            result->histogram[indices[j + i * numPixels] + i * NUM_BINS] += alphaChannel ? alphaChannel->eval(j) : 1;
-        }
+  co_await ThreadPool::global().parallelForAsync (0, nChannels, [&](int i) {
+    for (size_t j = 0; j < numPixels; ++j) {
+      result->histogram[indices[j + i * numPixels] + i * NUM_BINS] += alphaChannel ? alphaChannel->eval(j) : 1;
+      }
     }, priority);
 
-    for (int i = 0; i < nChannels; ++i) {
-        for (int j = 0; j < NUM_BINS; ++j) {
-            result->histogram[j + i * NUM_BINS] /= binToVal(j + 1) - binToVal(j);
-        }
+  for (int i = 0; i < nChannels; ++i) {
+    for (int j = 0; j < NUM_BINS; ++j) {
+      result->histogram[j + i * NUM_BINS] /= binToVal(j + 1) - binToVal(j);
+      }
     }
 
-    // Normalize the histogram according to the 10th-largest
-    // element to avoid a couple spikes ruining the entire graph.
-    auto tmp = result->histogram;
-    size_t idx = tmp.size() - 10;
-    nth_element(tmp.data(), tmp.data() + idx, tmp.data() + tmp.size());
+  // Normalize the histogram according to the 10th-largest
+  // element to avoid a couple spikes ruining the entire graph.
+  auto tmp = result->histogram;
+  size_t idx = tmp.size() - 10;
+  nth_element(tmp.data(), tmp.data() + idx, tmp.data() + tmp.size());
 
-    float norm = 1.0f / (max(tmp[idx], 0.1f) * 1.3f);
-    for (int i = 0; i < nChannels; ++i) {
-        for (int j = 0; j < NUM_BINS; ++j) {
-            result->histogram[j + i * NUM_BINS] *= norm;
-        }
+  float norm = 1.0f / (max(tmp[idx], 0.1f) * 1.3f);
+  for (int i = 0; i < nChannels; ++i) {
+    for (int j = 0; j < NUM_BINS; ++j) {
+      result->histogram[j + i * NUM_BINS] *= norm;
+      }
     }
 
-    co_return result;
-}
+  co_return result;
+  }
 //}}}
 
 //{{{
-Vector2f ImageCanvas::pixelOffset(const Vector2i& size) const {
+Vector2f ImageCanvas::pixelOffset (const Vector2i& size) const {
     // Translate by half of a pixel to avoid pixel boundaries aligning perfectly with texels.
     // The translation only needs to happen for axes with even resolution. Odd-resolution
     // axes are implicitly shifted by half a pixel due to the centering operation.
@@ -855,7 +853,7 @@ Vector2f ImageCanvas::pixelOffset(const Vector2i& size) const {
 }
 //}}}
 //{{{
-Matrix3f ImageCanvas::transform(const Image* image) {
+Matrix3f ImageCanvas::transform (const Image* image) {
     if (!image) {
         return Matrix3f::scale(Vector2f{1.0f});
     }
@@ -874,31 +872,32 @@ Matrix3f ImageCanvas::transform(const Image* image) {
 }
 //}}}
 //{{{
-Matrix3f ImageCanvas::textureToNanogui(const Image* image) {
-    if (!image) {
-        return Matrix3f::scale(Vector2f{1.0f});
+Matrix3f ImageCanvas::textureToNanogui (const Image* image) {
+
+  if (!image) {
+    return Matrix3f::scale(Vector2f{1.0f});
     }
 
-    TEV_ASSERT(mImage, "Coordinates are relative to the currently selected image's display window. So must have an image selected.");
+  TEV_ASSERT(mImage, "Coordinates are relative to the currently selected image's display window. So must have an image selected.");
 
-    // Move origin to centre of image, scale pixels, apply our transform, move origin back to top-left.
-    return
-        Matrix3f::translate(0.5f * Vector2f{m_size}) *
-        mTransform *
-        Matrix3f::scale(Vector2f{1.0f / mPixelRatio}) *
-        Matrix3f::translate(-0.5f * Vector2f{image->size()} + image->centerDisplayOffset(mImage->displayWindow()) + pixelOffset(image->size()));
+  // Move origin to centre of image, scale pixels, apply our transform, move origin back to top-left.
+  return Matrix3f::translate(0.5f * Vector2f{m_size}) *
+          mTransform *
+          Matrix3f::scale(Vector2f{1.0f / mPixelRatio}) *
+          Matrix3f::translate(-0.5f * Vector2f{image->size()} + image->centerDisplayOffset(mImage->displayWindow()) + pixelOffset(image->size()));
 }
 //}}}
 //{{{
-Matrix3f ImageCanvas::displayWindowToNanogui(const Image* image) {
-    if (!image) {
-        return Matrix3f::scale(Vector2f{1.0f});
+Matrix3f ImageCanvas::displayWindowToNanogui (const Image* image) {
+
+  if (!image) {
+    return Matrix3f::scale(Vector2f{1.0f});
     }
 
-    // Shift texture coordinates by the data coordinate offset.
-    // It's that simple.
-    return textureToNanogui(image) * Matrix3f::translate(-image->dataWindow().min);
-}
+  // Shift texture coordinates by the data coordinate offset.
+  // It's that simple.
+  return textureToNanogui(image) * Matrix3f::translate(-image->dataWindow().min);
+  }
 //}}}
 
 TEV_NAMESPACE_END

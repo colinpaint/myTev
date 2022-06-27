@@ -159,17 +159,13 @@ int mainFunc (const vector<string>& arguments) {
   //}}}
 
   //{{{
-  ValueFlag<float> exposureFlag {
-    parser,
-    "EXPOSURE",
+  ValueFlag<float> exposureFlag { parser, "EXPOSURE",
     "Scales the brightness of an image prior to tonemapping by 2^EXPOSURE. Default is 0.",
     {'e', "exposure"},
     };
   //}}}
   //{{{
-  ValueFlag<string> filterFlag {
-    parser,
-    "FILTER",
+  ValueFlag<string> filterFlag { parser, "FILTER",
     "Filter visible images and groups according to a supplied string. "
     "The string must have the format 'image:group'. "
     "Only images whose name contains 'image' and groups whose name contains 'group' will be visible.",
@@ -177,25 +173,19 @@ int mainFunc (const vector<string>& arguments) {
     };
   //}}}
   //{{{
-  ValueFlag<float> gammaFlag {
-    parser,
-    "GAMMA",
+  ValueFlag<float> gammaFlag { parser, "GAMMA",
     "The exponent used when TONEMAP is 'Gamma'. Default is 2.2.",
     {'g', "gamma"},
     };
   //}}}
   //{{{
-  HelpFlag helpFlag {
-    parser,
-    "HELP",
+  HelpFlag helpFlag { parser, "HELP",
     "Display this help menu.",
     {'h', "help"},
     };
   //}}}
   //{{{
-  ValueFlag<string> hostnameFlag {
-    parser,
-    "HOSTNAME",
+  ValueFlag<string> hostnameFlag { parser, "HOSTNAME",
     "The hostname to listen on for IPC communication. "
     "tev can have a distinct primary instance for each unique hostname in use. "
     "Default is 127.0.0.1:14158",
@@ -204,28 +194,24 @@ int mainFunc (const vector<string>& arguments) {
   //}}}
 
   //{{{
-  Flag ldrFlag{
-    parser,
-    "LDR",
+  Flag ldrFlag { parser, "LDR",
     "Force low dynamic range (8-bit) display colors.",
     {"ldr"},
     };
   //}}}
   //{{{
-  Flag maximizeFlagOn { parser,
-                        "MAXIMIZE", "Maximize the window on startup. (Default if images are supplied.)",
+  Flag maximizeFlagOn { parser, "MAXIMIZE",
+                        "Maximize the window on startup. (Default if images are supplied.)",
                         {"max", "maximize"}};
   //}}}
   //{{{
-  Flag maximizeFlagOff { parser,
-                         "NO MAXIMIZE", "Do not maximize the window on startup. (Default if no images are supplied.)",
+  Flag maximizeFlagOff { parser, "NO MAXIMIZE",
+                         "Do not maximize the window on startup. (Default if no images are supplied.)",
                          {"no-max", "no-maximize"}};
   //}}}
 
   //{{{
-  ValueFlag<string> metricFlag{
-    parser,
-    "METRIC",
+  ValueFlag<string> metricFlag { parser, "METRIC",
     "The metric to use when comparing two images. "
     "The available metrics are:\n"
     "E   - Error\n"
@@ -239,28 +225,24 @@ int mainFunc (const vector<string>& arguments) {
   //}}}
 
   //{{{
-  Flag newWindowFlagOn { parser,
-                         "NEW WINDOW", "Open a new window of tev, even if one exists already. (Default if no images are supplied.)",
+  Flag newWindowFlagOn { parser, "NEW WINDOW",
+                         "Open a new window of tev, even if one exists already. (Default if no images are supplied.)",
                          {'n', "new"}};
   //}}}
   //{{{
-  Flag newWindowFlagOff { parser,
-                          "NO NEW WINDOW", "Do not open a new window if one already exists. (Default if images are supplied.)",
+  Flag newWindowFlagOff { parser, "NO NEW WINDOW",
+                          "Do not open a new window if one already exists. (Default if images are supplied.)",
                           {"no-new"}};
   //}}}
 
   //{{{
-  ValueFlag<float> offsetFlag{
-    parser,
-    "OFFSET",
+  ValueFlag<float> offsetFlag { parser, "OFFSET",
     "Add an absolute offset to the image after EXPOSURE has been applied. Default is 0.",
     {'o', "offset"},
     };
   //}}}
   //{{{
-  ValueFlag<string> tonemapFlag{
-    parser,
-    "TONEMAP",
+  ValueFlag<string> tonemapFlag { parser, "TONEMAP",
     "The tonemapping algorithm to use. "
     "The available tonemaps are:\n"
     "sRGB   - sRGB\n"
@@ -273,34 +255,26 @@ int mainFunc (const vector<string>& arguments) {
   //}}}
 
   //{{{
-  Flag recursiveFlag{
-    parser,
-    "RECURSIVE",
+  Flag recursiveFlag { parser, "RECURSIVE",
     "Recursively traverse directories when loading images from them.",
     {'r', "recursive"},
     };
   //}}}
   //{{{
-  Flag versionFlag{
-    parser,
-    "VERSION",
+  Flag versionFlag { parser, "VERSION",
     "Display the version of tev.",
     {'v', "version"},
     };
   //}}}
   //{{{
-  Flag watchFlag{
-    parser,
-    "WATCH",
+  Flag watchFlag { parser, "WATCH",
     "Watch image files and directories for changes and automatically reload them.",
     {'w', "watch"},
     };
   //}}}
 
   //{{{
-  PositionalList<string> imageFiles{
-    parser,
-    "images",
+  PositionalList<string> imageFiles { parser, "images",
     "The image files to be opened by tev. "
     "If an argument starting with a ':' is encountered, "
     "then this argument is not treated as an image file "
@@ -340,14 +314,15 @@ int mainFunc (const vector<string>& arguments) {
   auto ipc = make_shared<Ipc>(hostname);
 
   // If we don't have any images to load, create new windows regardless of flag.
-  // (In this case, the user likely wants to open a new instance of tev rather
-  // than focusing the existing one.)
+  // - user likely wants to open a new instance of tev rather than focusing the existing one
   bool newWindow = !imageFiles;
-  if (newWindowFlagOn) { newWindow = true; }
-  if (newWindowFlagOff) { newWindow = false; }
+  if (newWindowFlagOn)
+    newWindow = true;
+  if (newWindowFlagOff)
+    newWindow = false;
 
   if (newWindowFlagOn && newWindowFlagOff) {
-    tlog::error() << "Ambiguous 'new window' arguments.";
+    tlog::error() << "Ambiguous 'new window' arguments";
     return -3;
     }
 
@@ -356,28 +331,28 @@ int mainFunc (const vector<string>& arguments) {
   if (!ipc->isPrimaryInstance() && !newWindow) {
     string channelSelector;
     bool first = true;
-    for (auto imageFile : get(imageFiles)) {
+    for (auto imageFile : get (imageFiles)) {
       if (!imageFile.empty() && imageFile[0] == ':') {
         channelSelector = imageFile.substr(1);
         continue;
         }
 
-      fs::path imagePath = toPath(imageFile);
-      if (!fs::exists(imagePath)) {
-        tlog::error() << tfm::format("Image %s does not exist.", imagePath);
+      fs::path imagePath = toPath (imageFile);
+      if (!fs::exists (imagePath)) {
+        tlog::error() << tfm::format("Image %s does not exist", imagePath);
         continue;
         }
 
       try {
         IpcPacket packet;
         // select the first image among those that are loaded
-        packet.setOpenImage (toString(fs::canonical(imagePath)), channelSelector, first);
+        packet.setOpenImage (toString (fs::canonical(imagePath)), channelSelector, first);
         first = false;
 
-        ipc->sendToPrimaryInstance(packet);
+        ipc->sendToPrimaryInstance (packet);
         }
       catch (const runtime_error& e) {
-        tlog::error() << tfm::format("Unexpected error %s: %s", imagePath, e.what());
+        tlog::error() << tfm::format ("Unexpected error %s: %s", imagePath, e.what());
         }
       }
     return 0;
@@ -386,22 +361,20 @@ int mainFunc (const vector<string>& arguments) {
   Imf::setGlobalThreadCount (thread::hardware_concurrency());
 
   shared_ptr<BackgroundImagesLoader> imagesLoader = make_shared<BackgroundImagesLoader>();
-  if (recursiveFlag) {
+  if (recursiveFlag)
     imagesLoader->setRecursiveDirectories (true);
-    }
 
   // Spawn a background thread that opens images passed via stdin.
   // To allow whitespace characters in filenames, we use the convention that
   // paths in stdin must be separated by newlines.
-  thread stdinThread{[&]() {
+  thread stdinThread {[&]() {
     string channelSelector;
     while (!shuttingDown()) {
       for (string line; getline (cin, line);) {
         string imageFile = tev::ensureUtf8 (line);
 
-        if (imageFile.empty()) {
+        if (imageFile.empty())
           continue;
-          }
 
         if (imageFile[0] == ':') {
           channelSelector = imageFile.substr (1);
@@ -432,13 +405,13 @@ int mainFunc (const vector<string>& arguments) {
         // got closed at some point. Attempt this with a reasonably low frequency
         // to not hog CPU/OS resources.
         if (!ipc->isPrimaryInstance() && !ipc->attemptToBecomePrimaryInstance()) {
-          this_thread::sleep_for(100ms);
+          this_thread::sleep_for (100ms);
           continue;
           }
 
-        ipc->receiveFromSecondaryInstance([&](const IpcPacket& packet) {
+        ipc->receiveFromSecondaryInstance ([&](const IpcPacket& packet) {
           try {
-            handleIpcPacket(packet, imagesLoader);
+            handleIpcPacket (packet, imagesLoader);
             }
           catch (const runtime_error& e) {
             tlog::warning() << "Malformed IPC packet: " << e.what();
@@ -453,18 +426,16 @@ int mainFunc (const vector<string>& arguments) {
       }
     }};
 
-  ScopeGuard backgroundThreadShutdownGuard{[&]() {
+  ScopeGuard backgroundThreadShutdownGuard {[&]() {
     setShuttingDown();
 
-    if (ipcThread.joinable()) {
+    if (ipcThread.joinable())
       ipcThread.join();
-      }
 
     // stdinThread should not be joinable, since it has been
     // detached earlier. But better to be safe than sorry.
-    if (stdinThread.joinable()) {
+    if (stdinThread.joinable())
       stdinThread.join();
-      }
     }};
 
   // Load images passed via command line in the background prior to
@@ -476,22 +447,20 @@ int mainFunc (const vector<string>& arguments) {
       channelSelector = imageFile.substr(1);
       continue;
       }
-
-    imagesLoader->enqueue(toPath(imageFile), channelSelector, false);
+    imagesLoader->enqueue (toPath (imageFile), channelSelector, false);
     }
 
   // Init nanogui application
   nanogui::init();
 
-  ScopeGuard nanoguiShutdownGuard{[&]() {
-
-  // On some linux distributions glfwTerminate() (which is called by
-  // nanogui::shutdown()) causes segfaults. Since we are done with our
-  // program here anyways, let's let the OS clean up after us.
-  #if defined(__APPLE__) or defined(_WIN32)
-    nanogui::shutdown();
-  #endif
-  }};
+  ScopeGuard nanoguiShutdownGuard {[&]() {
+    // On some linux distributions glfwTerminate() (which is called by
+    // nanogui::shutdown()) causes segfaults. Since we are done with our
+    // program here anyways, let's let the OS clean up after us.
+    #if defined(__APPLE__) or defined(_WIN32)
+      nanogui::shutdown();
+    #endif
+    }};
 
   #ifdef __APPLE__
     // On macOS, the mechanism for opening an application passes filenames
@@ -529,8 +498,10 @@ int mainFunc (const vector<string>& arguments) {
 
   // Do what the maximize flag tells us---if it exists---and maximize if we have images otherwise.
   bool maximize = imageFiles;
-  if (maximizeFlagOn) { maximize = true; }
-  if (maximizeFlagOff) { maximize = false; }
+  if (maximizeFlagOn)
+    maximize = true;
+  if (maximizeFlagOff)
+    maximize = false;
 
   if (maximizeFlagOn && maximizeFlagOff) {
     tlog::error() << "Ambiguous 'maximize' arguments.";
@@ -541,21 +512,27 @@ int mainFunc (const vector<string>& arguments) {
   // nanogui crashes upon cleanup, so we better not try.
   sImageViewer = new ImageViewer { imagesLoader, maximize, capability10bit || capabilityEdr, capabilityEdr };
 
-  sImageViewer->draw_all();
+  sImageViewer->draw_all ();
   sImageViewer->set_visible (true);
   sImageViewer->redraw();
 
   // Apply parameter flags
-  if (exposureFlag) { sImageViewer->setExposure (get (exposureFlag)); }
-  if (filterFlag)   { sImageViewer->setFilter (get (filterFlag)); }
-  if (gammaFlag)    { sImageViewer->setGamma (get (gammaFlag)); }
-  if (metricFlag)   { sImageViewer->setMetric (toMetric (get (metricFlag))); }
-  if (offsetFlag)   { sImageViewer->setOffset (get (offsetFlag)); }
-  if (tonemapFlag)  { sImageViewer->setTonemap (toTonemap (get (tonemapFlag))); }
-  if (watchFlag)    { sImageViewer->setWatchFilesForChanges (true); }
+  if (exposureFlag)
+    sImageViewer->setExposure (get (exposureFlag));
+  if (filterFlag)
+    sImageViewer->setFilter (get (filterFlag));
+  if (gammaFlag)
+    sImageViewer->setGamma (get (gammaFlag));
+  if (metricFlag)
+    sImageViewer->setMetric (toMetric (get (metricFlag)));
+  if (offsetFlag)
+    sImageViewer->setOffset (get (offsetFlag));
+  if (tonemapFlag)
+    sImageViewer->setTonemap (toTonemap (get (tonemapFlag)));
+  if (watchFlag)
+    sImageViewer->setWatchFilesForChanges (true);
 
-  // Refresh only every 250ms if there are no user interactions.
-  // This makes an idling tev surprisingly energy-efficient. :)
+  // Refresh only every 250ms if there are no user interactions, makes idling tev surprisingly energy-efficient
   nanogui::mainloop (250);
 
   return 0;
@@ -581,7 +558,7 @@ TEV_NAMESPACE_END
         // OSX sometimes (seemingly sporadically) passes the
         // process serial number via a command line parameter.
         // We would like to ignore this.
-        if (arg.find ("-psn") != 0) 
+        if (arg.find ("-psn") != 0)
           arguments.emplace_back (tev::ensureUtf8(argv[i]));
       #endif
       }
