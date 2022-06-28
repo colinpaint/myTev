@@ -30,7 +30,8 @@ static const int SIDEBAR_MIN_WIDTH = 230;
 
 //{{{
 ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader, bool maximize, bool floatBuffer, bool /*supportsHdr*/)
-  : nanogui::Screen{nanogui::Vector2i{1024, 799}, "tev", true, maximize, false, true, true, floatBuffer}, mImagesLoader{imagesLoader} {
+    : nanogui::Screen{nanogui::Vector2i{1024, 799}, "tev", true, maximize, false, true, true, floatBuffer},
+      mImagesLoader{imagesLoader} {
 
   if (floatBuffer && !m_float_buffer)
     tlog::warning() << "Failed to create floating point frame buffer.";
@@ -473,7 +474,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
 ImageViewer::~ImageViewer() {
 
   mShallRunPlaybackThread = false;
-  if (mPlaybackThread.joinable()) 
+  if (mPlaybackThread.joinable())
     mPlaybackThread.join();
   }
 //}}}
@@ -512,15 +513,15 @@ bool ImageViewer::mouse_button_event (const nanogui::Vector2i &p, int button, bo
       mIsDraggingSidebar = true;
       mDraggingStartPosition = nanogui::Vector2f(p);
       return true;
-      } 
+      }
     else if (mImageCanvas->contains(p)) {
       mIsDraggingImage = true;
       mDraggingStartPosition = nanogui::Vector2f(p);
       return true;
       }
-    } 
+    }
   else {
-    if (mIsDraggingImageButton) 
+    if (mIsDraggingImageButton)
       requestLayoutUpdate();
 
     mIsDraggingSidebar = false;
@@ -541,47 +542,44 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
   if (focused())
     redraw();
 
-  if (mIsDraggingSidebar || canDragSidebarFrom(p)) {
-    mSidebarLayout->set_cursor(Cursor::HResize);
-    mImageCanvas->set_cursor(Cursor::HResize);
-    } 
+  if (mIsDraggingSidebar || canDragSidebarFrom (p)) {
+    mSidebarLayout->set_cursor (Cursor::HResize);
+    mImageCanvas->set_cursor (Cursor::HResize);
+    }
   else {
-    mSidebarLayout->set_cursor(Cursor::Arrow);
-    mImageCanvas->set_cursor(Cursor::Arrow);
+    mSidebarLayout->set_cursor (Cursor::Arrow);
+    mImageCanvas->set_cursor (Cursor::Arrow);
     }
 
   if (mIsDraggingSidebar) {
-    mSidebar->set_fixed_width(clamp(p.x(), SIDEBAR_MIN_WIDTH, m_size.x() - 10));
+    mSidebar->set_fixed_width (clamp(p.x(), SIDEBAR_MIN_WIDTH, m_size.x() - 10));
     requestLayoutUpdate();
-    } 
+    }
   else if (mIsDraggingImage) {
     nanogui::Vector2f relativeMovement = {rel};
     auto* glfwWindow = screen()->glfw_window();
     // There is no explicit access to the currently pressed modifier keys here, so we
     // need to directly ask GLFW.
-    if (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT)) {
-        relativeMovement /= 10;
-    } else if (glfwGetKey(glfwWindow, SYSTEM_COMMAND_LEFT) || glfwGetKey(glfwWindow, SYSTEM_COMMAND_RIGHT)) {
-        relativeMovement /= std::log2(1.1f);
-    }
+    if (glfwGetKey (glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT))
+      relativeMovement /= 10;
+    else if (glfwGetKey (glfwWindow, SYSTEM_COMMAND_LEFT) || glfwGetKey(glfwWindow, SYSTEM_COMMAND_RIGHT))
+      relativeMovement /= std::log2(1.1f);
 
     // If left mouse button is held, move the image with mouse movement
-    if ((button & 1) != 0) {
-        mImageCanvas->translate(relativeMovement);
-    }
+    if ((button & 1) != 0)
+      mImageCanvas->translate(relativeMovement);
 
     // If middle mouse button is held, zoom in-out with up-down mouse movement
-    if ((button & 4) != 0) {
-      mImageCanvas->scale(relativeMovement.y() / 10.0f, {mDraggingStartPosition.x(), mDraggingStartPosition.y()});
-      }
-    } 
+    if ((button & 4) != 0)
+      mImageCanvas->scale (relativeMovement.y() / 10.0f, {mDraggingStartPosition.x(), mDraggingStartPosition.y()});
+    }
   else if (mIsDraggingImageButton) {
     auto& buttons = mImageButtonContainer->children();
     nanogui::Vector2i relMousePos = (absolute_position() + p) - mImageButtonContainer->absolute_position();
     for (size_t i = 0; i < buttons.size(); ++i) {
-      if (i == mDraggedImageButtonId) {
+      if (i == mDraggedImageButtonId)
         continue;
-        }
+
       auto* imgButton = dynamic_cast<ImageButton*>(buttons[i]);
       if (imgButton->contains(relMousePos)) {
         nanogui::Vector2i pos = imgButton->position();
@@ -595,7 +593,7 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
         }
       }
 
-    dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position(relMousePos - nanogui::Vector2i(mDraggingStartPosition));
+    dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position (relMousePos - nanogui::Vector2i (mDraggingStartPosition));
     }
 
   return false;
@@ -604,13 +602,11 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
 //{{{
 bool ImageViewer::drop_event (const vector<string>& filenames) {
 
-  if (Screen::drop_event(filenames)) {
+  if (Screen::drop_event(filenames))
     return true;
-    }
 
-  for (size_t i = 0; i < filenames.size(); ++i) {
-    mImagesLoader->enqueue(toPath(filenames[i]), "", i == filenames.size() - 1);
-    }
+  for (size_t i = 0; i < filenames.size(); ++i)
+    mImagesLoader->enqueue (toPath (filenames[i]), "", i == filenames.size() - 1);
 
   // Make sure we gain focus after dragging files into here.
   focusWindow();
@@ -620,275 +616,333 @@ bool ImageViewer::drop_event (const vector<string>& filenames) {
 //}}}
 //{{{
 bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifiers) {
-    if (Screen::keyboard_event(key, scancode, action, modifiers)) {
-        return true;
+
+  if (Screen::keyboard_event(key, scancode, action, modifiers))
+    return true;
+
+  redraw();
+
+  int numGroups = mGroupButtonContainer->child_count();
+
+  if (action == GLFW_PRESS) {
+    //{{{  Keybindings which should _not_ respond to repeats
+    if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
+      //{{{  0 - 9
+      int idx = (key - GLFW_KEY_1 + 10) % 10;
+      if (modifiers & GLFW_MOD_SHIFT) {
+        const auto& image = nthVisibleImage(idx);
+        if (image) {
+          if (mCurrentReference == image)
+            selectReference(nullptr);
+          else
+            selectReference(image);
+          }
+        }
+      else if (modifiers & GLFW_MOD_CONTROL) {
+        if (idx >= 0 && idx < numGroups) {
+          selectGroup(nthVisibleGroup(idx));
+          }
+        }
+      else {
+        const auto& image = nthVisibleImage(idx);
+        if (image)
+          selectImage(image);
+        }
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_HOME || key == GLFW_KEY_END) {
+     //{{{  home, end
+     const auto& image = nthVisibleImage(key == GLFW_KEY_HOME ? 0 : mImages.size());
+
+     if (modifiers & GLFW_MOD_SHIFT) {
+       if (mCurrentReference == image)
+         selectReference(nullptr);
+       else
+         selectReference(image);
+       }
+     else
+       selectImage(image);
+
+     return true;
+     }
+     //}}}
+    else if (key == GLFW_KEY_N) {
+      //{{{  N
+      normalizeExposureAndOffset();
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_R) {
+      //{{{  R
+      if (modifiers & SYSTEM_COMMAND_MOD) {
+        if (modifiers & GLFW_MOD_SHIFT)
+          reloadAllImages();
+        else
+          reloadImage(mCurrentImage);
+        }
+      else
+        resetImage();
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_B && (modifiers & SYSTEM_COMMAND_MOD))
+      //{{{  B
+      setUiVisible(!isUiVisible());
+      //}}}
+    else if (key == GLFW_KEY_O && (modifiers & SYSTEM_COMMAND_MOD)) {
+      //{{{  O
+      openImageDialog();
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_S && (modifiers & SYSTEM_COMMAND_MOD)) {
+      //{{{  S
+      saveImageDialog();
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_P && (modifiers & SYSTEM_COMMAND_MOD)) {
+      //{{{  P
+      mFilter->request_focus();
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_F) {
+      //{{{  F
+      if (mCurrentImage)
+        mImageCanvas->fitImageToScreen(*mCurrentImage);
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_H) {
+      //{{{  H
+      toggleHelpWindow();
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_ENTER && modifiers & GLFW_MOD_ALT) {
+      //{{{  enter
+      toggleMaximized();
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_F5) {
+      //{{{  F5
+      if (modifiers & SYSTEM_COMMAND_MOD)
+        reloadAllImages();
+      else
+        reloadImage(mCurrentImage);
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_F12) {
+      //{{{  F12 - debug
+      // For debugging purposes.
+      toggleConsole();
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_SPACE) {
+      //{{{  space - play
+      mPlayButton->set_pushed (!mPlayButton->pushed());
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_L && mSupportsHdr) {
+      //{{{  L - hdr
+      mClipToLdrButton->set_pushed(!mClipToLdrButton->pushed());
+      mImageCanvas->setClipToLdr(mClipToLdrButton->pushed());
+      return true;
+      }
+      //}}}
+    else if (key == GLFW_KEY_Q && (modifiers & SYSTEM_COMMAND_MOD)) {
+      //{{{  Q
+      set_visible (false);
+      return true;
+      }
+      //}}}
+    else if (mCurrentImage && key == GLFW_KEY_C && (modifiers & SYSTEM_COMMAND_MOD)) {
+      //{{{  sys + C
+      if (mImageScrollContainer->focused()) {
+        if (clip::set_text(mCurrentImage->name()))
+          tlog::success() << "Image path copied to clipboard.";
+        else
+          tlog::error() << "Failed to copy image path to clipboard.";
+        }
+
+      else {
+        auto imageSize = mCurrentImage->size();
+
+        clip::image_spec imageMetadata;
+        imageMetadata.width = imageSize.x();
+        imageMetadata.height = imageSize.y();
+        imageMetadata.bits_per_pixel = 32;
+        imageMetadata.bytes_per_row = imageMetadata.bits_per_pixel / 8 * imageMetadata.width;
+
+        imageMetadata.red_mask    = 0x000000ff;
+        imageMetadata.green_mask  = 0x0000ff00;
+        imageMetadata.blue_mask   = 0x00ff0000;
+        imageMetadata.alpha_mask  = 0xff000000;
+        imageMetadata.red_shift   = 0;
+        imageMetadata.green_shift = 8;
+        imageMetadata.blue_shift  = 16;
+        imageMetadata.alpha_shift = 24;
+
+        auto imageData = mImageCanvas->getLdrImageData(true, std::numeric_limits<int>::max());
+        clip::image image(imageData.data(), imageMetadata);
+
+        if (clip::set_image(image))
+          tlog::success() << "Image copied to clipboard.";
+        else
+          tlog::error() << "Failed to copy image to clipboard.";
+        }
+      }
+      //}}}
+    else if (key == GLFW_KEY_V && (modifiers & SYSTEM_COMMAND_MOD)) {
+      //{{{  sys + V
+      // if (clip::has(clip::text_format())) {
+      //     string path;
+      //     if (!clip::get_text(path)) {
+      //         tlog::error() << "Failed to paste text from clipboard.";
+      //     } else {
+      //         auto image = tryLoadImage(toPath(path), "");
+      //         if (image) {
+      //             addImage(image, true);
+      //         } else {
+      //             tlog::error() << tfm::format("Failed to load image from clipboard path: %s", path);
+      //         }
+      //     }
+      // } else
+      if (clip::has(clip::image_format())) {
+        clip::image clipImage;
+        if (!clip::get_image(clipImage)) {
+          tlog::error() << "Failed to paste image from clipboard.";
+          }
+        else {
+          tlog::info() << "Loading image from clipboard...";
+          stringstream imageStream;
+          imageStream << "clip"
+                      << string(reinterpret_cast<const char*>(&clipImage.spec()), sizeof(clip::image_spec))
+                      << string(clipImage.data(), clipImage.spec().bytes_per_row * clipImage.spec().height);
+
+          auto images = tryLoadImage(tfm::format("clipboard (%d)", ++mClipboardIndex), imageStream, "").get();
+          if (images.empty()) {
+            tlog::error() << "Failed to load image from clipboard data.";
+            }
+          else {
+            for (auto& image : images) {
+              addImage(image, true);
+              }
+            }
+          }
+        }
+      }
+      //}}}
     }
+    //}}}
+  if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+    //{{{  Keybindings which should respond to repeats
+    if (key == GLFW_KEY_KP_ADD || key == GLFW_KEY_EQUAL ||
+        key == GLFW_KEY_KP_SUBTRACT || key == GLFW_KEY_MINUS) {
+      //{{{  + = -
+      float scaleAmount = 1.0f;
+      if (modifiers & GLFW_MOD_SHIFT)
+        scaleAmount /= 10;
+      else if (modifiers & SYSTEM_COMMAND_MOD)
+        scaleAmount /= std::log2(1.1f);
 
-    redraw();
+      if (key == GLFW_KEY_KP_SUBTRACT || key == GLFW_KEY_MINUS)
+        scaleAmount = -scaleAmount;
 
-    int numGroups = mGroupButtonContainer->child_count();
+      nanogui::Vector2f origin = nanogui::Vector2f{mImageCanvas->position()} + nanogui::Vector2f{mImageCanvas->size()};
+      mImageCanvas->scale (scaleAmount, {origin.x(), origin.y()});
+      }
+      //}}}
 
-    // Keybindings which should _not_ respond to repeats
-    if (action == GLFW_PRESS) {
-        if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
-            int idx = (key - GLFW_KEY_1 + 10) % 10;
-            if (modifiers & GLFW_MOD_SHIFT) {
-                const auto& image = nthVisibleImage(idx);
-                if (image) {
-                    if (mCurrentReference == image) {
-                        selectReference(nullptr);
-                    } else {
-                        selectReference(image);
-                    }
-                }
-            } else if (modifiers & GLFW_MOD_CONTROL) {
-                if (idx >= 0 && idx < numGroups) {
-                    selectGroup(nthVisibleGroup(idx));
-                }
-            } else {
-                const auto& image = nthVisibleImage(idx);
-                if (image) {
-                    selectImage(image);
-                }
-            }
-            return true;
-        } else if (key == GLFW_KEY_HOME || key == GLFW_KEY_END) {
-            const auto& image = nthVisibleImage(key == GLFW_KEY_HOME ? 0 : mImages.size());
-            if (modifiers & GLFW_MOD_SHIFT) {
-                if (mCurrentReference == image) {
-                    selectReference(nullptr);
-                } else {
-                    selectReference(image);
-                }
-            } else {
-                selectImage(image);
-            }
-            return true;
-        } else if (key == GLFW_KEY_N) {
-            normalizeExposureAndOffset();
-            return true;
-        } else if (key == GLFW_KEY_R) {
-            if (modifiers & SYSTEM_COMMAND_MOD) {
-                if (modifiers & GLFW_MOD_SHIFT) {
-                    reloadAllImages();
-                } else {
-                    reloadImage(mCurrentImage);
-                }
-            } else {
-                resetImage();
-            }
-            return true;
-        } else if (key == GLFW_KEY_B && (modifiers & SYSTEM_COMMAND_MOD)) {
-            setUiVisible(!isUiVisible());
-        } else if (key == GLFW_KEY_O && (modifiers & SYSTEM_COMMAND_MOD)) {
-            openImageDialog();
-            return true;
-        } else if (key == GLFW_KEY_S && (modifiers & SYSTEM_COMMAND_MOD)) {
-            saveImageDialog();
-            return true;
-        } else if (key == GLFW_KEY_P && (modifiers & SYSTEM_COMMAND_MOD)) {
-            mFilter->request_focus();
-            return true;
-        } else if (key == GLFW_KEY_F) {
-            if (mCurrentImage) {
-                mImageCanvas->fitImageToScreen(*mCurrentImage);
-            }
-            return true;
-        } else if (key == GLFW_KEY_H) {
-            toggleHelpWindow();
-            return true;
-        } else if (key == GLFW_KEY_ENTER && modifiers & GLFW_MOD_ALT) {
-            toggleMaximized();
-            return true;
-        } else if (key == GLFW_KEY_F5) {
-            if (modifiers & SYSTEM_COMMAND_MOD) {
-                reloadAllImages();
-            } else {
-                reloadImage(mCurrentImage);
-            }
-            return true;
-        } else if (key == GLFW_KEY_F12) {
-            // For debugging purposes.
-            toggleConsole();
-            return true;
-        } else if (key == GLFW_KEY_SPACE) {
-            mPlayButton->set_pushed(!mPlayButton->pushed());
-            return true;
-        } else if (key == GLFW_KEY_L && mSupportsHdr) {
-            mClipToLdrButton->set_pushed(!mClipToLdrButton->pushed());
-            mImageCanvas->setClipToLdr(mClipToLdrButton->pushed());
-            return true;
-        } else if (key == GLFW_KEY_Q && (modifiers & SYSTEM_COMMAND_MOD)) {
-            set_visible(false);
-            return true;
-        } else if (mCurrentImage && key == GLFW_KEY_C && (modifiers & SYSTEM_COMMAND_MOD)) {
-            if (mImageScrollContainer->focused()) {
-                if (clip::set_text(mCurrentImage->name())) {
-                    tlog::success() << "Image path copied to clipboard.";
-                } else {
-                    tlog::error() << "Failed to copy image path to clipboard.";
-                }
-            } else {
-                auto imageSize = mCurrentImage->size();
+    if (key == GLFW_KEY_E) {
+      //{{{  E
+      if (modifiers & GLFW_MOD_SHIFT)
+        setExposure (exposure() - 0.5f);
+      else
+        setExposure (exposure() + 0.5f);
+      }
+      //}}}
 
-                clip::image_spec imageMetadata;
-                imageMetadata.width = imageSize.x();
-                imageMetadata.height = imageSize.y();
-                imageMetadata.bits_per_pixel = 32;
-                imageMetadata.bytes_per_row = imageMetadata.bits_per_pixel / 8 * imageMetadata.width;
+    if (key == GLFW_KEY_O) {
+      //{{{  O
+      if (modifiers & GLFW_MOD_SHIFT)
+        setOffset(offset() - 0.1f);
+      else
+        setOffset(offset() + 0.1f);
+      }
+      //}}}
 
-                imageMetadata.red_mask    = 0x000000ff;
-                imageMetadata.green_mask  = 0x0000ff00;
-                imageMetadata.blue_mask   = 0x00ff0000;
-                imageMetadata.alpha_mask  = 0xff000000;
-                imageMetadata.red_shift   = 0;
-                imageMetadata.green_shift = 8;
-                imageMetadata.blue_shift  = 16;
-                imageMetadata.alpha_shift = 24;
-
-                auto imageData = mImageCanvas->getLdrImageData(true, std::numeric_limits<int>::max());
-                clip::image image(imageData.data(), imageMetadata);
-
-                if (clip::set_image(image)) {
-                    tlog::success() << "Image copied to clipboard.";
-                } else {
-                    tlog::error() << "Failed to copy image to clipboard.";
-                }
-            }
-        } else if (key == GLFW_KEY_V && (modifiers & SYSTEM_COMMAND_MOD)) {
-            // if (clip::has(clip::text_format())) {
-            //     string path;
-            //     if (!clip::get_text(path)) {
-            //         tlog::error() << "Failed to paste text from clipboard.";
-            //     } else {
-            //         auto image = tryLoadImage(toPath(path), "");
-            //         if (image) {
-            //             addImage(image, true);
-            //         } else {
-            //             tlog::error() << tfm::format("Failed to load image from clipboard path: %s", path);
-            //         }
-            //     }
-            // } else
-            if (clip::has(clip::image_format())) {
-                clip::image clipImage;
-                if (!clip::get_image(clipImage)) {
-                    tlog::error() << "Failed to paste image from clipboard.";
-                } else {
-                    tlog::info() << "Loading image from clipboard...";
-                    stringstream imageStream;
-                    imageStream
-                        << "clip"
-                        << string(reinterpret_cast<const char*>(&clipImage.spec()), sizeof(clip::image_spec))
-                        << string(clipImage.data(), clipImage.spec().bytes_per_row * clipImage.spec().height)
-                        ;
-
-                    auto images = tryLoadImage(tfm::format("clipboard (%d)", ++mClipboardIndex), imageStream, "").get();
-                    if (images.empty()) {
-                        tlog::error() << "Failed to load image from clipboard data.";
-                    } else {
-                        for (auto& image : images) {
-                            addImage(image, true);
-                        }
-                    }
-                }
-            }
+    if (mGammaSlider->enabled()) {
+      if (key == GLFW_KEY_G) {
+        //{{{  G
+        if (modifiers & GLFW_MOD_SHIFT)
+          setGamma(gamma() - 0.1f);
+        else
+          setGamma(gamma() + 0.1f);
         }
+        //}}}
+      }
+
+    if (key == GLFW_KEY_W && modifiers & SYSTEM_COMMAND_MOD) {
+      //{{{  W
+      if (modifiers & GLFW_MOD_SHIFT)
+        removeAllImages();
+      else
+        removeImage (mCurrentImage);
+      }
+      //}}}
+    else if (key == GLFW_KEY_UP || key == GLFW_KEY_W || key == GLFW_KEY_PAGE_UP) {
+      //{{{  up, W, pageUp
+      if (modifiers & GLFW_MOD_SHIFT)
+        selectReference (nextImage(mCurrentReference, Backward));
+      else
+        selectImage (nextImage(mCurrentImage, Backward));
+      }
+      //}}}
+    else if (key == GLFW_KEY_DOWN || key == GLFW_KEY_S || key == GLFW_KEY_PAGE_DOWN) {
+      //{{{  down, S, pageDown
+      if (modifiers & GLFW_MOD_SHIFT)
+        selectReference (nextImage(mCurrentReference, Forward));
+      else
+        selectImage (nextImage (mCurrentImage, Forward));
+      }
+      //}}}
+
+    if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_D) {
+      //{{{  right, D
+      if (modifiers & GLFW_MOD_SHIFT)
+        setTonemap(static_cast<ETonemap>((tonemap() + 1) % NumTonemaps));
+      else if (modifiers & GLFW_MOD_CONTROL) {
+        if (mCurrentReference)
+          setMetric (static_cast<EMetric>((metric() + 1) % NumMetrics));
+        }
+      else
+        selectGroup(nextGroup(mCurrentGroup, Forward));
+      }
+      //}}}
+    else if (key == GLFW_KEY_LEFT || key == GLFW_KEY_A) {
+      //{{{  left, A
+      if (modifiers & GLFW_MOD_SHIFT) {
+        }
+      else if (modifiers & GLFW_MOD_CONTROL) {
+        if (mCurrentReference)
+          setMetric(static_cast<EMetric>((metric() - 1 + NumMetrics) % NumMetrics));
+        }
+      else
+        selectGroup (nextGroup (mCurrentGroup, Backward));
+      }
+      //}}}
     }
+    //}}}
 
-    // Keybindings which should respond to repeats
-    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (key == GLFW_KEY_KP_ADD || key == GLFW_KEY_EQUAL ||
-            key == GLFW_KEY_KP_SUBTRACT || key == GLFW_KEY_MINUS) {
-            float scaleAmount = 1.0f;
-            if (modifiers & GLFW_MOD_SHIFT) {
-                scaleAmount /= 10;
-            } else if (modifiers & SYSTEM_COMMAND_MOD) {
-                scaleAmount /= std::log2(1.1f);
-            }
-
-            if (key == GLFW_KEY_KP_SUBTRACT || key == GLFW_KEY_MINUS) {
-                scaleAmount = -scaleAmount;
-            }
-
-            nanogui::Vector2f origin = nanogui::Vector2f{mImageCanvas->position()} + nanogui::Vector2f{mImageCanvas->size()};
-
-            mImageCanvas->scale(
-                scaleAmount,
-                {origin.x(), origin.y()}
-            );
-        }
-
-        if (key == GLFW_KEY_E) {
-            if (modifiers & GLFW_MOD_SHIFT) {
-                setExposure(exposure() - 0.5f);
-            } else {
-                setExposure(exposure() + 0.5f);
-            }
-        }
-
-        if (key == GLFW_KEY_O) {
-            if (modifiers & GLFW_MOD_SHIFT) {
-                setOffset(offset() - 0.1f);
-            } else {
-                setOffset(offset() + 0.1f);
-            }
-        }
-
-        if (mGammaSlider->enabled()) {
-            if (key == GLFW_KEY_G) {
-                if (modifiers & GLFW_MOD_SHIFT) {
-                    setGamma(gamma() - 0.1f);
-                } else {
-                    setGamma(gamma() + 0.1f);
-                }
-            }
-        }
-
-        if (key == GLFW_KEY_W && modifiers & SYSTEM_COMMAND_MOD) {
-            if (modifiers & GLFW_MOD_SHIFT) {
-                removeAllImages();
-            } else {
-                removeImage(mCurrentImage);
-            }
-        } else if (key == GLFW_KEY_UP || key == GLFW_KEY_W || key == GLFW_KEY_PAGE_UP) {
-            if (modifiers & GLFW_MOD_SHIFT) {
-                selectReference(nextImage(mCurrentReference, Backward));
-            } else {
-                selectImage(nextImage(mCurrentImage, Backward));
-            }
-        } else if (key == GLFW_KEY_DOWN || key == GLFW_KEY_S || key == GLFW_KEY_PAGE_DOWN) {
-            if (modifiers & GLFW_MOD_SHIFT) {
-                selectReference(nextImage(mCurrentReference, Forward));
-            } else {
-                selectImage(nextImage(mCurrentImage, Forward));
-            }
-        }
-
-        if (key == GLFW_KEY_RIGHT || key == GLFW_KEY_D) {
-            if (modifiers & GLFW_MOD_SHIFT) {
-                setTonemap(static_cast<ETonemap>((tonemap() + 1) % NumTonemaps));
-            } else if (modifiers & GLFW_MOD_CONTROL) {
-                if (mCurrentReference) {
-                    setMetric(static_cast<EMetric>((metric() + 1) % NumMetrics));
-                }
-            } else {
-                selectGroup(nextGroup(mCurrentGroup, Forward));
-            }
-        } else if (key == GLFW_KEY_LEFT || key == GLFW_KEY_A) {
-            if (modifiers & GLFW_MOD_SHIFT) {
-                setTonemap(static_cast<ETonemap>((tonemap() - 1 + NumTonemaps) % NumTonemaps));
-            } else if (modifiers & GLFW_MOD_CONTROL) {
-                if (mCurrentReference) {
-                    setMetric(static_cast<EMetric>((metric() - 1 + NumMetrics) % NumMetrics));
-                }
-            } else {
-                selectGroup(nextGroup(mCurrentGroup, Backward));
-            }
-        }
-    }
-
-    return false;
-}
+  return false;
+  }
 //}}}
 
 //{{{
