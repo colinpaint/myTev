@@ -494,29 +494,28 @@ bool ImageViewer::mouse_button_event (const nanogui::Vector2i &p, int button, bo
 
       for (size_t i = 0; i < buttons.size(); ++i) {
         const auto* imgButton = dynamic_cast<ImageButton*>(buttons[i]);
-        if (imgButton->contains(relMousePos)) {
+        if (imgButton->contains (relMousePos)) {
           mDraggedImageButtonId = i;
           mIsDraggingImageButton = true;
-          mDraggingStartPosition = nanogui::Vector2f(relMousePos - imgButton->position());
+          mDraggingStartPosition = nanogui::Vector2f (relMousePos - imgButton->position());
           break;
           }
         }
       }
     }
 
-  if (Screen::mouse_button_event(p, button, down, modifiers)) {
+  if (Screen::mouse_button_event (p, button, down, modifiers))
     return true;
-    }
 
   if (down && !mIsDraggingImageButton) {
     if (canDragSidebarFrom(p)) {
       mIsDraggingSidebar = true;
-      mDraggingStartPosition = nanogui::Vector2f(p);
+      mDraggingStartPosition = nanogui::Vector2f (p);
       return true;
       }
     else if (mImageCanvas->contains(p)) {
       mIsDraggingImage = true;
-      mDraggingStartPosition = nanogui::Vector2f(p);
+      mDraggingStartPosition = nanogui::Vector2f (p);
       return true;
       }
     }
@@ -552,10 +551,13 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
     }
 
   if (mIsDraggingSidebar) {
+    //{{{  drag sideBar
     mSidebar->set_fixed_width (clamp(p.x(), SIDEBAR_MIN_WIDTH, m_size.x() - 10));
     requestLayoutUpdate();
     }
+    //}}}
   else if (mIsDraggingImage) {
+    //{{{  dragImage
     nanogui::Vector2f relativeMovement = {rel};
     auto* glfwWindow = screen()->glfw_window();
     // There is no explicit access to the currently pressed modifier keys here, so we
@@ -573,7 +575,9 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
     if ((button & 4) != 0)
       mImageCanvas->scale (relativeMovement.y() / 10.0f, {mDraggingStartPosition.x(), mDraggingStartPosition.y()});
     }
+    //}}}
   else if (mIsDraggingImageButton) {
+    //{{{  drag ImageButton
     auto& buttons = mImageButtonContainer->children();
     nanogui::Vector2i relMousePos = (absolute_position() + p) - mImageButtonContainer->absolute_position();
     for (size_t i = 0; i < buttons.size(); ++i) {
@@ -595,6 +599,7 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
 
     dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position (relMousePos - nanogui::Vector2i (mDraggingStartPosition));
     }
+    //}}}
 
   return false;
   }
@@ -611,13 +616,14 @@ bool ImageViewer::drop_event (const vector<string>& filenames) {
   // Make sure we gain focus after dragging files into here.
   focusWindow();
   redraw();
+
   return true;
   }
 //}}}
 //{{{
 bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifiers) {
 
-  if (Screen::keyboard_event(key, scancode, action, modifiers))
+  if (Screen::keyboard_event (key, scancode, action, modifiers))
     return true;
 
   redraw();
@@ -947,8 +953,7 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
 
 //{{{
 void ImageViewer::focusWindow() {
-
-  glfwFocusWindow(m_glfw_window);
+  glfwFocusWindow (m_glfw_window);
   }
 //}}}
 
@@ -980,66 +985,61 @@ void ImageViewer::draw_contents() {
   // new images is meant to override the current selection.
   bool newFocus = false;
   while (auto addition = mImagesLoader->tryPop()) {
-      newFocus |= addition->shallSelect;
+    newFocus |= addition->shallSelect;
 
-      bool first = true;
-      for (auto& image : addition->images) {
-          // If the loaded file consists of multiple images (such as multi-part EXRs),
-          // select the first part if selection is desired.
-          bool shallSelect = first ? addition->shallSelect : false;
-          if (addition->toReplace) {
-              replaceImage(addition->toReplace, image, shallSelect);
-          } else {
-              addImage(image, shallSelect);
-          }
-          first = false;
+    bool first = true;
+    for (auto& image : addition->images) {
+      // If the loaded file consists of multiple images (such as multi-part EXRs),
+      // select the first part if selection is desired.
+      bool shallSelect = first ? addition->shallSelect : false;
+      if (addition->toReplace)
+        replaceImage (addition->toReplace, image, shallSelect);
+      else
+        addImage (image, shallSelect);
+      first = false;
       }
-  }
+    }
 
-  if (newFocus) {
-      focusWindow();
-  }
+  if (newFocus)
+    focusWindow();
 
-  // mTaskQueue contains jobs that should be executed on the main thread. It is useful for handling
-  // callbacks from background threads
-  while (auto task = mTaskQueue.tryPop()) {
-      (*task)();
-  }
+  // mTaskQueue contains jobs that should be executed on the main thread.
+  // It is useful for handling callbacks from background threads
+  while (auto task = mTaskQueue.tryPop())
+    (*task)();
 
   for (auto it = begin(mToBump); it != end(mToBump); ) {
-      auto& image = *it;
-      bool isShown = image == mCurrentImage || image == mCurrentReference;
+    auto& image = *it;
+    bool isShown = image == mCurrentImage || image == mCurrentReference;
 
-      // If the image is no longer shown, bump ID immediately. Otherwise, wait until canvas statistics were ready for over 200 ms.
-      if (!isShown || std::chrono::steady_clock::now() - mImageCanvas->canvasStatistics()->becameReadyAt() > 200ms) {
-          image->bumpId();
-          auto localIt = it;
-          ++it;
-          mToBump.erase(localIt);
-      } else {
-          ++it;
+    // If the image is no longer shown, bump ID immediately. Otherwise, wait until canvas statistics were ready for over 200 ms.
+    if (!isShown || std::chrono::steady_clock::now() - mImageCanvas->canvasStatistics()->becameReadyAt() > 200ms) {
+      image->bumpId();
+      auto localIt = it;
+      ++it;
+      mToBump.erase(localIt);
       }
-  }
+    else
+      ++it;
+    }
 
   if (mRequiresFilterUpdate) {
-      updateFilter();
-      mRequiresFilterUpdate = false;
-  }
+    updateFilter();
+    mRequiresFilterUpdate = false;
+    }
 
   if (mRequiresLayoutUpdate) {
-      nanogui::Vector2i oldDraggedImageButtonPos{0, 0};
-      auto& buttons = mImageButtonContainer->children();
-      if (mIsDraggingImageButton) {
-          oldDraggedImageButtonPos = dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->position();
-      }
+    nanogui::Vector2i oldDraggedImageButtonPos{0, 0};
+    auto& buttons = mImageButtonContainer->children();
+    if (mIsDraggingImageButton)
+      oldDraggedImageButtonPos = dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->position();
 
-      updateLayout();
-      mRequiresLayoutUpdate = false;
+    updateLayout();
+    mRequiresLayoutUpdate = false;
 
-      if (mIsDraggingImageButton) {
-          dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position(oldDraggedImageButtonPos);
-      }
-  }
+    if (mIsDraggingImageButton)
+      dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position(oldDraggedImageButtonPos);
+    }
 
   updateTitle();
 
@@ -1047,294 +1047,278 @@ void ImageViewer::draw_contents() {
   static const string histogramTooltipBase = "Histogram of color values. Adapts to the currently chosen channel group and error metric.";
   auto lazyCanvasStatistics = mImageCanvas->canvasStatistics();
   if (lazyCanvasStatistics) {
-      if (lazyCanvasStatistics->isReady()) {
-          auto statistics = lazyCanvasStatistics->get();
-          mHistogram->setNChannels(statistics->nChannels);
-          mHistogram->setValues(statistics->histogram);
-          mHistogram->setMinimum(statistics->minimum);
-          mHistogram->setMean(statistics->mean);
-          mHistogram->setMaximum(statistics->maximum);
-          mHistogram->setZero(statistics->histogramZero);
-          mHistogram->set_tooltip(tfm::format(
-              "%s\n\n"
-              "Minimum: %.3f\n"
-              "Mean: %.3f\n"
-              "Maximum: %.3f",
-              histogramTooltipBase,
-              statistics->minimum,
-              statistics->mean,
-              statistics->maximum)
-          );
+    if (lazyCanvasStatistics->isReady()) {
+      auto statistics = lazyCanvasStatistics->get();
+      mHistogram->setNChannels(statistics->nChannels);
+      mHistogram->setValues(statistics->histogram);
+      mHistogram->setMinimum(statistics->minimum);
+      mHistogram->setMean(statistics->mean);
+      mHistogram->setMaximum(statistics->maximum);
+      mHistogram->setZero(statistics->histogramZero);
+      mHistogram->set_tooltip (tfm::format (
+          "%s\n\n"
+          "Minimum: %.3f\n"
+          "Mean: %.3f\n"
+          "Maximum: %.3f",
+          histogramTooltipBase, statistics->minimum, statistics->mean, statistics->maximum));
       }
-  } else {
-      mHistogram->setNChannels(1);
-      mHistogram->setValues({0.0f});
-      mHistogram->setMinimum(0);
-      mHistogram->setMean(0);
-      mHistogram->setMaximum(0);
-      mHistogram->setZero(0);
-      mHistogram->set_tooltip(
-          tfm::format("%s", histogramTooltipBase)
-      );
+    }
+  else {
+    mHistogram->setNChannels (1);
+    mHistogram->setValues ({0.0f});
+    mHistogram->setMinimum (0);
+    mHistogram->setMean (0);
+    mHistogram->setMaximum (0);
+    mHistogram->setZero (0);
+    mHistogram->set_tooltip (tfm::format("%s", histogramTooltipBase));
+    }
   }
-}
 //}}}
 
 //{{{
 void ImageViewer::insertImage (shared_ptr<Image> image, size_t index, bool shallSelect) {
-    if (!image) {
-        throw invalid_argument{"Image may not be null."};
-    }
 
-    if (mIsDraggingImageButton && index <= mDraggedImageButtonId) {
-        ++mDraggedImageButtonId;
-    }
+  if (!image)
+    throw invalid_argument{"Image may not be null."};
 
-    for (auto button : mAnyImageButtons) {
-        button->set_enabled(true);
-    }
+  if (mIsDraggingImageButton && index <= mDraggedImageButtonId)
+    ++mDraggedImageButtonId;
 
-    auto button = new ImageButton{nullptr, image->name(), true};
-    button->set_font_size(15);
-    button->setId(index + 1);
-    button->set_tooltip(image->toString());
+  for (auto button : mAnyImageButtons)
+    button->set_enabled(true);
 
-    button->setSelectedCallback([this, image]() {
-        selectImage(image);
+  auto button = new ImageButton{nullptr, image->name(), true};
+  button->set_font_size(15);
+  button->setId(index + 1);
+  button->set_tooltip(image->toString());
+
+  button->setSelectedCallback ([this, image]() {
+    selectImage(image);
     });
 
-    button->setReferenceCallback([this, image](bool isReference) {
-        if (!isReference) {
-            selectReference(nullptr);
-        } else {
-            selectReference(image);
-        }
+  button->setReferenceCallback ([this, image](bool isReference) {
+    if (!isReference)
+      selectReference (nullptr);
+    else
+      selectReference (image);
     });
 
-    mImageButtonContainer->add_child((int)index, button);
-    mImages.insert(begin(mImages) + index, image);
+  mImageButtonContainer->add_child ((int)index, button);
+  mImages.insert (begin(mImages) + index, image);
 
-    // The following call will show thefooter if there is not an image
-    // with more than 1 group.
-    setUiVisible(isUiVisible());
+  // The following call will show thefooter if there is not an image
+  // with more than 1 group.
+  setUiVisible (isUiVisible());
 
-    // Ensure the new image button will have the correct visibility state.
-    setFilter(mFilter->value());
+  // Ensure the new image button will have the correct visibility state.
+  setFilter (mFilter->value());
 
-    requestLayoutUpdate();
+  requestLayoutUpdate();
 
-    // First image got added, let's select it.
-    if ((index == 0 && mImages.size() == 1) || shallSelect) {
-        selectImage(image);
-        if (!isMaximized()) {
-            set_size(sizeToFitImage(image));
-        }
+  // First image got added, let's select it.
+  if ((index == 0 && mImages.size() == 1) || shallSelect) {
+    selectImage (image);
+    if (!isMaximized()) {
+      set_size (sizeToFitImage (image));
+      }
     }
-}
+  }
 //}}}
 //{{{
 void ImageViewer::moveImageInList (size_t oldIndex, size_t newIndex) {
-    if (oldIndex == newIndex) {
-        return;
+
+  if (oldIndex == newIndex)
+    return;
+
+  TEV_ASSERT(oldIndex < mImages.size(), "oldIndex must be smaller than the number of images.");
+  TEV_ASSERT(newIndex < mImages.size(), "newIndex must be smaller than the number of images.");
+
+  auto* button = mImageButtonContainer->child_at((int)oldIndex);
+  button->inc_ref();
+  mImageButtonContainer->remove_child_at((int)oldIndex);
+  mImageButtonContainer->add_child((int)newIndex, button);
+  button->dec_ref();
+
+  auto startI = std::min(oldIndex, newIndex);
+  auto endI = std::max(oldIndex, newIndex);
+  for (size_t i = startI; i <= endI; ++i) {
+    auto* curButton = dynamic_cast<ImageButton*>(mImageButtonContainer->child_at((int)i));
+    curButton->setId(i+1);
     }
 
-    TEV_ASSERT(oldIndex < mImages.size(), "oldIndex must be smaller than the number of images.");
-    TEV_ASSERT(newIndex < mImages.size(), "newIndex must be smaller than the number of images.");
+  auto img = mImages[oldIndex];
+  mImages.erase(mImages.begin() + oldIndex);
+  mImages.insert(mImages.begin() + newIndex, img);
 
-    auto* button = mImageButtonContainer->child_at((int)oldIndex);
-    button->inc_ref();
-    mImageButtonContainer->remove_child_at((int)oldIndex);
-    mImageButtonContainer->add_child((int)newIndex, button);
-    button->dec_ref();
-
-    auto startI = std::min(oldIndex, newIndex);
-    auto endI = std::max(oldIndex, newIndex);
-    for (size_t i = startI; i <= endI; ++i) {
-        auto* curButton = dynamic_cast<ImageButton*>(mImageButtonContainer->child_at((int)i));
-        curButton->setId(i+1);
-    }
-
-    auto img = mImages[oldIndex];
-    mImages.erase(mImages.begin() + oldIndex);
-    mImages.insert(mImages.begin() + newIndex, img);
-
-    requestLayoutUpdate();
-}
+  requestLayoutUpdate();
+  }
 //}}}
 //{{{
 void ImageViewer::removeImage (shared_ptr<Image> image) {
-    int id = imageId(image);
-    if (id == -1) {
-        return;
+
+  int id = imageId(image);
+  if (id == -1)
+      return;
+
+  if (mIsDraggingImageButton) {
+    // If we're currently dragging the to-be-removed image, stop.
+    if ((size_t)id == mDraggedImageButtonId) {
+      requestLayoutUpdate();
+      mIsDraggingImageButton = false;
+      }
+    else if ((size_t)id < mDraggedImageButtonId)
+      --mDraggedImageButtonId;
     }
 
-    if (mIsDraggingImageButton) {
-        // If we're currently dragging the to-be-removed image, stop.
-        if ((size_t)id == mDraggedImageButtonId) {
-            requestLayoutUpdate();
-            mIsDraggingImageButton = false;
-        } else if ((size_t)id < mDraggedImageButtonId) {
-            --mDraggedImageButtonId;
-        }
+  auto nextCandidate = nextImage (image, Forward);
+  // If we rolled over, let's rather use the previous image.
+  // We don't want to jumpt to the beginning when deleting the
+  // last image in our list.
+  if (imageId(nextCandidate) < id)
+    nextCandidate = nextImage (image, Backward);
+
+  // Reset all focus as a workaround a crash caused by nanogui.
+  // TODO: Remove once a fix exists.
+  request_focus();
+
+  mImages.erase (begin (mImages) + id);
+  mImageButtonContainer->remove_child_at (id);
+
+  if (mImages.empty()) {
+    selectImage (nullptr);
+    selectReference (nullptr);
+    for (auto button : mAnyImageButtons)
+      button->set_enabled (false);
+    return;
     }
 
-    auto nextCandidate = nextImage(image, Forward);
-    // If we rolled over, let's rather use the previous image.
-    // We don't want to jumpt to the beginning when deleting the
-    // last image in our list.
-    if (imageId(nextCandidate) < id) {
-        nextCandidate = nextImage(image, Backward);
-    }
+  if (mCurrentImage == image)
+    selectImage(nextCandidate);
 
-    // Reset all focus as a workaround a crash caused by nanogui.
-    // TODO: Remove once a fix exists.
-    request_focus();
-
-    mImages.erase(begin(mImages) + id);
-    mImageButtonContainer->remove_child_at(id);
-
-    if (mImages.empty()) {
-        selectImage(nullptr);
-        selectReference(nullptr);
-
-        for (auto button : mAnyImageButtons) {
-            button->set_enabled(false);
-        }
-
-        return;
-    }
-
-    if (mCurrentImage == image) {
-        selectImage(nextCandidate);
-    }
-
-    if (mCurrentReference == image) {
-        selectReference(nextCandidate);
-    }
-}
+  if (mCurrentReference == image)
+   selectReference(nextCandidate);
+  }
 //}}}
 //{{{
 void ImageViewer::removeAllImages() {
-    if (mImages.empty())
-        return;
 
-    // Reset all focus as a workaround a crash caused by nanogui.
-    // TODO: Remove once a fix exists.
-    request_focus();
+  if (mImages.empty())
+      return;
 
-    for (size_t i = mImages.size(); i > 0; --i) {
-        mImageButtonContainer->remove_child_at((int)(i - 1));
-    }
-    mImages.clear();
+  // Reset all focus as a workaround a crash caused by nanogui.
+  // TODO: Remove once a fix exists.
+  request_focus();
 
-    // No images left to select
-    selectImage(nullptr);
-    selectReference(nullptr);
-    for (auto button : mAnyImageButtons) {
-        button->set_enabled(false);
-    }
-}
+  for (size_t i = mImages.size(); i > 0; --i)
+    mImageButtonContainer->remove_child_at((int)(i - 1));
+  mImages.clear();
+
+  // No images left to select
+  selectImage (nullptr);
+  selectReference (nullptr);
+  for (auto button : mAnyImageButtons)
+    button->set_enabled (false);
+  }
 //}}}
 //{{{
 void ImageViewer::replaceImage (shared_ptr<Image> image, shared_ptr<Image> replacement, bool shallSelect) {
-    if (replacement == nullptr) {
-        throw std::runtime_error{"Must not replace image with nullptr."};
+
+  if (replacement == nullptr)
+    throw std::runtime_error {"Must not replace image with nullptr."};
+
+  int currentId = imageId (mCurrentImage);
+  int id = imageId (image);
+  if (id == -1) {
+    addImage (replacement, shallSelect);
+    return;
     }
 
-    int currentId = imageId(mCurrentImage);
-    int id = imageId(image);
-    if (id == -1) {
-        addImage(replacement, shallSelect);
-        return;
-    }
+  // If we already have the image selected, we must re-select it
+  // regardless of the `shallSelect` parameter.
+  shallSelect |= currentId == id;
 
-    // If we already have the image selected, we must re-select it
-    // regardless of the `shallSelect` parameter.
-    shallSelect |= currentId == id;
+  int referenceId = imageId(mCurrentReference);
 
-    int referenceId = imageId(mCurrentReference);
+  removeImage(image);
+  insertImage(replacement, id, shallSelect);
 
-    removeImage(image);
-    insertImage(replacement, id, shallSelect);
-
-    if (referenceId != -1) {
-        selectReference(mImages[referenceId]);
-    }
-}
-
+  if (referenceId != -1)
+    selectReference(mImages[referenceId]);
+  }
+//}}}
+//{{{
 void ImageViewer::reloadImage(shared_ptr<Image> image, bool shallSelect) {
-    int id = imageId(image);
-    if (id == -1) {
-        return;
-    }
 
-    mImagesLoader->enqueue(image->path(), image->channelSelector(), shallSelect, image);
-}
+  int id = imageId (image);
+  if (id == -1)
+    return;
 
+  mImagesLoader->enqueue (image->path(), image->channelSelector(), shallSelect, image);
+  }
+//}}}
+//{{{
 void ImageViewer::reloadAllImages() {
-    for (size_t i = 0; i < mImages.size(); ++i) {
-        reloadImage(mImages[i]);
-    }
-}
+
+  for (size_t i = 0; i < mImages.size(); ++i)
+    reloadImage (mImages[i]);
+  }
 //}}}
 //{{{
 void ImageViewer::reloadImagesWhoseFileChanged() {
-    for (size_t i = 0; i < mImages.size(); ++i) {
-        auto& image = mImages[i];
-        if (!fs::exists(image->path())) {
-            continue;
-        }
 
-        fs::file_time_type fileLastModified;
+  for (size_t i = 0; i < mImages.size(); ++i) {
+    auto& image = mImages[i];
+    if (!fs::exists (image->path()))
+      continue;
 
-        // Unlikely, but the file could have been deleted, moved, or something
-        // else could have happened to it that makes obtaining its last modified
-        // time impossible. Ignore such errors.
-        try {
-            fileLastModified = fs::last_write_time(image->path());
-        } catch (...) {
-            continue;
-        }
+    fs::file_time_type fileLastModified;
 
-        if (fileLastModified != image->fileLastModified()) {
-            // Updating the last-modified date prevents double-scheduled
-            // reloads if the load take a lot of time or fails.
-            image->setFileLastModified(fileLastModified);
-            reloadImage(image);
-        }
+    // Unlikely, but the file could have been deleted, moved, or something
+    // else could have happened to it that makes obtaining its last modified
+    // time impossible. Ignore such errors.
+    try {
+      fileLastModified = fs::last_write_time (image->path());
+      }
+    catch (...) {
+      continue;
+      }
+
+    if (fileLastModified != image->fileLastModified()) {
+      // Updating the last-modified date prevents double-scheduled
+      // reloads if the load take a lot of time or fails.
+      image->setFileLastModified (fileLastModified);
+      reloadImage (image);
+      }
     }
-}
+  }
 //}}}
 //{{{
-void ImageViewer::updateImage(
-    const string& imageName,
-    bool shallSelect,
-    const string& channel,
-    int x, int y,
-    int width, int height,
-    const vector<float>& imageData
-) {
-    auto image = imageByName(imageName);
-    if (!image) {
-        tlog::warning() << "Image " << imageName << " could not be updated, because it does not exist.";
-        return;
+void ImageViewer::updateImage (const string& imageName,
+                               bool shallSelect,
+                               const string& channel,
+                               int x, int y,
+                               int width, int height,
+                               const vector<float>& imageData) {
+
+  auto image = imageByName (imageName);
+  if (!image) {
+    tlog::warning() << "Image " << imageName << " could not be updated, because it does not exist.";
+    return;
     }
 
-    image->updateChannel(channel, x, y, width, height, imageData);
-    if (shallSelect) {
-        selectImage(image);
-    }
+  image->updateChannel (channel, x, y, width, height, imageData);
+  if (shallSelect)
+    selectImage (image);
 
-    // This image needs newly computed statistics... so give it a new ID.
-    // However, if the image is currently shown, we don't want to overwhelm
-    // the CPU, so we only launch new statistics computations every so often.
-    // These computations are scheduled from `drawContents` via the `mToBump` set.
-    if (image != mCurrentImage && image != mCurrentReference) {
-        image->bumpId();
-    } else {
-        mToBump.insert(image);
-    }
-}
+  // This image needs newly computed statistics... so give it a new ID.
+  // However, if the image is currently shown, we don't want to overwhelm
+  // the CPU, so we only launch new statistics computations every so often.
+  // These computations are scheduled from `drawContents` via the `mToBump` set.
+  if (image != mCurrentImage && image != mCurrentReference)
+    image->bumpId();
+  else
+    mToBump.insert (image);
+  }
 //}}}
 //{{{
 void ImageViewer::selectImage (const shared_ptr<Image>& image, bool stopPlayback) {
@@ -1517,52 +1501,55 @@ void ImageViewer::selectReference (const shared_ptr<Image>& image) {
 
 //{{{
 void ImageViewer::setExposure (float value) {
-    value = round(value, 1.0f);
-    mExposureSlider->set_value(value);
-    mExposureLabel->set_caption(tfm::format("Exposure: %+.1f", value));
 
-    mImageCanvas->setExposure(value);
-}
+  value = round(value, 1.0f);
+  mExposureSlider->set_value (value);
+  mExposureLabel->set_caption (tfm::format("Exposure: %+.1f", value));
+
+  mImageCanvas->setExposure (value);
+  }
 //}}}
 //{{{
 void ImageViewer::setOffset (float value) {
-    value = round(value, 2.0f);
-    mOffsetSlider->set_value(value);
-    mOffsetLabel->set_caption(tfm::format("Offset: %+.2f", value));
 
-    mImageCanvas->setOffset(value);
-}
+  value = round (value, 2.0f);
+  mOffsetSlider->set_value (value);
+  mOffsetLabel->set_caption (tfm::format("Offset: %+.2f", value));
+
+  mImageCanvas->setOffset (value);
+  }
 //}}}
 //{{{
 void ImageViewer::setGamma (float value) {
-    value = round(value, 2.0f);
-    mGammaSlider->set_value(value);
-    mGammaLabel->set_caption(tfm::format("Gamma: %+.2f", value));
 
-    mImageCanvas->setGamma(value);
-}
+  value = round(value, 2.0f);
+  mGammaSlider->set_value (value);
+  mGammaLabel->set_caption (tfm::format("Gamma: %+.2f", value));
+
+  mImageCanvas->setGamma (value);
+  }
 //}}}
 //{{{
 void ImageViewer::normalizeExposureAndOffset() {
-    if (!mCurrentImage) {
-        return;
+
+  if (!mCurrentImage)
+    return;
+
+  auto channels = mCurrentImage->channelsInGroup(mCurrentGroup);
+
+  float minimum = numeric_limits<float>::max();
+  float maximum = numeric_limits<float>::min();
+  for (const auto& channelName : channels) {
+    const auto& channel = mCurrentImage->channel(channelName);
+    auto [cmin, cmax, cmean] = channel->minMaxMean();
+    maximum = max (maximum, cmax);
+    minimum = min (minimum, cmin);
     }
 
-    auto channels = mCurrentImage->channelsInGroup(mCurrentGroup);
-
-    float minimum = numeric_limits<float>::max();
-    float maximum = numeric_limits<float>::min();
-    for (const auto& channelName : channels) {
-        const auto& channel = mCurrentImage->channel(channelName);
-        auto [cmin, cmax, cmean] = channel->minMaxMean();
-        maximum = max(maximum, cmax);
-        minimum = min(minimum, cmin);
-    }
-
-    float factor = 1.0f / (maximum - minimum);
-    setExposure(log2(factor));
-    setOffset(-minimum * factor);
-}
+  float factor = 1.0f / (maximum - minimum);
+  setExposure (log2 (factor));
+  setOffset (-minimum * factor);
+  }
 //}}}
 
 //{{{

@@ -58,44 +58,33 @@ bool ImageCanvas::scroll_event (const Vector2i& p, const Vector2f& rel) {
 void ImageCanvas::draw_contents() {
 
   auto* glfwWindow = screen()->glfw_window();
-  bool altHeld = glfwGetKey(glfwWindow, GLFW_KEY_LEFT_ALT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_ALT);
-  bool ctrlHeld = glfwGetKey(glfwWindow, GLFW_KEY_LEFT_CONTROL) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_CONTROL);
+
+  bool altHeld = glfwGetKey (glfwWindow, GLFW_KEY_LEFT_ALT) || glfwGetKey (glfwWindow, GLFW_KEY_RIGHT_ALT);
+  bool ctrlHeld = glfwGetKey (glfwWindow, GLFW_KEY_LEFT_CONTROL) || glfwGetKey (glfwWindow, GLFW_KEY_RIGHT_CONTROL);
+
   Image* image = (mReference && altHeld) ? mReference.get() : mImage.get();
-
-  if (!image) {
-    mShader->draw (2.0f * inverse (Vector2f{m_size}) / mPixelRatio, Vector2f{20.0f});
-    return;
-    }
-
-  if (!mReference || ctrlHeld || image == mReference.get()) {
+  if (!image)
+    mShader->draw (2.0f * inverse (Vector2f {m_size}) / mPixelRatio, Vector2f {20.0f});
+  else if (!mReference || ctrlHeld || (image == mReference.get())) 
     mShader->draw (2.0f * inverse(Vector2f{m_size}) / mPixelRatio,
                    Vector2f{20.0f},
-                   image->texture(mRequestedChannelGroup),
+                   image->texture (mRequestedChannelGroup),
                    // The uber shader operates in [-1, 1] coordinates and requires the _inserve_
                    // image transform to obtain texture coordinates in [0, 1]-space.
-                   inverse(transform(image)),
-                   mExposure,
-                   mOffset,
-                   mGamma,
-                   mClipToLdr,
-                   mTonemap);
-    return;
-    }
-
-  mShader->draw (2.0f * inverse(Vector2f{m_size}) / mPixelRatio,
-                 Vector2f{20.0f},
-                 mImage->texture(mRequestedChannelGroup),
-                 // The uber shader operates in [-1, 1] coordinates and requires the _inserve_
-                 // image transform to obtain texture coordinates in [0, 1]-space.
-                 inverse(transform(mImage.get())),
-                 mReference->texture(mRequestedChannelGroup),
-                 inverse(transform(mReference.get())),
-                 mExposure,
-                 mOffset,
-                 mGamma,
-                 mClipToLdr,
-                 mTonemap,
-                 mMetric);
+                   inverse(transform (image)),
+                   mExposure, mOffset, mGamma,
+                   mClipToLdr, mTonemap);
+  else
+    mShader->draw (2.0f * inverse(Vector2f {m_size}) / mPixelRatio,
+                   Vector2f{20.0f},
+                   mImage->texture (mRequestedChannelGroup),
+                   // The uber shader operates in [-1, 1] coordinates and requires the _inserve_
+                   // image transform to obtain texture coordinates in [0, 1]-space.
+                   inverse(transform(mImage.get())),
+                   mReference->texture (mRequestedChannelGroup),
+                   inverse(transform (mReference.get())),
+                   mExposure, mOffset, mGamma,
+                   mClipToLdr, mTonemap, mMetric);
   }
 //}}}
 //{{{
@@ -122,58 +111,58 @@ void ImageCanvas::drawPixelValuesAsText (NVGcontext* ctx) {
     };
 
   if (pixelSize.x() > 50 && pixelSize.x() < 1024) {
-    vector<string> channels = mImage->channelsInGroup(mRequestedChannelGroup);
+    vector<string> channels = mImage->channelsInGroup (mRequestedChannelGroup);
     // Remove duplicates
-    channels.erase(unique(begin(channels), end(channels)), end(channels));
+    channels.erase (unique (begin (channels), end (channels)), end (channels));
 
     vector<Color> colors;
     for (const auto& channel : channels)
-      colors.emplace_back(Channel::color(channel));
+      colors.emplace_back (Channel::color (channel));
 
     float fontSize = pixelSize.x() / 6;
     if (colors.size() > 4)
       fontSize *= 4.0f / colors.size();
-    float fontAlpha = min(min(1.0f, (pixelSize.x() - 50) / 30), (1024 - pixelSize.x()) / 256);
+    float fontAlpha = min (min (1.0f, (pixelSize.x() - 50) / 30), (1024 - pixelSize.x()) / 256);
 
-    nvgFontSize(ctx, fontSize);
-    nvgFontFace(ctx, "sans");
-    nvgTextAlign(ctx, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+    nvgFontSize (ctx, fontSize);
+    nvgFontFace (ctx, "sans");
+    nvgTextAlign (ctx, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
     auto* glfwWindow = screen()->glfw_window();
     bool shiftAndControlHeld =
-      (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT)) &&
-      (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_CONTROL) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_CONTROL));
+      (glfwGetKey (glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey (glfwWindow, GLFW_KEY_RIGHT_SHIFT)) &&
+      (glfwGetKey (glfwWindow, GLFW_KEY_LEFT_CONTROL) || glfwGetKey (glfwWindow, GLFW_KEY_RIGHT_CONTROL));
 
     Vector2i cur;
     vector<float> values;
     for (cur.y() = startIndices.y(); cur.y() < endIndices.y(); ++cur.y()) {
       for (cur.x() = startIndices.x(); cur.x() < endIndices.x(); ++cur.x()) {
         Vector2i nano = Vector2i{texToNano * (Vector2f{cur} + Vector2f{0.5f})};
-        getValuesAtNanoPos(nano, values, channels);
+        getValuesAtNanoPos (nano, values, channels);
 
-        TEV_ASSERT(values.size() >= colors.size(), "Can not have more values than channels.");
+        TEV_ASSERT (values.size() >= colors.size(), "Can not have more values than channels.");
 
         for (size_t i = 0; i < colors.size(); ++i) {
           string str;
           Vector2f pos;
 
           if (shiftAndControlHeld) {
-            float tonemappedValue = Channel::tail(channels[i]) == "A" ? values[i] : toSRGB(values[i]);
+            float tonemappedValue = Channel::tail (channels[i]) == "A" ? values[i] : toSRGB(values[i]);
             unsigned char discretizedValue = (char)(tonemappedValue * 255 + 0.5f);
-            str = tfm::format("%02X", discretizedValue);
+            str = tfm::format ("%02X", discretizedValue);
 
             pos = Vector2f {m_pos.x() + nano.x() + (i - 0.5f * (colors.size() - 1)) * fontSize * 0.88f,
                             (float)m_pos.y() + nano.y(), };
             }
           else {
-            str = tfm::format("%.4f", values[i]);
+            str = tfm::format ("%.4f", values[i]);
             pos = Vector2f {(float)m_pos.x() + nano.x(),
                             m_pos.y() + nano.y() + (i - 0.5f * (colors.size() - 1)) * fontSize, };
             }
 
           Color col = colors[i];
-          nvgFillColor(ctx, Color(col.r(), col.g(), col.b(), fontAlpha));
-          drawTextWithShadow(ctx, pos.x(), pos.y(), str, fontAlpha);
+          nvgFillColor (ctx, Color(col.r(), col.g(), col.b(), fontAlpha));
+          drawTextWithShadow (ctx, pos.x(), pos.y(), str, fontAlpha);
           }
         }
       }
@@ -187,10 +176,7 @@ void ImageCanvas::drawCoordinateSystem (NVGcontext* ctx) {
 
   auto displayWindowToNano = displayWindowToNanogui (mImage.get());
 
-  enum DrawFlags {
-    Label = 1,
-    Region = 2,
-    };
+  enum DrawFlags { Label = 1, Region = 2, };
 
   auto drawWindow = [&](Box2f window, Color color, bool top, bool right, const std::string& name, DrawFlags flags) {
     float fontSize = 20;
@@ -239,8 +225,9 @@ void ImageCanvas::drawCoordinateSystem (NVGcontext* ctx) {
       float bottomLeftCornerRadius = !top && right ? cornerRadius : 0;
       float bottomRightCornerRadius = !top && !right ? cornerRadius : 0;
 
-      nvgRoundedRectVarying (
-          ctx, right ? (topRight.x() - textWidth - 4*strokeWidth) : topLeft.x() - strokeWidth/2, topLeft.y() - (top ? fontSize : 0), textWidth + 4*strokeWidth, fontSize,
+      nvgRoundedRectVarying (ctx, 
+        right ? 
+          (topRight.x() - textWidth - 4*strokeWidth) : topLeft.x() - strokeWidth/2, topLeft.y() - (top ? fontSize : 0), textWidth + 4*strokeWidth, fontSize,
           topLeftCornerRadius, topRightCornerRadius, bottomRightCornerRadius, bottomLeftCornerRadius
         );
       nvgFill (ctx);
@@ -252,8 +239,8 @@ void ImageCanvas::drawCoordinateSystem (NVGcontext* ctx) {
     nvgRestore (ctx);
     };
 
-  Color imageColor = Color(0.35f, 0.35f, 0.8f, 1.0f);
-  Color referenceColor = Color(0.7f, 0.4f, 0.4f, 1.0f);
+  Color imageColor = Color (0.35f, 0.35f, 0.8f, 1.0f);
+  Color referenceColor = Color (0.7f, 0.4f, 0.4f, 1.0f);
 
   auto draw = [&](DrawFlags flags) {
     if (mReference) {
@@ -264,8 +251,10 @@ void ImageCanvas::drawCoordinateSystem (NVGcontext* ctx) {
         drawWindow (mReference->displayWindow(), referenceColor, mReference->displayWindow().min.y() <= mReference->dataWindow().min.y(), true, "Reference display window", flags);
       }
 
-    drawWindow (mImage->dataWindow(),    imageColor,        mImage->displayWindow().min.y() > mImage->dataWindow().min.y(), false, "Data window", flags);
-    drawWindow (mImage->displayWindow(), Color(0.3f, 1.0f), mImage->displayWindow().min.y() <= mImage->dataWindow().min.y(),  false, "Display window", flags);
+    drawWindow (mImage->dataWindow(), imageColor, 
+                mImage->displayWindow().min.y() > mImage->dataWindow().min.y(), false, "Data window", flags);
+    drawWindow (mImage->displayWindow(), Color(0.3f, 1.0f), 
+                mImage->displayWindow().min.y() <= mImage->dataWindow().min.y(),  false, "Display window", flags);
     };
 
   // Draw all labels after the regions to ensure no occlusion
@@ -294,15 +283,15 @@ void ImageCanvas::drawEdgeShadows (NVGcontext* ctx) {
 //{{{
 void ImageCanvas::draw (NVGcontext* ctx) {
 
-  Canvas::draw(ctx);
+  Canvas::draw (ctx);
 
   if (mImage) {
-    drawPixelValuesAsText(ctx);
+    drawPixelValuesAsText (ctx);
 
     // If the coordinate system is in any sort of way non-trivial, draw it!
-    if (mImage->dataWindow() != mImage->displayWindow() || 
+    if (mImage->dataWindow() != mImage->displayWindow() ||
         mImage->displayWindow().min != Vector2i{0} ||
-        (mReference && (mReference->dataWindow() != mImage->dataWindow() || 
+        (mReference && (mReference->dataWindow() != mImage->dataWindow() ||
                         mReference->displayWindow() != mImage->displayWindow())))
       drawCoordinateSystem (ctx);
     }
@@ -484,7 +473,7 @@ std::vector<float> ImageCanvas::getHdrImageData (bool divideAlpha, int priority)
         float alpha = result[j * 4 + 3];
         if (alpha == 0) {
           result[j * 4 + i] = 0;
-          } 
+          }
         else {
           result[j * 4 + i] /= alpha;
           }
