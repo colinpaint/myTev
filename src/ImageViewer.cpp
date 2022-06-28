@@ -34,7 +34,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       mImagesLoader{imagesLoader} {
 
   if (floatBuffer && !m_float_buffer)
-    tlog::warning() << "Failed to create floating point frame buffer.";
+    tlog::warning() << "Failed to create floating point frame buffer";
 
   mSupportsHdr = m_float_buffer;
 
@@ -44,7 +44,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
   m_background = Color {0.23f, 1.0f};
 
   mVerticalScreenSplit = new Widget {this};
-  mVerticalScreenSplit->set_layout(new BoxLayout {Orientation::Vertical, Alignment::Fill});
+  mVerticalScreenSplit->set_layout (new BoxLayout {Orientation::Vertical, Alignment::Fill});
 
   auto horizontalScreenSplit = new Widget (mVerticalScreenSplit);
   horizontalScreenSplit->set_layout (new BoxLayout {Orientation::Horizontal, Alignment::Fill});
@@ -56,7 +56,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
   mHelpButton = new Button {tmp, "", FA_QUESTION};
   mHelpButton->set_callback ([this]() { toggleHelpWindow(); });
   mHelpButton->set_font_size (15);
-  mHelpButton->set_tooltip ("Information about using tev.");
+  mHelpButton->set_tooltip ("Information about using tev");
 
   mSidebarLayout = new Widget {tmp};
   mSidebarLayout->set_layout (new BoxLayout{Orientation::Vertical, Alignment::Fill, 0, 0});
@@ -288,7 +288,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       label->set_tooltip(
           "Select images either by left-clicking on them or by pressing arrow/number keys on your keyboard.\n"
           "Right-clicking an image marks it as the 'reference' image. "
-          "While a reference image is set, the currently selected image is not simply displayed, but compared to the reference image."
+          "While a reference image is set, the currently selected image is not simply displayed, but compared to the reference image"
       );
 
       //{{{  Histogram of selected image
@@ -409,7 +409,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
               reloadAllImages();
           }, 0, tfm::format("Reload All (%s+Shift+R or %s+F5)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
 
-          mWatchFilesForChangesButton = makeImageButton("W", true, {}, 0, "Watch image files and directories for changes and reload them automatically.");
+          mWatchFilesForChangesButton = makeImageButton("W", true, {}, 0, "Watch image files and directories for changes and reload them automatically");
           mWatchFilesForChangesButton->set_flags(Button::Flags::ToggleButton);
           mWatchFilesForChangesButton->set_change_callback([this](bool value) {
               setWatchFilesForChanges(value);
@@ -463,7 +463,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
   selectReference(nullptr);
 
   if (!maximize) {
-    this->set_size(nanogui::Vector2i(1024, 800));
+    this->set_size (nanogui::Vector2i (1024, 800));
     mDidFitToImage = 3;
     }
 
@@ -508,12 +508,12 @@ bool ImageViewer::mouse_button_event (const nanogui::Vector2i &p, int button, bo
     return true;
 
   if (down && !mIsDraggingImageButton) {
-    if (canDragSidebarFrom(p)) {
+    if (canDragSidebarFrom (p)) {
       mIsDraggingSidebar = true;
       mDraggingStartPosition = nanogui::Vector2f (p);
       return true;
       }
-    else if (mImageCanvas->contains(p)) {
+    else if (mImageCanvas->contains (p)) {
       mIsDraggingImage = true;
       mDraggingStartPosition = nanogui::Vector2f (p);
       return true;
@@ -560,8 +560,8 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
     //{{{  dragImage
     nanogui::Vector2f relativeMovement = {rel};
     auto* glfwWindow = screen()->glfw_window();
-    // There is no explicit access to the currently pressed modifier keys here, so we
-    // need to directly ask GLFW.
+
+    // There is no explicit access to the currently pressed modifier keys here, ask GLFW.
     if (glfwGetKey (glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(glfwWindow, GLFW_KEY_RIGHT_SHIFT))
       relativeMovement /= 10;
     else if (glfwGetKey (glfwWindow, SYSTEM_COMMAND_LEFT) || glfwGetKey(glfwWindow, SYSTEM_COMMAND_RIGHT))
@@ -579,6 +579,7 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
   else if (mIsDraggingImageButton) {
     //{{{  drag ImageButton
     auto& buttons = mImageButtonContainer->children();
+
     nanogui::Vector2i relMousePos = (absolute_position() + p) - mImageButtonContainer->absolute_position();
     for (size_t i = 0; i < buttons.size(); ++i) {
       if (i == mDraggedImageButtonId)
@@ -588,10 +589,10 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
       if (imgButton->contains(relMousePos)) {
         nanogui::Vector2i pos = imgButton->position();
         pos.y() += ((int)mDraggedImageButtonId - (int)i) * imgButton->size().y();
-        imgButton->set_position(pos);
-        imgButton->mouse_enter_event(relMousePos, false);
+        imgButton->set_position (pos);
+        imgButton->mouse_enter_event (relMousePos, false);
 
-        moveImageInList(mDraggedImageButtonId, i);
+        moveImageInList (mDraggedImageButtonId, i);
         mDraggedImageButtonId = i;
         break;
         }
@@ -607,7 +608,7 @@ bool ImageViewer::mouse_motion_event (const nanogui::Vector2i& p, const nanogui:
 //{{{
 bool ImageViewer::drop_event (const vector<string>& filenames) {
 
-  if (Screen::drop_event(filenames))
+  if (Screen::drop_event (filenames))
     return true;
 
   for (size_t i = 0; i < filenames.size(); ++i)
@@ -772,9 +773,9 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
       //{{{  sys + C
       if (mImageScrollContainer->focused()) {
         if (clip::set_text(mCurrentImage->name()))
-          tlog::success() << "Image path copied to clipboard.";
+          tlog::success() << "Image path copied to clipboard";
         else
-          tlog::error() << "Failed to copy image path to clipboard.";
+          tlog::error() << "Failed to copy image path to clipboard";
         }
 
       else {
@@ -799,9 +800,9 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
         clip::image image(imageData.data(), imageMetadata);
 
         if (clip::set_image(image))
-          tlog::success() << "Image copied to clipboard.";
+          tlog::success() << "Image copied to clipboard";
         else
-          tlog::error() << "Failed to copy image to clipboard.";
+          tlog::error() << "Failed to copy image to clipboard";
         }
       }
       //}}}
@@ -810,7 +811,7 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
       // if (clip::has(clip::text_format())) {
       //     string path;
       //     if (!clip::get_text(path)) {
-      //         tlog::error() << "Failed to paste text from clipboard.";
+      //         tlog::error() << "Failed to paste text from clipboard";
       //     } else {
       //         auto image = tryLoadImage(toPath(path), "");
       //         if (image) {
@@ -823,10 +824,10 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
       if (clip::has(clip::image_format())) {
         clip::image clipImage;
         if (!clip::get_image(clipImage)) {
-          tlog::error() << "Failed to paste image from clipboard.";
+          tlog::error() << "Failed to paste image from clipboard";
           }
         else {
-          tlog::info() << "Loading image from clipboard...";
+          tlog::info() << "Loading image from clipboard..";
           stringstream imageStream;
           imageStream << "clip"
                       << string(reinterpret_cast<const char*>(&clipImage.spec()), sizeof(clip::image_spec))
@@ -834,7 +835,7 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
 
           auto images = tryLoadImage(tfm::format("clipboard (%d)", ++mClipboardIndex), imageStream, "").get();
           if (images.empty()) {
-            tlog::error() << "Failed to load image from clipboard data.";
+            tlog::error() << "Failed to load image from clipboard data";
             }
           else {
             for (auto& image : images) {
@@ -865,7 +866,6 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
       mImageCanvas->scale (scaleAmount, {origin.x(), origin.y()});
       }
       //}}}
-
     if (key == GLFW_KEY_E) {
       //{{{  E
       if (modifiers & GLFW_MOD_SHIFT)
@@ -874,7 +874,6 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
         setExposure (exposure() + 0.5f);
       }
       //}}}
-
     if (key == GLFW_KEY_O) {
       //{{{  O
       if (modifiers & GLFW_MOD_SHIFT)
@@ -883,7 +882,6 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
         setOffset(offset() + 0.1f);
       }
       //}}}
-
     if (mGammaSlider->enabled()) {
       if (key == GLFW_KEY_G) {
         //{{{  G
@@ -894,7 +892,6 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
         }
         //}}}
       }
-
     if (key == GLFW_KEY_W && modifiers & SYSTEM_COMMAND_MOD) {
       //{{{  W
       if (modifiers & GLFW_MOD_SHIFT)
@@ -959,12 +956,12 @@ void ImageViewer::focusWindow() {
 
 //{{{
 void ImageViewer::draw_contents() {
+// HACK HACK HACK: on Windows, when restoring a window from maximization,
+//                 the old window size is restored _several times_, necessitating
+//                 a repeated resize to the actually desired window size.
 
-  // HACK HACK HACK: on Windows, when restoring a window from maximization,
-  //                 the old window size is restored _several times_, necessitating
-  //                 a repeated resize to the actually desired window size.
   if (mDidFitToImage < 3 && !isMaximized()) {
-    set_size(sizeToFitAllImages());
+    set_size (sizeToFitAllImages());
     ++mDidFitToImage;
     }
 
@@ -1008,16 +1005,17 @@ void ImageViewer::draw_contents() {
   while (auto task = mTaskQueue.tryPop())
     (*task)();
 
-  for (auto it = begin(mToBump); it != end(mToBump); ) {
+  for (auto it = begin (mToBump); it != end (mToBump); ) {
     auto& image = *it;
     bool isShown = image == mCurrentImage || image == mCurrentReference;
 
     // If the image is no longer shown, bump ID immediately. Otherwise, wait until canvas statistics were ready for over 200 ms.
-    if (!isShown || std::chrono::steady_clock::now() - mImageCanvas->canvasStatistics()->becameReadyAt() > 200ms) {
+    if (!isShown || 
+        std::chrono::steady_clock::now() - mImageCanvas->canvasStatistics()->becameReadyAt() > 200ms) {
       image->bumpId();
       auto localIt = it;
       ++it;
-      mToBump.erase(localIt);
+      mToBump.erase (localIt);
       }
     else
       ++it;
@@ -1029,7 +1027,7 @@ void ImageViewer::draw_contents() {
     }
 
   if (mRequiresLayoutUpdate) {
-    nanogui::Vector2i oldDraggedImageButtonPos{0, 0};
+    nanogui::Vector2i oldDraggedImageButtonPos {0, 0};
     auto& buttons = mImageButtonContainer->children();
     if (mIsDraggingImageButton)
       oldDraggedImageButtonPos = dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->position();
@@ -1044,7 +1042,7 @@ void ImageViewer::draw_contents() {
   updateTitle();
 
   // Update histogram
-  static const string histogramTooltipBase = "Histogram of color values. Adapts to the currently chosen channel group and error metric.";
+  static const string histogramTooltipBase = "Histogram of color values. Adapts to the currently chosen channel group and error metric";
   auto lazyCanvasStatistics = mImageCanvas->canvasStatistics();
   if (lazyCanvasStatistics) {
     if (lazyCanvasStatistics->isReady()) {
@@ -1079,7 +1077,7 @@ void ImageViewer::draw_contents() {
 void ImageViewer::insertImage (shared_ptr<Image> image, size_t index, bool shallSelect) {
 
   if (!image)
-    throw invalid_argument{"Image may not be null."};
+    throw invalid_argument {"Image may not be null"};
 
   if (mIsDraggingImageButton && index <= mDraggedImageButtonId)
     ++mDraggedImageButtonId;
@@ -1130,8 +1128,8 @@ void ImageViewer::moveImageInList (size_t oldIndex, size_t newIndex) {
   if (oldIndex == newIndex)
     return;
 
-  TEV_ASSERT(oldIndex < mImages.size(), "oldIndex must be smaller than the number of images.");
-  TEV_ASSERT(newIndex < mImages.size(), "newIndex must be smaller than the number of images.");
+  TEV_ASSERT(oldIndex < mImages.size(), "oldIndex must be smaller than the number of images");
+  TEV_ASSERT(newIndex < mImages.size(), "newIndex must be smaller than the number of images");
 
   auto* button = mImageButtonContainer->child_at((int)oldIndex);
   button->inc_ref();
@@ -1224,7 +1222,7 @@ void ImageViewer::removeAllImages() {
 void ImageViewer::replaceImage (shared_ptr<Image> image, shared_ptr<Image> replacement, bool shallSelect) {
 
   if (replacement == nullptr)
-    throw std::runtime_error {"Must not replace image with nullptr."};
+    throw std::runtime_error {"Must not replace image with nullptr"};
 
   int currentId = imageId (mCurrentImage);
   int id = imageId (image);
@@ -1302,7 +1300,7 @@ void ImageViewer::updateImage (const string& imageName,
 
   auto image = imageByName (imageName);
   if (!image) {
-    tlog::warning() << "Image " << imageName << " could not be updated, because it does not exist.";
+    tlog::warning() << "Image " << imageName << " could not be updated, because it does not exist";
     return;
     }
 
@@ -1322,181 +1320,167 @@ void ImageViewer::updateImage (const string& imageName,
 //}}}
 //{{{
 void ImageViewer::selectImage (const shared_ptr<Image>& image, bool stopPlayback) {
-    if (stopPlayback) {
-        mPlayButton->set_pushed(false);
-    }
 
-    for (auto button : mCurrentImageButtons) {
-        button->set_enabled(image != nullptr);
-    }
+  if (stopPlayback)
+    mPlayButton->set_pushed(false);
 
-    if (!image) {
-        auto& buttons = mImageButtonContainer->children();
-        for (size_t i = 0; i < buttons.size(); ++i) {
-            dynamic_cast<ImageButton*>(buttons[i])->setIsSelected(false);
-        }
+  for (auto button : mCurrentImageButtons)
+    button->set_enabled(image != nullptr);
 
-        mCurrentImage = nullptr;
-        mImageCanvas->setImage(nullptr);
-
-        // Clear group buttons
-        while (mGroupButtonContainer->child_count() > 0) {
-            mGroupButtonContainer->remove_child_at(mGroupButtonContainer->child_count() - 1);
-        }
-
-        requestLayoutUpdate();
-        return;
-    }
-
-    size_t id = (size_t)max(0, imageId(image));
-
-    // Don't do anything if the image that wants to be selected is not visible.
-    if (!mImageButtonContainer->child_at((int)id)->visible()) {
-        return;
-    }
-
+  if (!image) {
     auto& buttons = mImageButtonContainer->children();
-    for (size_t i = 0; i < buttons.size(); ++i) {
-        dynamic_cast<ImageButton*>(buttons[i])->setIsSelected(i == id);
-    }
+    for (size_t i = 0; i < buttons.size(); ++i)
+      dynamic_cast<ImageButton*>(buttons[i])->setIsSelected(false);
 
-    mCurrentImage = image;
-    mImageCanvas->setImage(mCurrentImage);
+    mCurrentImage = nullptr;
+    mImageCanvas->setImage (nullptr);
 
     // Clear group buttons
-    while (mGroupButtonContainer->child_count() > 0) {
-        mGroupButtonContainer->remove_child_at(mGroupButtonContainer->child_count() - 1);
+    while (mGroupButtonContainer->child_count() > 0)
+      mGroupButtonContainer->remove_child_at (mGroupButtonContainer->child_count() - 1);
+
+    requestLayoutUpdate();
+    return;
     }
 
-    size_t numGroups = mCurrentImage->channelGroups().size();
-    for (size_t i = 0; i < numGroups; ++i) {
-        auto group = groupName(i);
-        auto button = new ImageButton{mGroupButtonContainer, group, false};
-        button->set_font_size(15);
-        button->setId(i + 1);
+  size_t id = (size_t)max(0, imageId(image));
 
-        button->setSelectedCallback([this, group]() {
-            selectGroup(group);
-        });
+  // Don't do anything if the image that wants to be selected is not visible.
+  if (!mImageButtonContainer->child_at((int)id)->visible())
+    return;
+
+  auto& buttons = mImageButtonContainer->children();
+  for (size_t i = 0; i < buttons.size(); ++i)
+    dynamic_cast<ImageButton*>(buttons[i])->setIsSelected(i == id);
+
+  mCurrentImage = image;
+  mImageCanvas->setImage(mCurrentImage);
+
+  // Clear group buttons
+  while (mGroupButtonContainer->child_count() > 0)
+    mGroupButtonContainer->remove_child_at(mGroupButtonContainer->child_count() - 1);
+
+  size_t numGroups = mCurrentImage->channelGroups().size();
+  for (size_t i = 0; i < numGroups; ++i) {
+    auto group = groupName(i);
+    auto button = new ImageButton{mGroupButtonContainer, group, false};
+    button->set_font_size(15);
+    button->setId(i + 1);
+    button->setSelectedCallback([this, group]() {
+      selectGroup(group);
+      });
     }
 
-    // Setting the filter again makes sure, that groups are correctly filtered.
-    setFilter(mFilter->value());
-    updateLayout();
+  // Setting the filter again makes sure, that groups are correctly filtered.
+  setFilter (mFilter->value());
+  updateLayout();
 
-    // This will automatically fall back to the root group if the current
-    // group isn't found.
-    selectGroup(mCurrentGroup);
+  // This will automatically fall back to the root group if the current
+  // group isn't found.
+  selectGroup (mCurrentGroup);
 
-    // Ensure the currently active image button is always fully on-screen
-    Widget* activeImageButton = nullptr;
-    for (Widget* widget : mImageButtonContainer->children()) {
-        if (dynamic_cast<ImageButton*>(widget)->isSelected()) {
-            activeImageButton = widget;
-            break;
-        }
+  // Ensure the currently active image button is always fully on-screen
+  Widget* activeImageButton = nullptr;
+  for (Widget* widget : mImageButtonContainer->children()) {
+    if (dynamic_cast<ImageButton*>(widget)->isSelected()) {
+      activeImageButton = widget;
+      break;
+      }
     }
 
-    if (activeImageButton) {
-        float divisor = mScrollContent->height() - mImageScrollContainer->height();
-        if (divisor > 0) {
-            mImageScrollContainer->set_scroll(clamp(
-                mImageScrollContainer->scroll(),
-                (activeImageButton->position().y() + activeImageButton->height() - mImageScrollContainer->height()) / divisor,
-                activeImageButton->position().y() / divisor
-            ));
-        }
+  if (activeImageButton) {
+    float divisor = mScrollContent->height() - mImageScrollContainer->height();
+    if (divisor > 0) {
+      mImageScrollContainer->set_scroll (clamp (
+        mImageScrollContainer->scroll(),
+        (activeImageButton->position().y() + activeImageButton->height() - mImageScrollContainer->height()) / divisor,
+        activeImageButton->position().y() / divisor
+        ));
+      }
     }
-}
+  }
 //}}}
 //{{{
 void ImageViewer::selectGroup (string group) {
-    // If the group does not exist, select the first group.
-    size_t id = (size_t)max(0, groupId(group));
 
-    auto& buttons = mGroupButtonContainer->children();
-    for (size_t i = 0; i < buttons.size(); ++i) {
-        dynamic_cast<ImageButton*>(buttons[i])->setIsSelected(i == id);
+  // If the group does not exist, select the first group.
+  size_t id = (size_t)max(0, groupId(group));
+
+  auto& buttons = mGroupButtonContainer->children();
+  for (size_t i = 0; i < buttons.size(); ++i)
+    dynamic_cast<ImageButton*>(buttons[i])->setIsSelected(i == id);
+
+  mCurrentGroup = groupName(id);
+  mImageCanvas->setRequestedChannelGroup(mCurrentGroup);
+
+  // Ensure the currently active group button is always fully on-screen
+  Widget* activeGroupButton = nullptr;
+  for (Widget* widget : mGroupButtonContainer->children()) {
+    if (dynamic_cast<ImageButton*>(widget)->isSelected()) {
+      activeGroupButton = widget;
+      break;
+      }
     }
 
-    mCurrentGroup = groupName(id);
-    mImageCanvas->setRequestedChannelGroup(mCurrentGroup);
-
-    // Ensure the currently active group button is always fully on-screen
-    Widget* activeGroupButton = nullptr;
-    for (Widget* widget : mGroupButtonContainer->children()) {
-        if (dynamic_cast<ImageButton*>(widget)->isSelected()) {
-            activeGroupButton = widget;
-            break;
-        }
+  // Ensure the currently active group button is always fully on-screen
+  if (activeGroupButton) {
+    mGroupButtonContainer->set_position (nanogui::Vector2i {
+      clamp (mGroupButtonContainer->position().x(),
+             -activeGroupButton->position().x(),
+             m_size.x() - activeGroupButton->position().x() - activeGroupButton->width()), 0 });
     }
-
-    // Ensure the currently active group button is always fully on-screen
-    if (activeGroupButton) {
-        mGroupButtonContainer->set_position(nanogui::Vector2i{
-            clamp(
-                mGroupButtonContainer->position().x(),
-                -activeGroupButton->position().x(),
-                m_size.x() - activeGroupButton->position().x() - activeGroupButton->width()
-            ),
-            0
-        });
-    }
-}
+  }
 //}}}
 //{{{
 void ImageViewer::selectReference (const shared_ptr<Image>& image) {
-    if (!image) {
-        auto& buttons = mImageButtonContainer->children();
-        for (size_t i = 0; i < buttons.size(); ++i) {
-            dynamic_cast<ImageButton*>(buttons[i])->setIsReference(false);
-        }
 
-        auto& metricButtons = mMetricButtonContainer->children();
-        for (size_t i = 0; i < metricButtons.size(); ++i) {
-            dynamic_cast<Button*>(metricButtons[i])->set_enabled(false);
-        }
-
-        mCurrentReference = nullptr;
-        mImageCanvas->setReference(nullptr);
-        return;
-    }
-
-    size_t id = (size_t)max(0, imageId(image));
-
+  if (!image) {
     auto& buttons = mImageButtonContainer->children();
-    for (size_t i = 0; i < buttons.size(); ++i) {
-        dynamic_cast<ImageButton*>(buttons[i])->setIsReference(i == id);
-    }
+    for (size_t i = 0; i < buttons.size(); ++i)
+      dynamic_cast<ImageButton*>(buttons[i])->setIsReference(false);
 
     auto& metricButtons = mMetricButtonContainer->children();
-    for (size_t i = 0; i < metricButtons.size(); ++i) {
-        dynamic_cast<Button*>(metricButtons[i])->set_enabled(true);
+    for (size_t i = 0; i < metricButtons.size(); ++i)
+      dynamic_cast<Button*>(metricButtons[i])->set_enabled(false);
+
+    mCurrentReference = nullptr;
+    mImageCanvas->setReference(nullptr);
+    return;
     }
 
-    mCurrentReference = image;
-    mImageCanvas->setReference(mCurrentReference);
+  size_t id = (size_t)max(0, imageId(image));
 
-    // Ensure the currently active reference button is always fully on-screen
-    Widget* activeReferenceButton = nullptr;
-    for (Widget* widget : mImageButtonContainer->children()) {
-        if (dynamic_cast<ImageButton*>(widget)->isReference()) {
-            activeReferenceButton = widget;
-            break;
-        }
+  auto& buttons = mImageButtonContainer->children();
+  for (size_t i = 0; i < buttons.size(); ++i)
+    dynamic_cast<ImageButton*>(buttons[i])->setIsReference(i == id);
+
+  auto& metricButtons = mMetricButtonContainer->children();
+  for (size_t i = 0; i < metricButtons.size(); ++i)
+    dynamic_cast<Button*>(metricButtons[i])->set_enabled(true);
+
+  mCurrentReference = image;
+  mImageCanvas->setReference(mCurrentReference);
+
+  // Ensure the currently active reference button is always fully on-screen
+  Widget* activeReferenceButton = nullptr;
+  for (Widget* widget : mImageButtonContainer->children()) {
+    if (dynamic_cast<ImageButton*>(widget)->isReference()) {
+      activeReferenceButton = widget;
+      break;
+      }
     }
 
-    if (activeReferenceButton) {
-        float divisor = mScrollContent->height() - mImageScrollContainer->height();
-        if (divisor > 0) {
-            mImageScrollContainer->set_scroll(clamp(
-                mImageScrollContainer->scroll(),
-                (activeReferenceButton->position().y() + activeReferenceButton->height() - mImageScrollContainer->height()) / divisor,
-                activeReferenceButton->position().y() / divisor
-            ));
-        }
+  if (activeReferenceButton) {
+    float divisor = mScrollContent->height() - mImageScrollContainer->height();
+    if (divisor > 0) {
+      mImageScrollContainer->set_scroll(clamp(
+        mImageScrollContainer->scroll(),
+        (activeReferenceButton->position().y() + activeReferenceButton->height() - mImageScrollContainer->height()) / divisor,
+        activeReferenceButton->position().y() / divisor
+        ));
+      }
     }
-}
+  }
 //}}}
 
 //{{{
@@ -1641,467 +1625,451 @@ void ImageViewer::setUseRegex (bool value) {
 
 //{{{
 bool ImageViewer::watchFilesForChanges() const {
-    return mWatchFilesForChangesButton->pushed();
-}
+  return mWatchFilesForChangesButton->pushed();
+  }
 //}}}
 //{{{
 void ImageViewer::setWatchFilesForChanges (bool value) {
-    mWatchFilesForChangesButton->set_pushed(value);
-}
+   mWatchFilesForChangesButton->set_pushed(value);
+  }
 //}}}
 
 //{{{
 void ImageViewer::maximize() {
-    glfwMaximizeWindow(m_glfw_window);
-}
+  glfwMaximizeWindow (m_glfw_window);
+  }
 //}}}
 //{{{
 bool ImageViewer::isMaximized() {
-    return glfwGetWindowAttrib(m_glfw_window, GLFW_MAXIMIZED) != 0;
-}
+  return glfwGetWindowAttrib (m_glfw_window, GLFW_MAXIMIZED) != 0;
+  }
 //}}}
 //{{{
 void ImageViewer::toggleMaximized() {
-    if (isMaximized()) {
-        glfwRestoreWindow(m_glfw_window);
-    } else {
-        maximize();
-    }
-}
+
+  if (isMaximized())
+    glfwRestoreWindow (m_glfw_window);
+  else
+    maximize();
+  }
 //}}}
 //{{{
 void ImageViewer::setUiVisible (bool shouldBeVisible) {
-    if (!shouldBeVisible) {
-        mIsDraggingSidebar = false;
+
+  if (!shouldBeVisible)
+    mIsDraggingSidebar = false;
+
+  mSidebar->set_visible (shouldBeVisible);
+
+  bool shouldFooterBeVisible = false;
+  for (const auto& image : mImages) {
+    // There is no point showing the footer as long as no image
+    // has more than the root group.
+    if (image->channelGroups().size() > 1) {
+      shouldFooterBeVisible = true;
+      break;
+      }
     }
 
-    mSidebar->set_visible(shouldBeVisible);
-
-    bool shouldFooterBeVisible = false;
-    for (const auto& image : mImages) {
-        // There is no point showing the footer as long as no image
-        // has more than the root group.
-        if (image->channelGroups().size() > 1) {
-            shouldFooterBeVisible = true;
-            break;
-        }
-    }
-
-    mFooter->set_visible(shouldFooterBeVisible && shouldBeVisible);
-
-    requestLayoutUpdate();
-}
+  mFooter->set_visible (shouldFooterBeVisible && shouldBeVisible);
+  requestLayoutUpdate();
+  }
 //}}}
 //{{{
 void ImageViewer::toggleHelpWindow() {
-    if (mHelpWindow) {
-        mHelpWindow->dispose();
-        mHelpWindow = nullptr;
-    } else {
-        mHelpWindow = new HelpWindow{this, mSupportsHdr, [this] { toggleHelpWindow(); }};
-        mHelpWindow->center();
-        mHelpWindow->request_focus();
+
+  if (mHelpWindow) {
+    mHelpWindow->dispose();
+    mHelpWindow = nullptr;
+    }
+  else {
+    mHelpWindow = new HelpWindow{this, mSupportsHdr, [this] { toggleHelpWindow(); }};
+    mHelpWindow->center();
+    mHelpWindow->request_focus();
     }
 
-    requestLayoutUpdate();
-}
+  requestLayoutUpdate();
+  }
 //}}}
 
 //{{{
 void ImageViewer::openImageDialog() {
-    vector<string> paths = file_dialog(
+
+  vector<string> paths = file_dialog (
     {
-        // HDR formats
-        {"exr",  "OpenEXR image"},
-        {"hdr",  "HDR image"},
-        {"pfm",  "Portable Float Map image"},
-        // LDR formats
-        {"bmp",  "Bitmap Image File"},
-        {"gif",  "Graphics Interchange Format image"},
-        {"jpg",  "JPEG image"},
-        {"jpeg", "JPEG image"},
-        {"pic",  "PIC image"},
-        {"pgm",  "Portable GrayMap image"},
-        {"png",  "Portable Network Graphics image"},
-        {"pnm",  "Portable AnyMap image"},
-        {"ppm",  "Portable PixMap image"},
-        {"psd",  "PSD image"},
-        {"qoi",  "Quite OK Image format"},
-        {"tga",  "Truevision TGA image"},
+      // HDR formats
+      {"exr",  "OpenEXR image"},
+      {"hdr",  "HDR image"},
+      {"pfm",  "Portable Float Map image"},
+      // LDR formats
+      {"bmp",  "Bitmap Image File"},
+      {"gif",  "Graphics Interchange Format image"},
+      {"jpg",  "JPEG image"},
+      {"jpeg", "JPEG image"},
+      {"pic",  "PIC image"},
+      {"pgm",  "Portable GrayMap image"},
+      {"png",  "Portable Network Graphics image"},
+      {"pnm",  "Portable AnyMap image"},
+      {"ppm",  "Portable PixMap image"},
+      {"psd",  "PSD image"},
+      {"qoi",  "Quite OK Image format"},
+      {"tga",  "Truevision TGA image"},
     }, false, true);
 
-    for (size_t i = 0; i < paths.size(); ++i) {
-        bool shallSelect = i == paths.size() - 1;
-        mImagesLoader->enqueue(toPath(paths[i]), "", shallSelect);
+  for (size_t i = 0; i < paths.size(); ++i) {
+    bool shallSelect = i == paths.size() - 1;
+    mImagesLoader->enqueue (toPath (paths[i]), "", shallSelect);
     }
 
-    // Make sure we gain focus after seleting a file to be loaded.
-    focusWindow();
-}
+  // Make sure we gain focus after seleting a file to be loaded.
+  focusWindow();
+  }
 //}}}
 //{{{
 void ImageViewer::saveImageDialog() {
-    if (!mCurrentImage) {
-        return;
+
+  if (!mCurrentImage)
+    return;
+
+  fs::path path = toPath (file_dialog ( {
+                                          {"exr",  "OpenEXR image"},
+                                          {"hdr",  "HDR image"},
+                                          {"bmp",  "Bitmap Image File"},
+                                          {"jpg",  "JPEG image"},
+                                          {"jpeg", "JPEG image"},
+                                          {"png",  "Portable Network Graphics image"},
+                                          {"qoi",  "Quite OK Image format"},
+                                          {"tga",  "Truevision TGA image"},
+                                        }, true));
+
+  if (path.empty())
+    return;
+
+  try {
+    mImageCanvas->saveImage(path);
+    }
+  catch (const invalid_argument& e) {
+    new MessageDialog (this, MessageDialog::Type::Warning, "Error",
+                       tfm::format("Failed to save image: %s", e.what()));
     }
 
-    fs::path path = toPath(
-        file_dialog(
-            {
-                {"exr",  "OpenEXR image"},
-                {"hdr",  "HDR image"},
-                {"bmp",  "Bitmap Image File"},
-                {"jpg",  "JPEG image"},
-                {"jpeg", "JPEG image"},
-                {"png",  "Portable Network Graphics image"},
-                {"qoi",  "Quite OK Image format"},
-                {"tga",  "Truevision TGA image"},
-            },
-            true
-        )
-    );
-
-    if (path.empty()) {
-        return;
-    }
-
-    try {
-        mImageCanvas->saveImage(path);
-    } catch (const invalid_argument& e) {
-        new MessageDialog(
-            this,
-            MessageDialog::Type::Warning,
-            "Error",
-            tfm::format("Failed to save image: %s", e.what())
-        );
-    }
-
-    // Make sure we gain focus after seleting a file to be loaded.
-    focusWindow();
-}
+  // Make sure we gain focus after seleting a file to be loaded.
+  focusWindow();
+  }
 //}}}
 
 //{{{
 void ImageViewer::updateFilter() {
-    string filter = mFilter->value();
-    string imagePart = filter;
-    string groupPart = "";
 
-    auto colonPos = filter.find_last_of(':');
-    if (colonPos != string::npos) {
-        imagePart = filter.substr(0, colonPos);
-        groupPart = filter.substr(colonPos + 1);
+  string filter = mFilter->value();
+  string imagePart = filter;
+  string groupPart = "";
+
+  auto colonPos = filter.find_last_of(':');
+  if (colonPos != string::npos) {
+    imagePart = filter.substr(0, colonPos);
+    groupPart = filter.substr(colonPos + 1);
     }
 
-    // Image filtering
-    {
-        // Checks whether an image matches the filter.
-        // This is the case if the image name matches the image part
-        // and at least one of the image's groups matches the group part.
-        auto doesImageMatch = [&](const shared_ptr<Image>& image) {
-            bool doesMatch = matchesFuzzyOrRegex(image->name(), imagePart, useRegex());
-            if (doesMatch) {
-                bool anyGroupsMatch = false;
-                for (const auto& group : image->channelGroups()) {
-                    if (matchesFuzzyOrRegex(group.name, groupPart, useRegex())) {
-                        anyGroupsMatch = true;
-                        break;
+  // Image filtering
+  {
+    // Checks whether an image matches the filter.
+    // This is the case if the image name matches the image part
+    // and at least one of the image's groups matches the group part.
+    auto doesImageMatch = [&](const shared_ptr<Image>& image) {
+      bool doesMatch = matchesFuzzyOrRegex(image->name(), imagePart, useRegex());
+      if (doesMatch) {
+        bool anyGroupsMatch = false;
+        for (const auto& group : image->channelGroups()) {
+          if (matchesFuzzyOrRegex(group.name, groupPart, useRegex())) {
+            anyGroupsMatch = true;
+            break;
+            }
+          }
+        if (!anyGroupsMatch)
+          doesMatch = false;
+        }
+      return doesMatch;
+      };
+
+    vector<string> activeImageNames;
+    size_t id = 1;
+    for (size_t i = 0; i < mImages.size(); ++i) {
+      ImageButton* ib = dynamic_cast<ImageButton*>(mImageButtonContainer->children()[i]);
+      ib->set_visible(doesImageMatch (mImages[i]));
+      if (ib->visible()) {
+        ib->setId (id++);
+        activeImageNames.emplace_back (mImages[i]->name());
+        }
+      }
+
+    int beginOffset = 0, endOffset = 0;
+    if (!activeImageNames.empty()) {
+      string first = activeImageNames.front();
+      int firstSize = (int)first.size();
+      if (firstSize > 0) {
+        bool allStartWithSameChar;
+        do {
+          int len = codePointLength(first[beginOffset]);
+
+          allStartWithSameChar = all_of(
+                  begin(activeImageNames),
+                  end(activeImageNames),
+                  [&first, beginOffset, len](const string& name) {
+                      if (beginOffset + len > (int)name.size()) {
+                          return false;
+                      }
+                      for (int i = beginOffset; i < beginOffset + len; ++i) {
+                          if (name[i] != first[i]) {
+                              return false;
+                          }
+                      }
+                      return true;
+                  }
+              );
+
+          if (allStartWithSameChar)
+            beginOffset += len;
+          } while (allStartWithSameChar && beginOffset < firstSize);
+
+        bool allEndWithSameChar;
+        do {
+          char lastChar = first[firstSize - endOffset - 1];
+          allEndWithSameChar = all_of (
+                  begin(activeImageNames),
+                  end(activeImageNames),
+                  [lastChar, endOffset](const string& name) {
+                    int index = (int)name.size() - endOffset - 1;
+                    return index >= 0 && name[index] == lastChar;
                     }
-                }
+            );
 
-                if (!anyGroupsMatch) {
-                    doesMatch = false;
-                }
-            }
-
-            return doesMatch;
-        };
-
-        vector<string> activeImageNames;
-        size_t id = 1;
-        for (size_t i = 0; i < mImages.size(); ++i) {
-            ImageButton* ib = dynamic_cast<ImageButton*>(mImageButtonContainer->children()[i]);
-            ib->set_visible(doesImageMatch(mImages[i]));
-            if (ib->visible()) {
-                ib->setId(id++);
-                activeImageNames.emplace_back(mImages[i]->name());
-            }
+          if (allEndWithSameChar)
+            ++endOffset;
+          } while (allEndWithSameChar && endOffset < firstSize);
         }
+      }
 
-        int beginOffset = 0, endOffset = 0;
-        if (!activeImageNames.empty()) {
-            string first = activeImageNames.front();
-            int firstSize = (int)first.size();
-            if (firstSize > 0) {
-                bool allStartWithSameChar;
-                do {
-                    int len = codePointLength(first[beginOffset]);
+    for (size_t i = 0; i < mImages.size(); ++i) {
+      ImageButton* ib = dynamic_cast<ImageButton*>(mImageButtonContainer->children()[i]);
+      if (ib->visible())
+        ib->setHighlightRange (beginOffset, endOffset);
+      }
 
-                    allStartWithSameChar = all_of(
-                        begin(activeImageNames),
-                        end(activeImageNames),
-                        [&first, beginOffset, len](const string& name) {
-                            if (beginOffset + len > (int)name.size()) {
-                                return false;
-                            }
-                            for (int i = beginOffset; i < beginOffset + len; ++i) {
-                                if (name[i] != first[i]) {
-                                    return false;
-                                }
-                            }
-                            return true;
-                        }
-                    );
+    if (mCurrentImage && !doesImageMatch (mCurrentImage))
+      selectImage (nthVisibleImage (0));
 
-                    if (allStartWithSameChar) {
-                        beginOffset += len;
-                    }
-                } while (allStartWithSameChar && beginOffset < firstSize);
-
-                bool allEndWithSameChar;
-                do {
-                    char lastChar = first[firstSize - endOffset - 1];
-                    allEndWithSameChar = all_of(
-                        begin(activeImageNames),
-                        end(activeImageNames),
-                        [lastChar, endOffset](const string& name) {
-                            int index = (int)name.size() - endOffset - 1;
-                            return index >= 0 && name[index] == lastChar;
-                        }
-                    );
-
-                    if (allEndWithSameChar) {
-                        ++endOffset;
-                    }
-                } while (allEndWithSameChar && endOffset < firstSize);
-            }
-        }
-
-        for (size_t i = 0; i < mImages.size(); ++i) {
-            ImageButton* ib = dynamic_cast<ImageButton*>(mImageButtonContainer->children()[i]);
-            if (ib->visible()) {
-                ib->setHighlightRange(beginOffset, endOffset);
-            }
-        }
-
-        if (mCurrentImage && !doesImageMatch(mCurrentImage)) {
-            selectImage(nthVisibleImage(0));
-        }
-
-        if (mCurrentReference && !matchesFuzzyOrRegex(mCurrentReference->name(), imagePart, useRegex())) {
-            selectReference(nullptr);
-        }
+    if (mCurrentReference && !matchesFuzzyOrRegex (mCurrentReference->name(), imagePart, useRegex()))
+      selectReference (nullptr);
     }
 
-    // Group filtering
-    if (mCurrentImage) {
-        size_t id = 1;
-        const auto& buttons = mGroupButtonContainer->children();
-        for (Widget* button : buttons) {
-            ImageButton* ib = dynamic_cast<ImageButton*>(button);
-            ib->set_visible(matchesFuzzyOrRegex(ib->caption(), groupPart, useRegex()));
-            if (ib->visible()) {
-                ib->setId(id++);
-            }
-        }
+  // Group filtering
+  if (mCurrentImage) {
+    size_t id = 1;
+    const auto& buttons = mGroupButtonContainer->children();
+    for (Widget* button : buttons) {
+      ImageButton* ib = dynamic_cast<ImageButton*>(button);
+      ib->set_visible (matchesFuzzyOrRegex (ib->caption(), groupPart, useRegex()));
+      if (ib->visible())
+        ib->setId(id++);
+      }
 
-        if (!matchesFuzzyOrRegex(mCurrentGroup, groupPart, useRegex())) {
-            selectGroup(nthVisibleGroup(0));
-        }
+    if (!matchesFuzzyOrRegex (mCurrentGroup, groupPart, useRegex()))
+     selectGroup (nthVisibleGroup(0));
     }
 
-    requestLayoutUpdate();
-}
+  requestLayoutUpdate();
+  }
 //}}}
 //{{{
 void ImageViewer::updateLayout() {
-    int sidebarWidth = visibleSidebarWidth();
-    int footerHeight = visibleFooterHeight();
-    mImageCanvas->set_fixed_size(m_size - nanogui::Vector2i{sidebarWidth - 1, footerHeight - 1});
-    mSidebar->set_fixed_height(m_size.y() - footerHeight);
 
-    mVerticalScreenSplit->set_fixed_size(m_size);
-    mImageScrollContainer->set_fixed_height(
-        m_size.y() - mImageScrollContainer->position().y() - footerHeight
-    );
+  int sidebarWidth = visibleSidebarWidth();
+  int footerHeight = visibleFooterHeight();
+  mImageCanvas->set_fixed_size (m_size - nanogui::Vector2i{sidebarWidth - 1, footerHeight - 1});
+  mSidebar->set_fixed_height (m_size.y() - footerHeight);
 
-    if (mImageScrollContainer->fixed_height() < 100) {
-        // Stop scrolling the image button container and instead scroll the entire sidebar
-        mImageScrollContainer->set_fixed_height(0);
-    }
+  mVerticalScreenSplit->set_fixed_size (m_size);
+  mImageScrollContainer->set_fixed_height (m_size.y() - mImageScrollContainer->position().y() - footerHeight);
 
-    mSidebarLayout->parent()->set_height(mSidebarLayout->preferred_size(m_nvg_context).y());
-    perform_layout();
+  if (mImageScrollContainer->fixed_height() < 100)
+    // Stop scrolling the image button container and instead scroll the entire sidebar
+    mImageScrollContainer->set_fixed_height (0);
 
-    mSidebarLayout->set_fixed_width(mSidebarLayout->parent()->width());
-    mHelpButton->set_position(nanogui::Vector2i{mSidebarLayout->fixed_width() - 38, 5});
-    mFilter->set_fixed_width(mSidebarLayout->fixed_width() - 50);
-    perform_layout();
+  mSidebarLayout->parent()->set_height (mSidebarLayout->preferred_size(m_nvg_context).y());
+  perform_layout();
 
-    // With a changed layout the relative position of the mouse
-    // within children changes and therefore should get updated.
-    // nanogui does not handle this for us.
-    double x, y;
-    glfwGetCursorPos(m_glfw_window, &x, &y);
-    cursor_pos_callback_event(x, y);
-}
+  mSidebarLayout->set_fixed_width (mSidebarLayout->parent()->width());
+  mHelpButton->set_position (nanogui::Vector2i{mSidebarLayout->fixed_width() - 38, 5});
+  mFilter->set_fixed_width (mSidebarLayout->fixed_width() - 50);
+  perform_layout();
+
+  // With a changed layout the relative position of the mouse
+  // within children changes and therefore should get updated.
+  // nanogui does not handle this for us.
+  double x, y;
+  glfwGetCursorPos (m_glfw_window, &x, &y);
+  cursor_pos_callback_event (x, y);
+  }
 //}}}
 //{{{
 void ImageViewer::updateTitle() {
-    string caption = "tev";
-    if (mCurrentImage) {
-        auto channels = mCurrentImage->channelsInGroup(mCurrentGroup);
-        // Remove duplicates
-        channels.erase(unique(begin(channels), end(channels)), end(channels));
 
-        auto channelTails = channels;
-        transform(begin(channelTails), end(channelTails), begin(channelTails), Channel::tail);
+  string caption = "tev";
+  if (mCurrentImage) {
+    auto channels = mCurrentImage->channelsInGroup (mCurrentGroup);
+    // Remove duplicates
+    channels.erase (unique (begin (channels), end (channels)), end (channels));
 
-        caption = mCurrentImage->shortName();
-        caption += " – "s + mCurrentGroup;
+    auto channelTails = channels;
+    transform (begin (channelTails), end (channelTails), begin (channelTails), Channel::tail);
 
-        auto rel = mouse_pos() - mImageCanvas->position();
-        vector<float> values = mImageCanvas->getValuesAtNanoPos({rel.x(), rel.y()}, channels);
-        nanogui::Vector2i imageCoords = mImageCanvas->getImageCoords(*mCurrentImage, {rel.x(), rel.y()});
-        TEV_ASSERT(values.size() >= channelTails.size(), "Should obtain a value for every existing channel.");
+    caption = mCurrentImage->shortName();
+    caption += " – "s + mCurrentGroup;
 
-        string valuesString;
-        for (size_t i = 0; i < channelTails.size(); ++i) {
-            valuesString += tfm::format("%.2f,", values[i]);
-        }
-        valuesString.pop_back();
-        valuesString += " / 0x";
-        for (size_t i = 0; i < channelTails.size(); ++i) {
-            float tonemappedValue = channelTails[i] == "A" ? values[i] : toSRGB(values[i]);
-            unsigned char discretizedValue = (char)(tonemappedValue * 255 + 0.5f);
-            valuesString += tfm::format("%02X", discretizedValue);
-        }
+    auto rel = mouse_pos() - mImageCanvas->position();
+    vector<float> values = mImageCanvas->getValuesAtNanoPos({rel.x(), rel.y()}, channels);
+    nanogui::Vector2i imageCoords = mImageCanvas->getImageCoords (*mCurrentImage, {rel.x(), rel.y()});
+    TEV_ASSERT(values.size() >= channelTails.size(), "Should obtain a value for every existing channel");
 
-        caption += tfm::format(" – @(%d,%d)%s", imageCoords.x(), imageCoords.y(), valuesString);
-        caption += tfm::format(" – %d%%", (int)std::round(mImageCanvas->extractScale() * 100));
+    string valuesString;
+    for (size_t i = 0; i < channelTails.size(); ++i)
+      valuesString += tfm::format("%.2f,", values[i]);
+
+    valuesString.pop_back();
+    valuesString += " / 0x";
+    for (size_t i = 0; i < channelTails.size(); ++i) {
+      float tonemappedValue = channelTails[i] == "A" ? values[i] : toSRGB(values[i]);
+      unsigned char discretizedValue = (char)(tonemappedValue * 255 + 0.5f);
+      valuesString += tfm::format ("%02X", discretizedValue);
+      }
+
+    caption += tfm::format (" – @(%d,%d)%s", imageCoords.x(), imageCoords.y(), valuesString);
+    caption += tfm::format (" – %d%%", (int)std::round(mImageCanvas->extractScale() * 100));
     }
 
-    set_caption(caption);
-}
+  set_caption (caption);
+  }
 //}}}
 
 //{{{
 string ImageViewer::groupName (size_t index) {
-    if (!mCurrentImage) {
-        return "";
-    }
 
-    return mCurrentImage->channelGroups().at(index).name;
-}
+  if (!mCurrentImage)
+    return "";
+
+  return mCurrentImage->channelGroups().at(index).name;
+  }
 //}}}
 //{{{
 int ImageViewer::groupId (const string& groupName) const {
-    if (!mCurrentImage) {
-        return 0;
-    }
 
-    const auto& groups = mCurrentImage->channelGroups();
-    size_t pos = 0;
-    for (; pos < groups.size(); ++pos) {
-        if (groups[pos].name == groupName) {
-            break;
-        }
-    }
+  if (!mCurrentImage)
+    return 0;
 
-    return pos >= groups.size() ? -1 : (int)pos;
-}
+  const auto& groups = mCurrentImage->channelGroups();
+  size_t pos = 0;
+  for (; pos < groups.size(); ++pos)
+    if (groups[pos].name == groupName)
+      break;
+
+  return pos >= groups.size() ? -1 : (int)pos;
+  }
 //}}}
 //{{{
 int ImageViewer::imageId (const shared_ptr<Image>& image) const {
-    auto pos = static_cast<size_t>(distance(begin(mImages), find(begin(mImages), end(mImages), image)));
-    return pos >= mImages.size() ? -1 : (int)pos;
-}
+
+  auto pos = static_cast<size_t>(distance(begin(mImages), find(begin(mImages), end(mImages), image)));
+  return pos >= mImages.size() ? -1 : (int)pos;
+  }
 //}}}
 //{{{
 int ImageViewer::imageId (const string& imageName) const {
-    auto pos = static_cast<size_t>(distance(begin(mImages), find_if(begin(mImages), end(mImages), [&](const shared_ptr<Image>& image) {
-        return image->name() == imageName;
-    })));
-    return pos >= mImages.size() ? -1 : (int)pos;
-}
+
+  auto pos = static_cast<size_t>(distance (begin(mImages), find_if(begin(mImages), end(mImages),
+                                 [&](const shared_ptr<Image>& image) {
+                                   return image->name() == imageName;}) ) );
+
+  return pos >= mImages.size() ? -1 : (int)pos;
+  }
 //}}}
 //{{{
 string ImageViewer::nextGroup (const string& group, EDirection direction) {
-    if (mGroupButtonContainer->child_count() == 0) {
-        return mCurrentGroup;
-    }
 
-    int dir = direction == Forward ? 1 : -1;
+  if (mGroupButtonContainer->child_count() == 0)
+    return mCurrentGroup;
 
-    // If the group does not exist, start at index 0.
-    int startId = max(0, groupId(group));
+  int dir = direction == Forward ? 1 : -1;
 
-    int id = startId;
-    do {
-        id = (id + mGroupButtonContainer->child_count() + dir) % mGroupButtonContainer->child_count();
+  // If the group does not exist, start at index 0.
+  int startId = max(0, groupId(group));
+
+  int id = startId;
+  do {
+    id = (id + mGroupButtonContainer->child_count() + dir) % mGroupButtonContainer->child_count();
     } while (!mGroupButtonContainer->child_at(id)->visible() && id != startId);
 
-    return groupName(id);
-}
+  return groupName(id);
+  }
 //}}}
 //{{{
 string ImageViewer::nthVisibleGroup (size_t n) {
-    string lastVisible = mCurrentGroup;
-    for (int i = 0; i < mGroupButtonContainer->child_count(); ++i) {
-        if (mGroupButtonContainer->child_at(i)->visible()) {
-            lastVisible = groupName(i);
-            if (n == 0) {
-                break;
-            }
-            --n;
-        }
+
+  string lastVisible = mCurrentGroup;
+  for (int i = 0; i < mGroupButtonContainer->child_count(); ++i) {
+    if (mGroupButtonContainer->child_at (i)->visible()) {
+      lastVisible = groupName(i);
+      if (n == 0)
+        break;
+      --n;
+      }
     }
-    return lastVisible;
-}
+  return lastVisible;
+  }
 //}}}
 //{{{
 shared_ptr<Image> ImageViewer::nextImage (const shared_ptr<Image>& image, EDirection direction) {
-    if (mImages.empty()) {
-        return nullptr;
-    }
 
-    int dir = direction == Forward ? 1 : -1;
+  if (mImages.empty())
+     return nullptr;
 
-    // If the image does not exist, start at image 0.
-    int startId = max(0, imageId(image));
+  int dir = direction == Forward ? 1 : -1;
 
-    int id = startId;
-    do {
-        id = (id + mImageButtonContainer->child_count() + dir) % mImageButtonContainer->child_count();
+  // If the image does not exist, start at image 0.
+  int startId = max(0, imageId(image));
+
+  int id = startId;
+  do {
+    id = (id + mImageButtonContainer->child_count() + dir) % mImageButtonContainer->child_count();
     } while (!mImageButtonContainer->child_at(id)->visible() && id != startId);
 
-    return mImages[id];
-}
+  return mImages[id];
+  }
 //}}}
 //{{{
 shared_ptr<Image> ImageViewer::nthVisibleImage (size_t n) {
-    shared_ptr<Image> lastVisible = nullptr;
-    for (size_t i = 0; i < mImages.size(); ++i) {
-        if (mImageButtonContainer->children()[i]->visible()) {
-            lastVisible = mImages[i];
-            if (n == 0) {
-                break;
-            }
-            --n;
-        }
+
+  shared_ptr<Image> lastVisible = nullptr;
+  for (size_t i = 0; i < mImages.size(); ++i) {
+    if (mImageButtonContainer->children()[i]->visible()) {
+      lastVisible = mImages[i];
+      if (n == 0)
+        break;
+      --n;
+     }
     }
-    return lastVisible;
-}
+  return lastVisible;
+  }
 //}}}
 //{{{
 shared_ptr<Image> ImageViewer::imageByName (const string& imageName) {
-    int id = imageId(imageName);
-    if (id != -1) {
-        return mImages[id];
-    } else {
-        return nullptr;
-    }
-}
+
+  int id = imageId(imageName);
+  if (id != -1)
+    return mImages[id];
+  else
+    return nullptr;
+  }
 //}}}
 
 TEV_NAMESPACE_END

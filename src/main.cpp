@@ -1,7 +1,5 @@
-//{{{
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
-//}}}
 //{{{  includes
 #include <tev/Image.h>
 #include <tev/ImageViewer.h>
@@ -25,30 +23,27 @@
 using namespace args;
 using namespace std;
 //}}}
-
 TEV_NAMESPACE_BEGIN
+
 // Image viewer is a static variable to allow other parts of the program to easily schedule operations
 // onto the main nanogui thread loop.
 // In a truly modular program, this would never be required,
 // but OpenGL's state-machine nature throws a wrench into modularity.
 // Currently, the only use case is the destruction of
 // OpenGL textures, which _must_ happen on the thread on which the GL context is "current".
-
 static ImageViewer* sImageViewer = nullptr;
 
 //{{{
 void scheduleToMainThread (const std::function<void()>& fun) {
 
-  if (sImageViewer) {
+  if (sImageViewer)
     sImageViewer->scheduleToUiThread(fun);
-    }
   }
 //}}}
 //{{{
 void redrawWindow() {
-  if (sImageViewer) {
+  if (sImageViewer)
     sImageViewer->redraw();
-    }
   }
 //}}}
 //{{{
@@ -59,7 +54,7 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
     //{{{
     case IpcPacket::OpenImageV2: {
       auto info = packet.interpretAsOpenImage();
-      imagesLoader->enqueue(toPath(info.imagePath), ensureUtf8(info.channelSelector), info.grabFocus);
+      imagesLoader->enqueue (toPath (info.imagePath), ensureUtf8 (info.channelSelector), info.grabFocus);
       break;
       }
     //}}}
@@ -70,7 +65,7 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
 
       auto info = packet.interpretAsReloadImage();
       sImageViewer->scheduleToUiThread([&,info] {
-        sImageViewer->reloadImage(ensureUtf8(info.imageName), info.grabFocus);
+        sImageViewer->reloadImage (ensureUtf8 (info.imageName), info.grabFocus);
         });
 
       sImageViewer->redraw();
@@ -81,8 +76,8 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
     case IpcPacket::CloseImage: {
       while (!sImageViewer) { }
       auto info = packet.interpretAsCloseImage();
-      sImageViewer->scheduleToUiThread([&,info] {
-        sImageViewer->removeImage(ensureUtf8(info.imageName));
+      sImageViewer->scheduleToUiThread ([&,info] {
+        sImageViewer->removeImage (ensureUtf8 (info.imageName));
         });
 
       sImageViewer->redraw();
@@ -95,13 +90,13 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
     //{{{
     case IpcPacket::UpdateImageV3: {
 
-      while (!sImageViewer) { }
+      while (!sImageViewer) {}
+
       auto info = packet.interpretAsUpdateImage();
       sImageViewer->scheduleToUiThread([&,info] {
-        string imageString = ensureUtf8(info.imageName);
-        for (int i = 0; i < info.nChannels; ++i) {
-          sImageViewer->updateImage(imageString, info.grabFocus, info.channelNames[i], info.x, info.y, info.width, info.height, info.imageData[i]);
-          }
+        string imageString = ensureUtf8 (info.imageName);
+        for (int i = 0; i < info.nChannels; ++i) 
+          sImageViewer->updateImage (imageString, info.grabFocus, info.channelNames[i], info.x, info.y, info.width, info.height, info.imageData[i]);
         });
 
       sImageViewer->redraw();
@@ -112,23 +107,22 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
     //{{{
     case IpcPacket::CreateImage: {
 
-      while (!sImageViewer) { }
+      while (!sImageViewer) {}
 
       auto info = packet.interpretAsCreateImage();
       sImageViewer->scheduleToUiThread([&,info] {
         stringstream imageStream;
         imageStream << "empty" << " " << info.width << " " << info.height << " " << info.nChannels << " ";
 
-        for (int i = 0; i < info.nChannels; ++i) {
+        for (int i = 0; i < info.nChannels; ++i) 
           // The following lines encode strings by prefixing their length.
           // The reason for using this encoding is to allow  arbitrary characters,
           // including whitespaces, in the channel names.
           imageStream << info.channelNames[i].length() << info.channelNames[i];
-          }
 
-        auto images = tryLoadImage(toPath(info.imageName), imageStream, "").get();
+        auto images = tryLoadImage (toPath(info.imageName), imageStream, "").get();
         if (!images.empty()) {
-          sImageViewer->replaceImage(ensureUtf8(info.imageName), images.front(), info.grabFocus);
+          sImageViewer->replaceImage (ensureUtf8(info.imageName), images.front(), info.grabFocus);
           TEV_ASSERT(images.size() == 1, "IPC CreateImage should never create more than 1 image at once.");
           }
         });
@@ -138,9 +132,8 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
       }
     //}}}
 
-    default: {
+    default: 
       throw runtime_error { tfm::format ("Invalid IPC packet type %d", (int)packet.type()) };
-      }
     }
   }
 //}}}
@@ -339,7 +332,7 @@ int mainFunc (const vector<string>& arguments) {
 
       fs::path imagePath = toPath (imageFile);
       if (!fs::exists (imagePath)) {
-        tlog::error() << tfm::format("Image %s does not exist", imagePath);
+        tlog::error() << tfm::format ("Image %s does not exist", imagePath);
         continue;
         }
 
@@ -393,11 +386,10 @@ int mainFunc (const vector<string>& arguments) {
   // terminated as the main thread terminates.
   stdinThread.detach();
 
-  // Spawn another background thread, this one dealing with images passed to us
-  // via inter-process communication (IPC). This happens when
-  // a user starts another instance of tev while one is already running. Note, that this
-  // behavior can be overridden by the -n flag, so not _all_ secondary instances send their
-  // paths to the primary instance.
+  // Spawn another background thread, this one dealing with images passed to us via IPC
+  // This happens when // a user starts another instance of tev while one is already running. 
+  // Note, that this behavior can be overridden by the -n flag
+  // so not _all_ secondary instances send their paths to the primary instance.
   thread ipcThread = thread{[&]() {
     try {
       while (!shuttingDown()) {
@@ -472,22 +464,20 @@ int mainFunc (const vector<string>& arguments) {
       // If we didn't get any command line arguments for files to open,
       // then, on macOS, they might have been supplied through the NS api.
       const char* const* openedFiles = glfwGetOpenedFilenames();
-      if (openedFiles) {
-        for (auto p = openedFiles; *p; ++p) {
+      if (openedFiles)
+        for (auto p = openedFiles; *p; ++p)
           imagesLoader->enqueue(toPath(*p), "", false);
-          }
-        }
       }
 
     // 2. a callback for when the same application is opened additional
     //    times with more files.
     glfwSetOpenedFilenamesCallback([](const char* imageFile) {
-      sImageViewer->imagesLoader().enqueue(toPath(imageFile), "", false);
+      sImageViewer->imagesLoader().enqueue (toPath (imageFile), "", false);
       });
   #endif
 
   auto [capability10bit, capabilityEdr] = nanogui::test_10bit_edr_support();
-  if (get(ldrFlag)) {
+  if (get (ldrFlag)) {
     capability10bit = false;
     capabilityEdr = false;
     }
