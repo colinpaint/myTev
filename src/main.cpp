@@ -95,7 +95,7 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
       auto info = packet.interpretAsUpdateImage();
       sImageViewer->scheduleToUiThread([&,info] {
         string imageString = ensureUtf8 (info.imageName);
-        for (int i = 0; i < info.nChannels; ++i) 
+        for (int i = 0; i < info.nChannels; ++i)
           sImageViewer->updateImage (imageString, info.grabFocus, info.channelNames[i], info.x, info.y, info.width, info.height, info.imageData[i]);
         });
 
@@ -114,7 +114,7 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
         stringstream imageStream;
         imageStream << "empty" << " " << info.width << " " << info.height << " " << info.nChannels << " ";
 
-        for (int i = 0; i < info.nChannels; ++i) 
+        for (int i = 0; i < info.nChannels; ++i)
           // The following lines encode strings by prefixing their length.
           // The reason for using this encoding is to allow  arbitrary characters,
           // including whitespaces, in the channel names.
@@ -132,7 +132,7 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
       }
     //}}}
 
-    default: 
+    default:
       throw runtime_error { tfm::format ("Invalid IPC packet type %d", (int)packet.type()) };
     }
   }
@@ -387,7 +387,7 @@ int mainFunc (const vector<string>& arguments) {
   stdinThread.detach();
 
   // Spawn another background thread, this one dealing with images passed to us via IPC
-  // This happens when // a user starts another instance of tev while one is already running. 
+  // This happens when // a user starts another instance of tev while one is already running.
   // Note, that this behavior can be overridden by the -n flag
   // so not _all_ secondary instances send their paths to the primary instance.
   thread ipcThread = thread{[&]() {
@@ -501,7 +501,6 @@ int mainFunc (const vector<string>& arguments) {
   // sImageViewer is a raw pointer to make sure it will never get deleted.
   // nanogui crashes upon cleanup, so we better not try.
   sImageViewer = new ImageViewer { imagesLoader, maximize, capability10bit || capabilityEdr, capabilityEdr };
-
   sImageViewer->draw_all ();
   sImageViewer->set_visible (true);
   sImageViewer->redraw();

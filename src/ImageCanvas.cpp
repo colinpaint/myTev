@@ -24,30 +24,27 @@ TEV_NAMESPACE_BEGIN
 
 //{{{
 ImageCanvas::ImageCanvas (Widget* parent, float pixelRatio)
-: Canvas{parent, 1, false, false, false}, mPixelRatio{pixelRatio} {
-    mShader.reset(new UberShader{render_pass()});
-    set_draw_border(false);
-}
+    : Canvas{parent, 1, false, false, false}, mPixelRatio{pixelRatio} {
+
+  mShader.reset (new UberShader {render_pass()});
+  set_draw_border (false);
+  }
 //}}}
 
 //{{{
 bool ImageCanvas::scroll_event (const Vector2i& p, const Vector2f& rel) {
 
-  if (Canvas::scroll_event(p, rel)) {
+  if (Canvas::scroll_event (p, rel)) 
     return true;
-    }
 
   float scaleAmount = rel.y();
   auto* glfwWindow = screen()->glfw_window();
 
-  // There is no explicit access to the currently pressed modifier keys here, so we
-  // need to directly ask GLFW.
-  if (glfwGetKey (glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey (glfwWindow, GLFW_KEY_RIGHT_SHIFT)) {
+  // There is no explicit access to the currently pressed modifier keys here, ask GLFW.
+  if (glfwGetKey (glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey (glfwWindow, GLFW_KEY_RIGHT_SHIFT))
     scaleAmount /= 10;
-    }
-  else if (glfwGetKey (glfwWindow, SYSTEM_COMMAND_LEFT) || glfwGetKey (glfwWindow, SYSTEM_COMMAND_RIGHT)) {
+  else if (glfwGetKey (glfwWindow, SYSTEM_COMMAND_LEFT) || glfwGetKey (glfwWindow, SYSTEM_COMMAND_RIGHT))
     scaleAmount /= std::log2(1.1f);
-    }
 
   scale (scaleAmount, Vector2f{p});
   return true;
@@ -65,8 +62,9 @@ void ImageCanvas::draw_contents() {
   Image* image = (mReference && altHeld) ? mReference.get() : mImage.get();
   if (!image)
     mShader->draw (2.0f * inverse (Vector2f {m_size}) / mPixelRatio, Vector2f {20.0f});
-  else if (!mReference || ctrlHeld || (image == mReference.get())) 
-    mShader->draw (2.0f * inverse(Vector2f{m_size}) / mPixelRatio,
+
+  else if (!mReference || ctrlHeld || (image == mReference.get()))
+    mShader->draw (2.0f * inverse (Vector2f{m_size}) / mPixelRatio,
                    Vector2f{20.0f},
                    image->texture (mRequestedChannelGroup),
                    // The uber shader operates in [-1, 1] coordinates and requires the _inserve_
@@ -74,13 +72,14 @@ void ImageCanvas::draw_contents() {
                    inverse(transform (image)),
                    mExposure, mOffset, mGamma,
                    mClipToLdr, mTonemap);
+
   else
     mShader->draw (2.0f * inverse(Vector2f {m_size}) / mPixelRatio,
                    Vector2f{20.0f},
                    mImage->texture (mRequestedChannelGroup),
                    // The uber shader operates in [-1, 1] coordinates and requires the _inserve_
                    // image transform to obtain texture coordinates in [0, 1]-space.
-                   inverse(transform(mImage.get())),
+                   inverse (transform (mImage.get())),
                    mReference->texture (mRequestedChannelGroup),
                    inverse(transform (mReference.get())),
                    mExposure, mOffset, mGamma,
@@ -182,10 +181,10 @@ void ImageCanvas::drawCoordinateSystem (NVGcontext* ctx) {
     float fontSize = 20;
     float strokeWidth = 3.0f;
 
-    Vector2i topLeft     = m_pos + Vector2i{displayWindowToNano * Vector2f{window.min.x(), window.min.y()}};
-    Vector2i topRight    = m_pos + Vector2i{displayWindowToNano * Vector2f{window.max.x(), window.min.y()}};
-    Vector2i bottomLeft  = m_pos + Vector2i{displayWindowToNano * Vector2f{window.min.x(), window.max.y()}};
-    Vector2i bottomRight = m_pos + Vector2i{displayWindowToNano * Vector2f{window.max.x(), window.max.y()}};
+    Vector2i topLeft     = m_pos + Vector2i {displayWindowToNano * Vector2f {window.min.x(), window.min.y()}};
+    Vector2i topRight    = m_pos + Vector2i {displayWindowToNano * Vector2f {window.max.x(), window.min.y()}};
+    Vector2i bottomLeft  = m_pos + Vector2i {displayWindowToNano * Vector2f {window.min.x(), window.max.y()}};
+    Vector2i bottomRight = m_pos + Vector2i {displayWindowToNano * Vector2f {window.max.x(), window.max.y()}};
 
     nvgSave (ctx);
 
@@ -225,8 +224,8 @@ void ImageCanvas::drawCoordinateSystem (NVGcontext* ctx) {
       float bottomLeftCornerRadius = !top && right ? cornerRadius : 0;
       float bottomRightCornerRadius = !top && !right ? cornerRadius : 0;
 
-      nvgRoundedRectVarying (ctx, 
-        right ? 
+      nvgRoundedRectVarying (ctx,
+        right ?
           (topRight.x() - textWidth - 4*strokeWidth) : topLeft.x() - strokeWidth/2, topLeft.y() - (top ? fontSize : 0), textWidth + 4*strokeWidth, fontSize,
           topLeftCornerRadius, topRightCornerRadius, bottomRightCornerRadius, bottomLeftCornerRadius
         );
@@ -251,9 +250,9 @@ void ImageCanvas::drawCoordinateSystem (NVGcontext* ctx) {
         drawWindow (mReference->displayWindow(), referenceColor, mReference->displayWindow().min.y() <= mReference->dataWindow().min.y(), true, "Reference display window", flags);
       }
 
-    drawWindow (mImage->dataWindow(), imageColor, 
+    drawWindow (mImage->dataWindow(), imageColor,
                 mImage->displayWindow().min.y() > mImage->dataWindow().min.y(), false, "Data window", flags);
-    drawWindow (mImage->displayWindow(), Color(0.3f, 1.0f), 
+    drawWindow (mImage->displayWindow(), Color(0.3f, 1.0f),
                 mImage->displayWindow().min.y() <= mImage->dataWindow().min.y(),  false, "Display window", flags);
     };
 
@@ -314,17 +313,16 @@ void ImageCanvas::scale (float amount, const Vector2f& origin) {
 
   // Use the current cursor position as the origin to scale around.
   Vector2f offset = -(origin - Vector2f{position()}) + 0.5f * Vector2f{m_size};
-  auto scaleTransform =
-      Matrix3f::translate(-offset) *
-      Matrix3f::scale(Vector2f{scaleFactor}) *
-      Matrix3f::translate(offset);
+  auto scaleTransform = Matrix3f::translate(-offset) *
+                        Matrix3f::scale(Vector2f{scaleFactor}) *
+                        Matrix3f::translate(offset);
 
   mTransform = scaleTransform * mTransform;
   }
 //}}}
 //{{{
 float ImageCanvas::applyExposureAndOffset (float value) const {
-  return pow(2.0f, mExposure) * value + mOffset;
+  return pow (2.0f, mExposure) * value + mOffset;
   }
 //}}}
 
@@ -339,9 +337,9 @@ Vector2i ImageCanvas::getImageCoords (const Image& image, Vector2i nanoPos) {
 void ImageCanvas::getValuesAtNanoPos (Vector2i nanoPos, vector<float>& result, const vector<string>& channels) {
 
   result.clear();
-  if (!mImage) {
+
+  if (!mImage) 
     return;
-    }
 
   auto imageCoords = getImageCoords(*mImage, nanoPos);
   for (const auto& channel : channels) {
@@ -368,52 +366,53 @@ void ImageCanvas::getValuesAtNanoPos (Vector2i nanoPos, vector<float>& result, c
 Vector3f ImageCanvas::applyTonemap (const Vector3f& value, float gamma, ETonemap tonemap) {
 
   Vector3f result;
-  switch (tonemap) {
-      case ETonemap::SRGB:
-          {
-              result = {toSRGB(value.x()), toSRGB(value.y()), toSRGB(value.z())};
-              break;
-          }
-      case ETonemap::Gamma:
-          {
-              result = {pow(value.x(), 1 / gamma), pow(value.y(), 1 / gamma), pow(value.z(), 1 / gamma)};
-              break;
-          }
-      case ETonemap::FalseColor:
-          {
-              static const auto falseColor = [](float linear) {
-                  static const auto& fcd = colormap::turbo();
-                  int start = 4 * clamp((int)(linear * (fcd.size() / 4)), 0, (int)fcd.size() / 4 - 1);
-                  return Vector3f{fcd[start], fcd[start + 1], fcd[start + 2]};
-              };
 
-              result = falseColor(log2(mean(value) + 0.03125f) / 10 + 0.5f);
-              break;
-          }
-      case ETonemap::PositiveNegative:
-          {
-              result = {-2.0f * mean(min(value, Vector3f{0.0f})), 2.0f * mean(max(value, Vector3f{0.0f})), 0.0f};
-              break;
-          }
-      default:
-          throw runtime_error{"Invalid tonemap selected."};
-  }
+  switch (tonemap) {
+    case ETonemap::SRGB: {
+      result = {toSRGB(value.x()), toSRGB(value.y()), toSRGB(value.z())};
+      break;
+      }
+
+    case ETonemap::Gamma: {
+      result = {pow(value.x(), 1 / gamma), pow(value.y(), 1 / gamma), pow(value.z(), 1 / gamma)};
+      break;
+      }
+
+    case ETonemap::FalseColor: {
+      static const auto falseColor = [](float linear) {
+        static const auto& fcd = colormap::turbo();
+        int start = 4 * clamp ((int)(linear * (fcd.size() / 4)), 0, (int)fcd.size() / 4 - 1);
+        return Vector3f {fcd[start], fcd[start + 1], fcd[start + 2]};
+        };
+
+      result = falseColor (log2(mean(value) + 0.03125f) / 10 + 0.5f);
+      break;
+      }
+
+    case ETonemap::PositiveNegative: {
+      result = {-2.0f * mean(min(value, Vector3f{0.0f})), 2.0f * mean(max(value, Vector3f{0.0f})), 0.0f};
+      break;
+      }
+
+    default:
+      throw runtime_error{"Invalid tonemap selected."};
+    }
 
   return min(max(result, Vector3f{0.0f}), Vector3f{1.0f});
-}
+  }
 //}}}
 //{{{
 float ImageCanvas::applyMetric (float image, float reference, EMetric metric) {
 
   float diff = image - reference;
   switch (metric) {
-      case EMetric::Error:                 return diff;
-      case EMetric::AbsoluteError:         return abs(diff);
-      case EMetric::SquaredError:          return diff * diff;
-      case EMetric::RelativeAbsoluteError: return abs(diff) / (reference + 0.01f);
-      case EMetric::RelativeSquaredError:  return diff * diff / (reference * reference + 0.01f);
-      default:
-          throw runtime_error{"Invalid metric selected."};
+    case EMetric::Error:                 return diff;
+    case EMetric::AbsoluteError:         return abs (diff);
+    case EMetric::SquaredError:          return diff * diff;
+    case EMetric::RelativeAbsoluteError: return abs (diff) / (reference + 0.01f);
+    case EMetric::RelativeSquaredError:  return diff * diff / (reference * reference + 0.01f);
+    default:
+      throw runtime_error{"Invalid metric selected."};
     }
   }
 //}}}
@@ -421,13 +420,13 @@ float ImageCanvas::applyMetric (float image, float reference, EMetric metric) {
 //{{{
 void ImageCanvas::fitImageToScreen (const Image& image) {
 
-  Vector2f nanoguiImageSize = Vector2f{image.displayWindow().size()} / mPixelRatio;
-  mTransform = Matrix3f::scale(Vector2f{min(m_size.x() / nanoguiImageSize.x(), m_size.y() / nanoguiImageSize.y())});
+  Vector2f nanoguiImageSize = Vector2f {image.displayWindow().size()} / mPixelRatio;
+  mTransform = Matrix3f::scale (Vector2f {min(m_size.x() / nanoguiImageSize.x(), m_size.y() / nanoguiImageSize.y())});
   }
 //}}}
 //{{{
 void ImageCanvas::resetTransform() {
-  mTransform = Matrix3f::scale(Vector2f{1.0f});
+  mTransform = Matrix3f::scale (Vector2f{1.0f});
   }
 //}}}
 
@@ -436,16 +435,14 @@ std::vector<float> ImageCanvas::getHdrImageData (bool divideAlpha, int priority)
 
   std::vector<float> result;
 
-  if (!mImage) {
+  if (!mImage) 
     return result;
-    }
 
   const auto& channels = channelsFromImages (mImage, mReference, mRequestedChannelGroup, mMetric, priority);
   auto numPixels = mImage->numPixels();
 
-  if (channels.empty()) {
+  if (channels.empty())
     return result;
-    }
 
   int nChannelsToSave = std::min ((int)channels.size(), 4);
 
@@ -453,30 +450,25 @@ std::vector<float> ImageCanvas::getHdrImageData (bool divideAlpha, int priority)
   result.resize(4 * numPixels, 0);
 
   ThreadPool::global().parallelFor (0, nChannelsToSave, [&channels, &result](int i) {
-      const auto& channelData = channels[i].data();
-      for (size_t j = 0; j < channelData.size(); ++j) {
-          result[j * 4 + i] = channelData[j];
-      }
+    const auto& channelData = channels[i].data();
+    for (size_t j = 0; j < channelData.size(); ++j) 
+      result[j * 4 + i] = channelData[j];
     }, priority);
 
   // Manually set alpha channel to 1 if the image does not have one.
-  if (nChannelsToSave < 4) {
-    for (size_t i = 0; i < numPixels; ++i) {
+  if (nChannelsToSave < 4) 
+    for (size_t i = 0; i < numPixels; ++i) 
       result[i * 4 + 3] = 1;
-      }
-    }
 
   // Divide alpha out if needed (for storing in non-premultiplied formats)
   if (divideAlpha) {
     ThreadPool::global().parallelFor(0, min(nChannelsToSave, 3), [&result,numPixels](int i) {
       for (size_t j = 0; j < numPixels; ++j) {
         float alpha = result[j * 4 + 3];
-        if (alpha == 0) {
+        if (alpha == 0)
           result[j * 4 + i] = 0;
-          }
-        else {
+        else
           result[j * 4 + i] /= alpha;
-          }
         }
       }, priority);
     }
@@ -489,12 +481,11 @@ std::vector<char> ImageCanvas::getLdrImageData (bool divideAlpha, int priority) 
 
   std::vector<char> result;
 
-  if (!mImage) {
+  if (!mImage)
     return result;
-    }
 
   auto numPixels = mImage->numPixels();
-  auto floatData = getHdrImageData(divideAlpha, priority);
+  auto floatData = getHdrImageData (divideAlpha, priority);
 
   // Store as LDR image.
   result.resize(floatData.size());
@@ -502,16 +493,16 @@ std::vector<char> ImageCanvas::getLdrImageData (bool divideAlpha, int priority) 
   ThreadPool::global().parallelFor<size_t>(0, numPixels, [&](size_t i) {
     size_t start = 4 * i;
     Vector3f value = applyTonemap({
-      applyExposureAndOffset(floatData[start]),
-      applyExposureAndOffset(floatData[start + 1]),
-      applyExposureAndOffset(floatData[start + 2]),
+      applyExposureAndOffset (floatData[start]),
+      applyExposureAndOffset (floatData[start + 1]),
+      applyExposureAndOffset (floatData[start + 2]),
       });
-    for (int j = 0; j < 3; ++j) {
+
+    for (int j = 0; j < 3; ++j)
       floatData[start + j] = value[j];
-      }
-    for (int j = 0; j < 4; ++j) {
+
+    for (int j = 0; j < 4; ++j)
       result[start + j] = (char)(floatData[start + j] * 255 + 0.5f);
-      }
     }, priority);
 
   return result;
@@ -520,9 +511,8 @@ std::vector<char> ImageCanvas::getLdrImageData (bool divideAlpha, int priority) 
 //{{{
 void ImageCanvas::saveImage (const fs::path& path) const {
 
-  if (!mImage) {
+  if (!mImage)
     return;
-    }
 
   Vector2i imageSize = mImage->size();
 
@@ -530,39 +520,35 @@ void ImageCanvas::saveImage (const fs::path& path) const {
   auto start = chrono::system_clock::now();
 
   ofstream f{path, ios_base::binary};
-  if (!f) {
-    throw invalid_argument{tfm::format("Could not open file %s", path)};
-    }
+  if (!f)
+    throw invalid_argument{tfm::format ("Could not open file %s", path)};
 
-  for (const auto& saver : ImageSaver::getSavers()) {
+  for (const auto& saver : ImageSaver::getSavers())
     if (!saver->canSaveFile(path)) {
       continue;
-      }
 
     const auto* hdrSaver = dynamic_cast<const TypedImageSaver<float>*>(saver.get());
     const auto* ldrSaver = dynamic_cast<const TypedImageSaver<char>*>(saver.get());
 
-    TEV_ASSERT(hdrSaver || ldrSaver, "Each image saver must either be a HDR or an LDR saver.");
+    TEV_ASSERT (hdrSaver || ldrSaver, "Each image saver must either be a HDR or an LDR saver.");
 
-    if (hdrSaver) {
+    if (hdrSaver)
       hdrSaver->save (f, path,
                       getHdrImageData(!saver->hasPremultipliedAlpha(), std::numeric_limits<int>::max()),
                       imageSize, 4);
-      }
-    else if (ldrSaver) {
+    else if (ldrSaver) 
       ldrSaver->save (f, path,
                       getLdrImageData(!saver->hasPremultipliedAlpha(), std::numeric_limits<int>::max()),
                       imageSize, 4);
-      }
 
     auto end = chrono::system_clock::now();
     chrono::duration<double> elapsedSeconds = end - start;
 
-    tlog::success() << tfm::format("Saved %s after %.3f seconds.", path, elapsedSeconds.count());
+    tlog::success() << tfm::format ("Saved %s after %.3f seconds.", path, elapsedSeconds.count());
     return;
     }
 
-  throw invalid_argument{tfm::format("No save routine for image type %s found.", path.extension())};
+  throw invalid_argument {tfm::format("No save routine for image type %s found.", path.extension())};
   }
 //}}}
 
