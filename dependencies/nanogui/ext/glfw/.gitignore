@@ -35,7 +35,6 @@ rules.ninja
 .ninja_log
 
 # CMake clutter
-/CMake/*
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
