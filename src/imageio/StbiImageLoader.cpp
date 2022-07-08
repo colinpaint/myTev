@@ -2,8 +2,8 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 
-#include <tev/imageio/StbiImageLoader.h>
-#include <tev/ThreadPool.h>
+#include <imageio/StbiImageLoader.h>
+#include <ThreadPool.h>
 
 #include <stb_image.h>
 
@@ -52,7 +52,7 @@ Task<vector<ImageData>> StbiImageLoader::load(istream& iStream, const fs::path&,
 
   if (isHdr) {
     data = stbi_loadf_from_callbacks(&callbacks, &iStream, &size.x(), &size.y(), &numChannels, 0);
-    } 
+    }
   else {
     data = stbi_load_from_callbacks(&callbacks, &iStream, &size.x(), &size.y(), &numChannels, 0);
     }

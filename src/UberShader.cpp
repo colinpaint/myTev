@@ -2,8 +2,8 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 
-#include <tev/FalseColor.h>
-#include <tev/UberShader.h>
+#include <FalseColor.h>
+#include <UberShader.h>
 
 using namespace nanogui;
 using namespace std;

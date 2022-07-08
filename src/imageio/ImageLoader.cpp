@@ -2,15 +2,15 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 
-#include <tev/imageio/ClipboardImageLoader.h>
-#include <tev/imageio/EmptyImageLoader.h>
-#include <tev/imageio/ExrImageLoader.h>
-#include <tev/imageio/ImageLoader.h>
-#include <tev/imageio/PfmImageLoader.h>
-#include <tev/imageio/QoiImageLoader.h>
-#include <tev/imageio/StbiImageLoader.h>
+#include <imageio/ClipboardImageLoader.h>
+#include <imageio/EmptyImageLoader.h>
+#include <imageio/ExrImageLoader.h>
+#include <imageio/ImageLoader.h>
+#include <imageio/PfmImageLoader.h>
+#include <imageio/QoiImageLoader.h>
+#include <imageio/StbiImageLoader.h>
 #ifdef _WIN32
-#   include <tev/imageio/DdsImageLoader.h>
+#   include <imageio/DdsImageLoader.h>
 #endif
 
 using namespace nanogui;
@@ -46,7 +46,7 @@ vector<Channel> ImageLoader::makeNChannels (int numChannels, const Vector2i& siz
       string name = c < (int)channelNames.size() ? channelNames[c] : to_string(c);
       channels.emplace_back (name, size);
       }
-    } 
+    }
   else {
     channels.emplace_back("L", size);
     }

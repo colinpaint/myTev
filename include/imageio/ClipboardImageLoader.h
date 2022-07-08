@@ -3,20 +3,20 @@
 
 #pragma once
 
-#include <tev/Image.h>
-#include <tev/imageio/ImageLoader.h>
+#include <Image.h>
+#include <imageio/ImageLoader.h>
 
 #include <istream>
 
 TEV_NAMESPACE_BEGIN
 
-class PfmImageLoader : public ImageLoader {
+class ClipboardImageLoader : public ImageLoader {
 public:
     bool canLoadFile(std::istream& iStream) const override;
     Task<std::vector<ImageData>> load(std::istream& iStream, const fs::path& path, const std::string& channelSelector, int priority) const override;
 
     std::string name() const override {
-        return "PFM";
+        return "clipboard";
     }
 };
 

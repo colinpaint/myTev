@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <tev/Box.h>
-#include <tev/Channel.h>
-#include <tev/SharedQueue.h>
-#include <tev/ThreadPool.h>
+#include <Box.h>
+#include <Channel.h>
+#include <SharedQueue.h>
+#include <ThreadPool.h>
 
 #include <nanogui/texture.h>
 

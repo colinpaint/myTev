@@ -21,8 +21,8 @@ set_property (DIRECTORY PROPERTY VS_STARTUP_PROJECT tev)
 
 # Set a default configuration if none was specified
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message (STATUS "No release type specified. Setting to 'Release'.")
-  set (CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  message (STATUS "No release type specified. Setting to 'Release'")
+  set (CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
   set_property (CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo")
 endif()
 
@@ -30,11 +30,8 @@ if (MSVC)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_WARNINGS")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP24")
   set (CompilerFlags
-       CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-       CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
-       CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
-       CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
-
+       CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+       CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
   foreach (CompilerFlag ${CompilerFlags})
     string (REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
   endforeach()
@@ -59,7 +56,7 @@ macro (CHECK_CXX_COMPILER_AND_LINKER_FLAGS _RESULT _CXX_FLAGS _LINKER_FLAGS)
 endmacro()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_FLAGS MATCHES "-stdlib=libc\\+\\+")
-  CHECK_CXX_COMPILER_AND_LINKER_FLAGS(HAS_LIBCPP "-stdlib=libc++" "-stdlib=libc++")
+  CHECK_CXX_COMPILER_AND_LINKER_FLAGS (HAS_LIBCPP "-stdlib=libc++" "-stdlib=libc++")
   if (HAS_LIBCPP)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -D_LIBCPP_VERSION")
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
@@ -74,8 +71,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_FLAGS MATCHES "-stdl
       message (STATUS "TEV: using libc++ and libc++abi.")
     else()
       message (FATAL_ERROR
-               "When Clang is used to compile TEV, libc++ must be available -- GCC's libstdc++ is not supported! (please install "
-               "the libc++ development headers, provided e.g. by the packages libc++-dev' and 'libc++abi-dev' on Debian/Ubuntu).")
+               "When Clang is used to compile TEV, libc++ must be available -- GCC's libstdc++ is not supported!"
+               "- install libc++ development headers by provided by libc++-dev and libc++abi-dev")
     endif()
   endif()
 endif()
@@ -119,42 +116,41 @@ if (MSVC)
 endif()
 
 set (TEV_SOURCES
-     include/tev/imageio/ClipboardImageLoader.h src/imageio/ClipboardImageLoader.cpp
-     include/tev/imageio/EmptyImageLoader.h src/imageio/EmptyImageLoader.cpp
-     include/tev/imageio/ExrImageLoader.h src/imageio/ExrImageLoader.cpp
-     include/tev/imageio/ExrImageSaver.h src/imageio/ExrImageSaver.cpp
-     include/tev/imageio/ImageLoader.h src/imageio/ImageLoader.cpp
-     include/tev/imageio/ImageSaver.h src/imageio/ImageSaver.cpp
-     include/tev/imageio/PfmImageLoader.h src/imageio/PfmImageLoader.cpp
-     include/tev/imageio/QoiImageLoader.h src/imageio/QoiImageLoader.cpp
-     include/tev/imageio/QoiImageSaver.h src/imageio/QoiImageSaver.cpp
-     include/tev/imageio/StbiHdrImageSaver.h src/imageio/StbiHdrImageSaver.cpp
-     include/tev/imageio/StbiImageLoader.h src/imageio/StbiImageLoader.cpp
-     include/tev/imageio/StbiLdrImageSaver.h src/imageio/StbiLdrImageSaver.cpp
-
-     include/tev/Box.h src/Box.cpp
-     include/tev/Channel.h src/Channel.cpp
-     include/tev/Common.h src/Common.cpp
-     include/tev/FalseColor.h src/FalseColor.cpp
-     include/tev/HelpWindow.h src/HelpWindow.cpp
-     include/tev/Image.h src/Image.cpp
-     include/tev/ImageButton.h src/ImageButton.cpp
-     include/tev/ImageCanvas.h src/ImageCanvas.cpp
-     include/tev/ImageViewer.h src/ImageViewer.cpp
-     include/tev/Ipc.h src/Ipc.cpp
-     include/tev/Lazy.h src/Lazy.cpp
-     include/tev/MultiGraph.h src/MultiGraph.cpp
-     include/tev/SharedQueue.h src/SharedQueue.cpp
-     include/tev/Task.h src/Task.cpp
-     include/tev/ThreadPool.h src/ThreadPool.cpp
-     include/tev/UberShader.h src/UberShader.cpp
-
-     src/main.cpp)
+     src/main.cpp
+     include/Box.h src/Box.cpp
+     include/Channel.h src/Channel.cpp
+     include/Common.h src/Common.cpp
+     include/FalseColor.h src/FalseColor.cpp
+     include/HelpWindow.h src/HelpWindow.cpp
+     include/Image.h src/Image.cpp
+     include/ImageButton.h src/ImageButton.cpp
+     include/ImageCanvas.h src/ImageCanvas.cpp
+     include/ImageViewer.h src/ImageViewer.cpp
+     include/Ipc.h src/Ipc.cpp
+     include/Lazy.h src/Lazy.cpp
+     include/MultiGraph.h src/MultiGraph.cpp
+     include/SharedQueue.h src/SharedQueue.cpp
+     include/Task.h src/Task.cpp
+     include/ThreadPool.h src/ThreadPool.cpp
+     include/UberShader.h src/UberShader.cpp
+     include/imageio/ClipboardImageLoader.h src/imageio/ClipboardImageLoader.cpp
+     include/imageio/EmptyImageLoader.h src/imageio/EmptyImageLoader.cpp
+     include/imageio/ExrImageLoader.h src/imageio/ExrImageLoader.cpp
+     include/imageio/ExrImageSaver.h src/imageio/ExrImageSaver.cpp
+     include/imageio/ImageLoader.h src/imageio/ImageLoader.cpp
+     include/imageio/ImageSaver.h src/imageio/ImageSaver.cpp
+     include/imageio/PfmImageLoader.h src/imageio/PfmImageLoader.cpp
+     include/imageio/QoiImageLoader.h src/imageio/QoiImageLoader.cpp
+     include/imageio/QoiImageSaver.h src/imageio/QoiImageSaver.cpp
+     include/imageio/StbiHdrImageSaver.h src/imageio/StbiHdrImageSaver.cpp
+     include/imageio/StbiImageLoader.h src/imageio/StbiImageLoader.cpp
+     include/imageio/StbiLdrImageSaver.h src/imageio/StbiLdrImageSaver.cpp
+     )
 
 if (MSVC)
   set (TEV_SOURCES ${TEV_SOURCES} resources/icon.rc)
   set (TEV_SOURCES ${TEV_SOURCES} resources/tev.manifest)
-  set (TEV_SOURCES ${TEV_SOURCES} include/tev/imageio/DdsImageLoader.h src/imageio/DdsImageLoader.cpp)
+  set (TEV_SOURCES ${TEV_SOURCES} include/imageio/DdsImageLoader.h src/imageio/DdsImageLoader.cpp)
 endif()
 
 add_executable (tev ${TEV_SOURCES})

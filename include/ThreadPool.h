@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <tev/Common.h>
-#include <tev/Task.h>
+#include <Common.h>
+#include <Task.h>
 
 #include <atomic>
 #include <functional>

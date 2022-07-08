@@ -1,8 +1,8 @@
 // This file was developed by Tiago Chaves & Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 
-#include <tev/imageio/QoiImageLoader.h>
-#include <tev/ThreadPool.h>
+#include <imageio/QoiImageLoader.h>
+#include <ThreadPool.h>
 
 #define QOI_NO_STDIO
 #define QOI_IMPLEMENTATION

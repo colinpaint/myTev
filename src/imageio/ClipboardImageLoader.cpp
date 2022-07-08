@@ -2,8 +2,8 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 
-#include <tev/imageio/ClipboardImageLoader.h>
-#include <tev/ThreadPool.h>
+#include <imageio/ClipboardImageLoader.h>
+#include <ThreadPool.h>
 
 #include <clip.h>
 
@@ -94,7 +94,7 @@ Task<vector<ImageData>> ClipboardImageLoader::load(istream& iStream, const fs::p
         unsigned char val = data[baseIdx + shifts[c]];
         if (c == alphaChannelIndex) {
           resultData.channels[c].at({x, y}) = val / 255.0f;
-          } 
+          }
         else {
           float alpha = premultipliedAlpha ? resultData.channels[alphaChannelIndex].at({x, y}) : 1.0f;
           float alphaFactor = alpha == 0 ? 0 : (1.0f / alpha);

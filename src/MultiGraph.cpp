@@ -3,7 +3,7 @@
 // by Mikko Mononen. Modifications were developed by Thomas Müller <thomas94@gmx.net>.
 // This file is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
-#include <tev/MultiGraph.h>
+#include <MultiGraph.h>
 
 #include <nanogui/theme.h>
 #include <nanogui/opengl.h>
@@ -34,7 +34,7 @@ void MultiGraph::draw (NVGcontext *ctx) {
 
   Widget::draw(ctx);
 
-  NVGpaint bg = nvgBoxGradient (ctx, 
+  NVGpaint bg = nvgBoxGradient (ctx,
                                 m_pos.x() + 1, m_pos.y() + 1 + 1.0f, m_size.x() - 2, m_size.y() - 2,
                                 3, 4, Color(120, 32), Color(32, 32));
 

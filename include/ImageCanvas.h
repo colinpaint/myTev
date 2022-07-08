@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <tev/UberShader.h>
-#include <tev/Image.h>
-#include <tev/Lazy.h>
+#include <UberShader.h>
+#include <Image.h>
+#include <Lazy.h>
 
 #include <nanogui/canvas.h>
 

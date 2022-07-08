@@ -8,9 +8,9 @@
   #undef NOMINMAX
 #endif
 
-#include <tev/Common.h>
-#include <tev/Ipc.h>
-#include <tev/ThreadPool.h>
+#include <Common.h>
+#include <Ipc.h>
+#include <ThreadPool.h>
 
 #ifdef _WIN32
   using socklen_t = int;

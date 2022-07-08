@@ -1,7 +1,7 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
-#include <tev/ImageViewer.h>
+#include <ImageViewer.h>
 
 #include <clip.h>
 

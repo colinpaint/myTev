@@ -1,7 +1,7 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
-#include <tev/ImageButton.h>
+#include <ImageButton.h>
 
 #include <nanogui/opengl.h>
 
@@ -44,7 +44,7 @@ void ImageButton::setHighlightRange (size_t begin, size_t end) {
   mHighlightBegin = beginIndex;
   mHighlightEnd = max(mCaption.size() - end, beginIndex);
 
-  if (mHighlightBegin == mHighlightEnd || mCaption.empty()) 
+  if (mHighlightBegin == mHighlightEnd || mCaption.empty())
     return;
 
   // Extend beginning and ending of highlighted region to entire word/number
@@ -52,7 +52,7 @@ void ImageButton::setHighlightRange (size_t begin, size_t end) {
     while (mHighlightBegin > 0 && isalnum (mCaption[mHighlightBegin - 1]))
       --mHighlightBegin;
 
-  if (isalnum (mCaption[mHighlightEnd - 1])) 
+  if (isalnum (mCaption[mHighlightEnd - 1]))
     while (mHighlightEnd < mCaption.size() && isalnum (mCaption[mHighlightEnd]))
       ++mHighlightEnd;
   }
@@ -73,7 +73,7 @@ bool ImageButton::mouse_button_event (const Vector2i &p, int button, bool down, 
 
     // If we newly became the reference, then we need to disable the existing reference
     // if it exists.
-    if (mIsReference) 
+    if (mIsReference)
       for (auto widget : parent()->children()) {
         ImageButton* b = dynamic_cast<ImageButton*>(widget);
         if (b && b != this)
@@ -145,7 +145,7 @@ void ImageButton::draw (NVGcontext* ctx) {
 
     nvgFontSize(ctx, m_font_size);
     while (mCutoff < mCaption.size() &&
-           nvgTextBounds (ctx, 0, 0, mCaption.substr (mCutoff).c_str(), 
+           nvgTextBounds (ctx, 0, 0, mCaption.substr (mCutoff).c_str(),
                           nullptr, nullptr) > m_size.x() - 25 - idSize)
       mCutoff += codePointLength (mCaption[mCutoff]);;
 

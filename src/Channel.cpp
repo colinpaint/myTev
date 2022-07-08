@@ -2,8 +2,8 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 
-#include <tev/Channel.h>
-#include <tev/ThreadPool.h>
+#include <Channel.h>
+#include <ThreadPool.h>
 
 #include <numeric>
 

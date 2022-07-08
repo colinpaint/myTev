@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <tev/Common.h>
-#include <tev/ThreadPool.h>
+#include <Common.h>
+#include <ThreadPool.h>
 
 #include <chrono>
 #include <functional>

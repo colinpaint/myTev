@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <tev/Channel.h>
-#include <tev/Image.h>
-#include <tev/ThreadPool.h>
+#include <Channel.h>
+#include <Image.h>
+#include <ThreadPool.h>
 
 #include <nanogui/vector.h>
 

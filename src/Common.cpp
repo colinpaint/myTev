@@ -1,7 +1,7 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
-#include <tev/Common.h>
+#include <Common.h>
 
 #include <nanogui/opengl.h>
 
@@ -152,7 +152,7 @@ bool matchesRegex (string text, string filter) {
   try {
     regex searchRegex{filter, std::regex_constants::ECMAScript | std::regex_constants::icase};
     return regex_search(text, searchRegex);
-    } 
+    }
   catch (const regex_error&) {
     return false;
     }

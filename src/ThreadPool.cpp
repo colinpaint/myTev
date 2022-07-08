@@ -2,7 +2,7 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 
-#include <tev/ThreadPool.h>
+#include <ThreadPool.h>
 
 #include <chrono>
 

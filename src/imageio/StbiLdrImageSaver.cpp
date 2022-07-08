@@ -1,7 +1,7 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 
-#include <tev/imageio/StbiLdrImageSaver.h>
+#include <imageio/StbiLdrImageSaver.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>

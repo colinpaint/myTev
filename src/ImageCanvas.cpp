@@ -2,11 +2,11 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 
-#include <tev/FalseColor.h>
-#include <tev/ImageCanvas.h>
-#include <tev/ThreadPool.h>
+#include <FalseColor.h>
+#include <ImageCanvas.h>
+#include <ThreadPool.h>
 
-#include <tev/imageio/ImageSaver.h>
+#include <imageio/ImageSaver.h>
 
 #include <nanogui/opengl.h>
 #include <nanogui/screen.h>
@@ -34,7 +34,7 @@ ImageCanvas::ImageCanvas (Widget* parent, float pixelRatio)
 //{{{
 bool ImageCanvas::scroll_event (const Vector2i& p, const Vector2f& rel) {
 
-  if (Canvas::scroll_event (p, rel)) 
+  if (Canvas::scroll_event (p, rel))
     return true;
 
   float scaleAmount = rel.y();
@@ -338,7 +338,7 @@ void ImageCanvas::getValuesAtNanoPos (Vector2i nanoPos, vector<float>& result, c
 
   result.clear();
 
-  if (!mImage) 
+  if (!mImage)
     return;
 
   auto imageCoords = getImageCoords(*mImage, nanoPos);
@@ -435,7 +435,7 @@ std::vector<float> ImageCanvas::getHdrImageData (bool divideAlpha, int priority)
 
   std::vector<float> result;
 
-  if (!mImage) 
+  if (!mImage)
     return result;
 
   const auto& channels = channelsFromImages (mImage, mReference, mRequestedChannelGroup, mMetric, priority);
@@ -451,13 +451,13 @@ std::vector<float> ImageCanvas::getHdrImageData (bool divideAlpha, int priority)
 
   ThreadPool::global().parallelFor (0, nChannelsToSave, [&channels, &result](int i) {
     const auto& channelData = channels[i].data();
-    for (size_t j = 0; j < channelData.size(); ++j) 
+    for (size_t j = 0; j < channelData.size(); ++j)
       result[j * 4 + i] = channelData[j];
     }, priority);
 
   // Manually set alpha channel to 1 if the image does not have one.
-  if (nChannelsToSave < 4) 
-    for (size_t i = 0; i < numPixels; ++i) 
+  if (nChannelsToSave < 4)
+    for (size_t i = 0; i < numPixels; ++i)
       result[i * 4 + 3] = 1;
 
   // Divide alpha out if needed (for storing in non-premultiplied formats)
@@ -536,7 +536,7 @@ void ImageCanvas::saveImage (const fs::path& path) const {
       hdrSaver->save (f, path,
                       getHdrImageData(!saver->hasPremultipliedAlpha(), std::numeric_limits<int>::max()),
                       imageSize, 4);
-    else if (ldrSaver) 
+    else if (ldrSaver)
       ldrSaver->save (f, path,
                       getLdrImageData(!saver->hasPremultipliedAlpha(), std::numeric_limits<int>::max()),
                       imageSize, 4);

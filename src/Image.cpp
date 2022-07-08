@@ -2,9 +2,9 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 
-#include <tev/Image.h>
-#include <tev/imageio/ImageLoader.h>
-#include <tev/ThreadPool.h>
+#include <Image.h>
+#include <imageio/ImageLoader.h>
+#include <ThreadPool.h>
 
 #include <Iex.h>
 

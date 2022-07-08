@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <tev/HelpWindow.h>
-#include <tev/Image.h>
-#include <tev/ImageButton.h>
-#include <tev/ImageCanvas.h>
-#include <tev/Lazy.h>
-#include <tev/MultiGraph.h>
-#include <tev/SharedQueue.h>
+#include <HelpWindow.h>
+#include <Image.h>
+#include <ImageButton.h>
+#include <ImageCanvas.h>
+#include <Lazy.h>
+#include <MultiGraph.h>
+#include <SharedQueue.h>
 
 #include <nanogui/opengl.h>
 #include <nanogui/screen.h>

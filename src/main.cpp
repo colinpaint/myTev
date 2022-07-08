@@ -1,10 +1,10 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
-#include <tev/Image.h>
-#include <tev/ImageViewer.h>
-#include <tev/Ipc.h>
-#include <tev/ThreadPool.h>
+#include <Image.h>
+#include <ImageViewer.h>
+#include <Ipc.h>
+#include <ThreadPool.h>
 
 #include <args.hxx>
 #include <ImfThreading.h>

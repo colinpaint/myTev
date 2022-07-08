@@ -1,12 +1,12 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 
-#include <tev/imageio/ImageSaver.h>
+#include <imageio/ImageSaver.h>
 
-#include <tev/imageio/ExrImageSaver.h>
-#include <tev/imageio/QoiImageSaver.h>
-#include <tev/imageio/StbiHdrImageSaver.h>
-#include <tev/imageio/StbiLdrImageSaver.h>
+#include <imageio/ExrImageSaver.h>
+#include <imageio/QoiImageSaver.h>
+#include <imageio/StbiHdrImageSaver.h>
+#include <imageio/StbiLdrImageSaver.h>
 
 #include <vector>
 
