@@ -1,99 +1,114 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
-
+//{{{  includes
 #pragma once
-
 #include <Common.h>
 
 #include <list>
 #include <vector>
+//}}}
 
 TEV_NAMESPACE_BEGIN
 
+//{{{
 struct IpcPacketOpenImage {
-    std::string imagePath;
-    std::string channelSelector;
-    bool grabFocus;
-};
-
+  std::string imagePath;
+  std::string channelSelector;
+  bool grabFocus;
+  };
+//}}}
+//{{{
 struct IpcPacketReloadImage {
-    std::string imageName;
-    bool grabFocus;
-};
-
+  std::string imageName;
+  bool grabFocus;
+  };
+//}}}
+//{{{
 struct IpcPacketUpdateImage {
-    std::string imageName;
-    bool grabFocus;
-    int32_t nChannels;
-    std::vector<std::string> channelNames;
-    std::vector<int64_t> channelOffsets;
-    std::vector<int64_t> channelStrides;
-    int32_t x, y, width, height;
-    std::vector<std::vector<float>> imageData; // One set of data per channel
-};
-
+  std::string imageName;
+  bool grabFocus;
+  int32_t nChannels;
+  std::vector<std::string> channelNames;
+  std::vector<int64_t> channelOffsets;
+  std::vector<int64_t> channelStrides;
+  int32_t x, y, width, height;
+  std::vector<std::vector<float>> imageData; // One set of data per channel
+  };
+//}}}
+//{{{
 struct IpcPacketCloseImage {
-    std::string imageName;
-};
-
+  std::string imageName;
+  };
+//}}}
+//{{{
 struct IpcPacketCreateImage {
-    std::string imageName;
-    bool grabFocus;
-    int32_t width, height;
-    int32_t nChannels;
-    std::vector<std::string> channelNames;
-};
+  std::string imageName;
+  bool grabFocus;
+  int32_t width, height;
+  int32_t nChannels;
+  std::vector<std::string> channelNames;
+  };
+//}}}
 
+//{{{
 class IpcPacket {
 public:
-    enum Type : char {
-        OpenImage = 0,
-        ReloadImage = 1,
-        CloseImage = 2,
-        UpdateImage = 3,
-        CreateImage = 4,
-        UpdateImageV2 = 5, // Adds multi-channel support
-        UpdateImageV3 = 6, // Adds custom striding/offset support
-        OpenImageV2 = 7, // Explicit separation of image name and channel selector
-    };
+  //{{{
+  enum Type : char {
+      OpenImage = 0,
+      ReloadImage = 1,
+      CloseImage = 2,
+      UpdateImage = 3,
+      CreateImage = 4,
+      UpdateImageV2 = 5, // Adds multi-channel support
+      UpdateImageV3 = 6, // Adds custom striding/offset support
+      OpenImageV2 = 7, // Explicit separation of image name and channel selector
+  };
 
-    IpcPacket() = default;
-    IpcPacket(const char* data, size_t length);
+  //}}}
+  IpcPacket() = default;
+  IpcPacket(const char* data, size_t length);
 
-    const char* data() const {
-        return mPayload.data();
-    }
+  //{{{
+  const char* data() const {
+      return mPayload.data();
+  }
+  //}}}
+  //{{{
+  size_t size() const {
+      return mPayload.size();
+  }
+  //}}}
+  //{{{
+  Type type() const {
+      // The first 4 bytes encode the message size.
+      return (Type)mPayload[4];
+  }
+  //}}}
 
-    size_t size() const {
-        return mPayload.size();
-    }
+  //{{{
+  struct ChannelDesc {
+      std::string name;
+      int64_t offset;
+      int64_t stride;
+  };
+  //}}}
 
-    Type type() const {
-        // The first 4 bytes encode the message size.
-        return (Type)mPayload[4];
-    }
+  void setOpenImage (const std::string& imagePath, const std::string& channelSelector, bool grabFocus);
+  void setReloadImage (const std::string& imageName, bool grabFocus);
+  void setCloseImage (const std::string& imageName);
+  void setUpdateImage (const std::string& imageName, bool grabFocus, const std::vector<ChannelDesc>& channelDescs, int32_t x, int32_t y, int32_t width, int32_t height, const std::vector<float>& stridedImageData);
+  void setCreateImage (const std::string& imageName, bool grabFocus, int32_t width, int32_t height, int32_t nChannels, const std::vector<std::string>& channelNames);
 
-    struct ChannelDesc {
-        std::string name;
-        int64_t offset;
-        int64_t stride;
-    };
-
-    void setOpenImage(const std::string& imagePath, const std::string& channelSelector, bool grabFocus);
-    void setReloadImage(const std::string& imageName, bool grabFocus);
-    void setCloseImage(const std::string& imageName);
-    void setUpdateImage(const std::string& imageName, bool grabFocus, const std::vector<ChannelDesc>& channelDescs, int32_t x, int32_t y, int32_t width, int32_t height, const std::vector<float>& stridedImageData);
-    void setCreateImage(const std::string& imageName, bool grabFocus, int32_t width, int32_t height, int32_t nChannels, const std::vector<std::string>& channelNames);
-
-    IpcPacketOpenImage interpretAsOpenImage() const;
-    IpcPacketReloadImage interpretAsReloadImage() const;
-    IpcPacketCloseImage interpretAsCloseImage() const;
-    IpcPacketUpdateImage interpretAsUpdateImage() const;
-    IpcPacketCreateImage interpretAsCreateImage() const;
+  IpcPacketOpenImage interpretAsOpenImage() const;
+  IpcPacketReloadImage interpretAsReloadImage() const;
+  IpcPacketCloseImage interpretAsCloseImage() const;
+  IpcPacketUpdateImage interpretAsUpdateImage() const;
+  IpcPacketCreateImage interpretAsCreateImage() const;
 
 private:
     std::vector<char> mPayload;
-
+    //{{{
     class IStream {
     public:
         IStream(const std::vector<char>& data) : mData{data} {
@@ -157,7 +172,8 @@ private:
         const std::vector<char>& mData;
         size_t mIdx = 0;
     };
-
+    //}}}
+    //{{{
     class OStream {
     public:
         OStream(std::vector<char>& data) : mData{data} {
@@ -212,66 +228,73 @@ private:
         std::vector<char>& mData;
         size_t mIdx = 0;
     };
-};
-
+    //}}}
+  };
+//}}}
+//{{{
 class Ipc {
 public:
-#ifdef _WIN32
+  #ifdef _WIN32
     using socket_t = SOCKET;
-#else
+  #else
     using socket_t = int;
-#endif
+  #endif
 
-    Ipc(const std::string& hostname);
-    virtual ~Ipc();
+  Ipc(const std::string& hostname);
+  virtual ~Ipc();
 
-    bool isPrimaryInstance() {
-        return mIsPrimaryInstance;
-    }
+  //{{{
+  bool isPrimaryInstance() {
+      return mIsPrimaryInstance;
+  }
+  //}}}
 
-    bool attemptToBecomePrimaryInstance();
+  bool attemptToBecomePrimaryInstance();
 
-    void sendToPrimaryInstance(const IpcPacket& message);
-    void receiveFromSecondaryInstance(std::function<void(const IpcPacket&)> callback);
+  void sendToPrimaryInstance (const IpcPacket& message);
+  void receiveFromSecondaryInstance (std::function<void(const IpcPacket&)> callback);
 
 private:
-    bool mIsPrimaryInstance;
-    socket_t mSocketFd;
+  bool mIsPrimaryInstance;
+  socket_t mSocketFd;
 
-#ifdef _WIN32
+  #ifdef _WIN32
     HANDLE mInstanceMutex;
-#else
+  #else
     int mLockFileDescriptor;
     fs::path mLockFile;
-#endif
+  #endif
 
-    class SocketConnection {
-    public:
-        SocketConnection(Ipc::socket_t fd, const std::string& name);
+  //{{{
+  class SocketConnection {
+  public:
+    SocketConnection (Ipc::socket_t fd, const std::string& name);
 
-        void service(std::function<void(const IpcPacket&)> callback);
+    void service (std::function<void(const IpcPacket&)> callback);
 
-        void close();
+    void close();
+    bool isClosed() const;
 
-        bool isClosed() const;
+  private:
+    Ipc::socket_t mSocketFd;
+    std::string mName;
 
-    private:
-        Ipc::socket_t mSocketFd;
-        std::string mName;
+    // Because TCP socket recv() calls return as much data as is available
+    // (which may have the partial contents of a client-side send() call,
+    // we need to buffer it up in SocketConnection.
+    std::vector<char> mBuffer;
 
-        // Because TCP socket recv() calls return as much data as is available
-        // (which may have the partial contents of a client-side send() call,
-        // we need to buffer it up in SocketConnection.
-        std::vector<char> mBuffer;
-        // Offset into buffer where next recv() call should start writing.
-        size_t mRecvOffset = 0;
+    // Offset into buffer where next recv() call should start writing.
+    size_t mRecvOffset = 0;
     };
+  //}}}
 
-    std::list<SocketConnection> mSocketConnections;
+  std::list<SocketConnection> mSocketConnections;
 
-    std::string mIp;
-    std::string mPort;
-    std::string mLockName;
-};
+  std::string mIp;
+  std::string mPort;
+  std::string mLockName;
+  };
+//}}}
 
 TEV_NAMESPACE_END

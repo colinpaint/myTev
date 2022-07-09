@@ -34,7 +34,7 @@ static ImageViewer* sImageViewer = nullptr;
 void scheduleToMainThread (const std::function<void()>& fun) {
 
   if (sImageViewer)
-    sImageViewer->scheduleToUiThread(fun);
+    sImageViewer->scheduleToUiThread (fun);
   }
 //}}}
 //{{{

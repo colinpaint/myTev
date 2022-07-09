@@ -1,6 +1,8 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 #pragma once
+
 #include <Common.h>
 #include <Task.h>
 #include <atomic>
@@ -9,7 +11,7 @@
 #include <queue>
 #include <thread>
 #include <vector>
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
 class ThreadPool {

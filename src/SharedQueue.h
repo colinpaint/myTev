@@ -1,12 +1,13 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 #pragma once
 #include <Common.h>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
 #include <optional>
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
 template <typename T> class SharedQueue {
