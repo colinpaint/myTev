@@ -2,7 +2,6 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
 #include <ImageButton.h>
-
 #include <nanogui/opengl.h>
 
 #include <cctype>

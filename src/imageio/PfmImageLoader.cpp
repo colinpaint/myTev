@@ -1,6 +1,6 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
-
+//{{{  includes
 #include <imageio/PfmImageLoader.h>
 #include <ThreadPool.h>
 
@@ -8,93 +8,94 @@
 
 using namespace nanogui;
 using namespace std;
+//}}}
 
 TEV_NAMESPACE_BEGIN
 
+//{{{
 bool PfmImageLoader::canLoadFile(istream& iStream) const {
-    char b[2];
-    iStream.read(b, sizeof(b));
 
-    bool result = !!iStream && iStream.gcount() == sizeof(b) && b[0] == 'P' && (b[1] == 'F' || b[1] == 'f');
+  char b[2];
+  iStream.read(b, sizeof(b));
 
-    iStream.clear();
-    iStream.seekg(0);
-    return result;
-}
+  bool result = !!iStream && iStream.gcount() == sizeof(b) && b[0] == 'P' && (b[1] == 'F' || b[1] == 'f');
 
+  iStream.clear();
+  iStream.seekg(0);
+  return result;
+  }
+//}}}
+//{{{
 Task<vector<ImageData>> PfmImageLoader::load(istream& iStream, const fs::path&, const string& channelSelector, int priority) const {
-    vector<ImageData> result(1);
-    ImageData& resultData = result.front();
 
-    string magic;
-    Vector2i size;
-    float scale;
+  vector<ImageData> result (1);
+  ImageData& resultData = result.front();
 
-    iStream >> magic >> size.x() >> size.y() >> scale;
+  string magic;
+  Vector2i size;
+  float scale;
 
-    int numChannels;
-    if (magic == "Pf") {
-        numChannels = 1;
-    } else if (magic == "PF") {
-        numChannels = 3;
-    } else if (magic == "PF4") {
-        numChannels = 4;
-    } else {
-        throw invalid_argument{tfm::format("Invalid magic PFM string %s", magic)};
-    }
+  iStream >> magic >> size.x() >> size.y() >> scale;
 
-    if (!isfinite(scale) || scale == 0) {
-        throw invalid_argument{tfm::format("Invalid PFM scale %f", scale)};
-    }
+  int numChannels;
+  if (magic == "Pf")
+    numChannels = 1;
+  else if (magic == "PF")
+    numChannels = 3;
+  else if (magic == "PF4")
+    numChannels = 4;
+  else
+    throw invalid_argument {tfm::format ("Invalid magic PFM string %s", magic)};
 
-    bool isPfmLittleEndian = scale < 0;
-    scale = abs(scale);
+  if (!isfinite(scale) || scale == 0)
+    throw invalid_argument {tfm::format ("Invalid PFM scale %f", scale)};
 
-    resultData.channels = makeNChannels(numChannels, size);
+  bool isPfmLittleEndian = scale < 0;
+  scale = abs (scale);
 
-    auto numPixels = (size_t)size.x() * size.y();
-    if (numPixels == 0) {
-        throw invalid_argument{"Image has zero pixels."};
-    }
+  resultData.channels = makeNChannels (numChannels, size);
 
-    auto numFloats = numPixels * numChannels;
-    auto numBytes = numFloats * sizeof(float);
+  auto numPixels = (size_t)size.x() * size.y();
+  if (numPixels == 0)
+    throw invalid_argument {"Image has zero pixels."};
 
-    // Skip last newline at the end of the header.
-    char c;
-    while (iStream.get(c) && c != '\r' && c != '\n');
+  auto numFloats = numPixels * numChannels;
+  auto numBytes = numFloats * sizeof(float);
 
-    // Read entire file in binary mode.
-    vector<float> data(numFloats);
-    iStream.read(reinterpret_cast<char*>(data.data()), numBytes);
-    if (iStream.gcount() < (streamsize)numBytes) {
-        throw invalid_argument{tfm::format("Not sufficient bytes to read (%d vs %d)", iStream.gcount(), numBytes)};
-    }
+  // Skip last newline at the end of the header.
+  char c;
+  while (iStream.get(c) && c != '\r' && c != '\n');
 
-    // Reverse bytes of every float if endianness does not match up with system
-    const bool shallSwapBytes = (std::endian::native == std::endian::little) != isPfmLittleEndian;
+  // Read entire file in binary mode.
+  vector<float> data(numFloats);
+  iStream.read(reinterpret_cast<char*>(data.data()), numBytes);
+  if (iStream.gcount() < (streamsize)numBytes) {
+      throw invalid_argument {tfm::format ("Not sufficient bytes to read (%d vs %d)", iStream.gcount(), numBytes)};
+  }
 
-    co_await ThreadPool::global().parallelForAsync(0, size.y(), [&](int y) {
-        for (int x = 0; x < size.x(); ++x) {
-            int baseIdx = (y * size.x() + x) * numChannels;
-            for (int c = 0; c < numChannels; ++c) {
-                float val = data[baseIdx + c];
+  // Reverse bytes of every float if endianness does not match up with system
+  const bool shallSwapBytes = (std::endian::native == std::endian::little) != isPfmLittleEndian;
 
-                // Thankfully, due to branch prediction, the "if" in the
-                // inner loop is no significant overhead.
-                if (shallSwapBytes) {
-                    val = swapBytes(val);
-                }
+  co_await ThreadPool::global().parallelForAsync (0, size.y(), [&](int y) {
+    for (int x = 0; x < size.x(); ++x) {
+      int baseIdx = (y * size.x() + x) * numChannels;
+      for (int c = 0; c < numChannels; ++c) {
+        float val = data[baseIdx + c];
 
-                // Flip image vertically due to PFM format
-                resultData.channels[c].at({x, size.y() - (int)y - 1}) = scale * val;
-            }
+        // Thankfully, due to branch prediction, the "if" in the inner loop is no significant overhead.
+        if (shallSwapBytes)
+          val = swapBytes(val);
+
+        // Flip image vertically due to PFM format
+        resultData.channels[c].at({x, size.y() - (int)y - 1}) = scale * val;
         }
+      }
     }, priority);
 
-    resultData.hasPremultipliedAlpha = false;
+  resultData.hasPremultipliedAlpha = false;
 
-    co_return result;
-}
+  co_return result;
+  }
+//}}}
 
 TEV_NAMESPACE_END

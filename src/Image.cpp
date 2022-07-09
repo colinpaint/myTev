@@ -1,11 +1,9 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
-
 #include <Image.h>
 #include <imageio/ImageLoader.h>
 #include <ThreadPool.h>
-
 #include <Iex.h>
 
 #include <GLFW/glfw3.h>
@@ -17,7 +15,6 @@
 using namespace nanogui;
 using namespace std;
 //}}}
-
 TEV_NAMESPACE_BEGIN
 
 //{{{

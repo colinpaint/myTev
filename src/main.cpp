@@ -12,8 +12,8 @@
 #include <utf8.h>
 
 #ifdef __APPLE__
-#define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>
+  #define GLFW_EXPOSE_NATIVE_COCOA
+  #include <GLFW/glfw3native.h>
 #endif
 
 #include <chrono>
@@ -25,12 +25,9 @@ using namespace std;
 //}}}
 TEV_NAMESPACE_BEGIN
 
-// Image viewer is a static variable to allow other parts of the program to easily schedule operations
-// onto the main nanogui thread loop.
-// In a truly modular program, this would never be required,
-// but OpenGL's state-machine nature throws a wrench into modularity.
-// Currently, the only use case is the destruction of
-// OpenGL textures, which _must_ happen on the thread on which the GL context is "current".
+// Image viewer is a static variable to allow other parts of the program to easily schedule operations onto the main nanogui thread loop.
+// In a truly modular program, this would never be required, but OpenGL's state-machine nature throws a wrench into modularity.
+// Currently, the only use case is the destruction of OpenGL textures, which _must_ happen on the thread on which the GL context is "current"
 static ImageViewer* sImageViewer = nullptr;
 
 //{{{
@@ -543,17 +540,14 @@ TEV_NAMESPACE_END
       #ifdef _WIN32
         arguments.emplace_back (tev::utf16to8(argv[i]));
       #else
+        // OSX sometimes (seemingly sporadically) passes the process serial number via a command line parameter, would like to ignore this
         string arg = argv[i];
-        // OSX sometimes (seemingly sporadically) passes the
-        // process serial number via a command line parameter.
-        // We would like to ignore this.
         if (arg.find ("-psn") != 0)
           arguments.emplace_back (tev::ensureUtf8(argv[i]));
       #endif
       }
 
     tev::mainFunc (arguments);
-
     }
   catch (const exception& e) {
     tlog::error() << tfm::format ("Uncaught exception: %s", e.what());

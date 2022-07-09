@@ -21,16 +21,16 @@ TEV_NAMESPACE_BEGIN
 const vector<unique_ptr<ImageLoader>>& ImageLoader::getLoaders() {
   auto makeLoaders = [] {
     vector<unique_ptr<ImageLoader>> imageLoaders;
-    imageLoaders.emplace_back(new ExrImageLoader());
-    imageLoaders.emplace_back(new PfmImageLoader());
-    imageLoaders.emplace_back(new ClipboardImageLoader());
-    imageLoaders.emplace_back(new EmptyImageLoader());
+    imageLoaders.emplace_back (new ExrImageLoader());
+    imageLoaders.emplace_back (new PfmImageLoader());
+    imageLoaders.emplace_back (new ClipboardImageLoader());
+    imageLoaders.emplace_back (new EmptyImageLoader());
 
     #ifdef _WIN32
-       imageLoaders.emplace_back(new DdsImageLoader());
+       imageLoaders.emplace_back (new DdsImageLoader());
     #endif
-    imageLoaders.emplace_back(new QoiImageLoader());
-    imageLoaders.emplace_back(new StbiImageLoader());
+    imageLoaders.emplace_back (new QoiImageLoader());
+    imageLoaders.emplace_back (new StbiImageLoader());
     return imageLoaders;
     };
 
@@ -47,9 +47,8 @@ vector<Channel> ImageLoader::makeNChannels (int numChannels, const Vector2i& siz
       channels.emplace_back (name, size);
       }
     }
-  else {
-    channels.emplace_back("L", size);
-    }
+  else 
+    channels.emplace_back ("L", size);
 
   return channels;
   }

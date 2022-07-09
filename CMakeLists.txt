@@ -1,9 +1,9 @@
 cmake_minimum_required (VERSION 3.13)
-
-project (tev VERSION 1.24 DESCRIPTION "HDR image viewer, mostly OpenEXR" LANGUAGES C CXX)
-
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project (tev VERSION 1.24 DESCRIPTION "HDR image viewer, mostly OpenEXR" LANGUAGES C CXX)
+set_property (DIRECTORY PROPERTY VS_STARTUP_PROJECT tev)
 
 set (TEV_VERSION "${CMAKE_PROJECT_VERSION}")
 if (NOT TEV_DEPLOY)
@@ -16,9 +16,6 @@ elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
   set (TEV_VERSION "${TEV_VERSION} (32 bit)")
 endif()
 
-# Set ourselves as the startup project in visual studio, not available until cmake 3.6, but doesn't break older versions.
-set_property (DIRECTORY PROPERTY VS_STARTUP_PROJECT tev)
-
 # Set a default configuration if none was specified
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message (STATUS "No release type specified. Setting to 'Release'")
@@ -27,8 +24,7 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 if (MSVC)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_WARNINGS")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP24")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_WARNINGS /MP24")
   set (CompilerFlags
        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
@@ -117,40 +113,40 @@ endif()
 
 set (TEV_SOURCES
      src/main.cpp
-     include/Box.h src/Box.cpp
-     include/Channel.h src/Channel.cpp
-     include/Common.h src/Common.cpp
-     include/FalseColor.h src/FalseColor.cpp
-     include/HelpWindow.h src/HelpWindow.cpp
-     include/Image.h src/Image.cpp
-     include/ImageButton.h src/ImageButton.cpp
-     include/ImageCanvas.h src/ImageCanvas.cpp
-     include/ImageViewer.h src/ImageViewer.cpp
-     include/Ipc.h src/Ipc.cpp
-     include/Lazy.h src/Lazy.cpp
-     include/MultiGraph.h src/MultiGraph.cpp
-     include/SharedQueue.h src/SharedQueue.cpp
-     include/Task.h src/Task.cpp
-     include/ThreadPool.h src/ThreadPool.cpp
-     include/UberShader.h src/UberShader.cpp
-     include/imageio/ClipboardImageLoader.h src/imageio/ClipboardImageLoader.cpp
-     include/imageio/EmptyImageLoader.h src/imageio/EmptyImageLoader.cpp
-     include/imageio/ExrImageLoader.h src/imageio/ExrImageLoader.cpp
-     include/imageio/ExrImageSaver.h src/imageio/ExrImageSaver.cpp
-     include/imageio/ImageLoader.h src/imageio/ImageLoader.cpp
-     include/imageio/ImageSaver.h src/imageio/ImageSaver.cpp
-     include/imageio/PfmImageLoader.h src/imageio/PfmImageLoader.cpp
-     include/imageio/QoiImageLoader.h src/imageio/QoiImageLoader.cpp
-     include/imageio/QoiImageSaver.h src/imageio/QoiImageSaver.cpp
-     include/imageio/StbiHdrImageSaver.h src/imageio/StbiHdrImageSaver.cpp
-     include/imageio/StbiImageLoader.h src/imageio/StbiImageLoader.cpp
-     include/imageio/StbiLdrImageSaver.h src/imageio/StbiLdrImageSaver.cpp
+     src/Box.h src/Box.cpp
+     src/Channel.h src/Channel.cpp
+     src/Common.h src/Common.cpp
+     src/FalseColor.h src/FalseColor.cpp
+     src/HelpWindow.h src/HelpWindow.cpp
+     src/Image.h src/Image.cpp
+     src/ImageButton.h src/ImageButton.cpp
+     src/ImageCanvas.h src/ImageCanvas.cpp
+     src/ImageViewer.h src/ImageViewer.cpp
+     src/Ipc.h src/Ipc.cpp
+     src/Lazy.h src/Lazy.cpp
+     src/MultiGraph.h src/MultiGraph.cpp
+     src/SharedQueue.h src/SharedQueue.cpp
+     src/Task.h src/Task.cpp
+     src/ThreadPool.h src/ThreadPool.cpp
+     src/UberShader.h src/UberShader.cpp
+     src/imageio/ClipboardImageLoader.h src/imageio/ClipboardImageLoader.cpp
+     src/imageio/EmptyImageLoader.h src/imageio/EmptyImageLoader.cpp
+     src/imageio/ExrImageLoader.h src/imageio/ExrImageLoader.cpp
+     src/imageio/ExrImageSaver.h src/imageio/ExrImageSaver.cpp
+     src/imageio/ImageLoader.h src/imageio/ImageLoader.cpp
+     src/imageio/ImageSaver.h src/imageio/ImageSaver.cpp
+     src/imageio/PfmImageLoader.h src/imageio/PfmImageLoader.cpp
+     src/imageio/QoiImageLoader.h src/imageio/QoiImageLoader.cpp
+     src/imageio/QoiImageSaver.h src/imageio/QoiImageSaver.cpp
+     src/imageio/StbiHdrImageSaver.h src/imageio/StbiHdrImageSaver.cpp
+     src/imageio/StbiImageLoader.h src/imageio/StbiImageLoader.cpp
+     src/imageio/StbiLdrImageSaver.h src/imageio/StbiLdrImageSaver.cpp
      )
 
 if (MSVC)
   set (TEV_SOURCES ${TEV_SOURCES} resources/icon.rc)
   set (TEV_SOURCES ${TEV_SOURCES} resources/tev.manifest)
-  set (TEV_SOURCES ${TEV_SOURCES} include/imageio/DdsImageLoader.h src/imageio/DdsImageLoader.cpp)
+  set (TEV_SOURCES ${TEV_SOURCES} src/imageio/DdsImageLoader.h src/imageio/DdsImageLoader.cpp)
 endif()
 
 add_executable (tev ${TEV_SOURCES})
@@ -167,13 +163,13 @@ include_directories (${ARGS_INCLUDE}
                      ${TINYFORMAT_INCLUDE}
                      ${TINYLOGGER_INCLUDE}
                      ${UTFCPP_INCLUDE}
-                     "${CMAKE_CURRENT_SOURCE_DIR}/include")
+                     "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 set (TEV_DEFINITIONS -DTEV_VERSION="${TEV_VERSION}")
 
-add_definitions(${TEV_DEFINITIONS} ${NANOGUI_EXTRA_DEFS})
+add_definitions (${TEV_DEFINITIONS} ${NANOGUI_EXTRA_DEFS})
 
-target_link_libraries(tev ${TEV_LIBS})
+target_link_libraries (tev ${TEV_LIBS})
 
 if (WIN32)
   install (TARGETS tev RUNTIME DESTINATION "bin")

@@ -1,7 +1,6 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
 //{{{  includes
-
 #include <Channel.h>
 #include <ThreadPool.h>
 
@@ -46,8 +45,8 @@ Task<void> Channel::multiplyWithAsync (const Channel& other, int priority) {
 void Channel::updateTile (int x, int y, int width, int height, const vector<float>& newData) {
 
   if (x < 0 || y < 0 || x + width > size().x() || y + height > size().y()) {
-    tlog::warning() << "Tile [" << x << "," << y 
-                    << "," << width << "," << height 
+    tlog::warning() << "Tile [" << x << "," << y
+                    << "," << width << "," << height
                     << "] could not be updated because it does not fit into the channel's size " << size();
     return;
     }

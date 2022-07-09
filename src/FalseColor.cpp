@@ -2,7 +2,6 @@
 // It is published under the BSD 3-Clause License within the LICENSE file.
 #include <FalseColor.h>
 using namespace std;
-
 TEV_NAMESPACE_BEGIN
 
 namespace colormap {
