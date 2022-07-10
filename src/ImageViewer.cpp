@@ -1019,7 +1019,7 @@ void ImageViewer::draw_contents() {
     mRequiresLayoutUpdate = false;
 
     if (mIsDraggingImageButton)
-      dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position(oldDraggedImageButtonPos);
+      dynamic_cast<ImageButton*>(buttons[mDraggedImageButtonId])->set_position (oldDraggedImageButtonPos);
     }
 
   updateTitle();
@@ -1099,7 +1099,7 @@ void ImageViewer::insertImage (shared_ptr<Image> image, size_t index, bool shall
   // First image got added, let's select it.
   if ((index == 0 && mImages.size() == 1) || shallSelect) {
     selectImage (image);
-    if (!isMaximized()) 
+    if (!isMaximized())
       set_size (sizeToFitImage (image));
     }
   }
@@ -1408,7 +1408,7 @@ void ImageViewer::selectGroup (string group) {
   if (activeGroupButton) {
     mGroupButtonContainer->set_position (nanogui::Vector2i {
       clamp (mGroupButtonContainer->position().x(),
-             -activeGroupButton->position().x(), 
+             -activeGroupButton->position().x(),
              m_size.x() - activeGroupButton->position().x() - activeGroupButton->width()), 0 });
     }
   }
@@ -1581,7 +1581,7 @@ nanogui::Vector2i ImageViewer::sizeToFitImage (const shared_ptr<Image>& image) {
 nanogui::Vector2i ImageViewer::sizeToFitAllImages() {
 
   nanogui::Vector2i result = m_size;
-  for (const auto& image : mImages) 
+  for (const auto& image : mImages)
     result = max (result, sizeToFitImage (image));
 
   return result;
