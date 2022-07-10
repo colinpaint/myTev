@@ -1,3 +1,4 @@
+//{{{
 /*
     src/label.cpp -- Text label with an arbitrary font, color, and size
 
@@ -8,13 +9,15 @@
     All rights reserved. Use of this source code is governed by a
     BSD-style license that can be found in the LICENSE.txt file.
 */
-
+//}}}
+//{{{  includes
 #include <nanogui/label.h>
 #include <nanogui/theme.h>
 #include <nanogui/opengl.h>
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
+//{{{
 Label::Label(Widget *parent, const std::string &caption, const std::string &font, int font_size)
     : Widget(parent), m_caption(caption), m_font(font) {
     if (m_theme) {
@@ -23,7 +26,9 @@ Label::Label(Widget *parent, const std::string &caption, const std::string &font
     }
     if (font_size >= 0) m_font_size = font_size;
 }
+//}}}
 
+//{{{
 void Label::set_theme(Theme *theme) {
     Widget::set_theme(theme);
     if (m_theme) {
@@ -31,7 +36,9 @@ void Label::set_theme(Theme *theme) {
         m_color = m_theme->m_text_color;
     }
 }
+//}}}
 
+//{{{
 Vector2i Label::preferred_size(NVGcontext *ctx) const {
     if (m_caption == "")
         return Vector2i(0);
@@ -50,7 +57,9 @@ Vector2i Label::preferred_size(NVGcontext *ctx) const {
         );
     }
 }
+//}}}
 
+//{{{
 void Label::draw(NVGcontext *ctx) {
     Widget::draw(ctx);
     nvgFontFace(ctx, m_font.c_str());
@@ -64,5 +73,6 @@ void Label::draw(NVGcontext *ctx) {
         nvgText(ctx, m_pos.x(), m_pos.y() + m_size.y() * 0.5f, m_caption.c_str(), nullptr);
     }
 }
+//}}}
 
 NAMESPACE_END(nanogui)

@@ -1,9 +1,11 @@
+//{{{  includes
 #include <nanogui/texture.h>
 #include <stb_image.h>
 #include <memory>
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
+//{{{
 Texture::Texture(PixelFormat pixel_format,
                  ComponentFormat component_format,
                  const Vector2i &size,
@@ -25,7 +27,8 @@ Texture::Texture(PixelFormat pixel_format,
 
     init();
 }
-
+//}}}
+//{{{
 Texture::Texture(const std::string &filename,
                  InterpolationMode min_interpolation_mode,
                  InterpolationMode mag_interpolation_mode,
@@ -58,7 +61,9 @@ Texture::Texture(const std::string &filename,
         throw std::runtime_error("Texture::Texture(): pixel format not supported by the hardware!");
     upload((const uint8_t *) texture_data.get());
 }
+//}}}
 
+//{{{
 size_t Texture::bytes_per_pixel() const {
     size_t result = 0;
     switch (m_component_format) {
@@ -76,7 +81,8 @@ size_t Texture::bytes_per_pixel() const {
 
     return result * channels();
 }
-
+//}}}
+//{{{
 size_t Texture::channels() const {
     size_t result = 1;
     switch (m_pixel_format) {
@@ -93,5 +99,6 @@ size_t Texture::channels() const {
     }
     return result;
 }
+//}}}
 
 NAMESPACE_END(nanogui)

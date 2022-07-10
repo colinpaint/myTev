@@ -1,5 +1,4 @@
 cmake_minimum_required (VERSION 3.13..3.18)
-set (CMAKE_OSX_DEPLOYMENT_TARGET 10.13)
 
 # Extract project version from source
 file (STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/include/nanogui/common.h" nanogui_version_defines
@@ -351,31 +350,33 @@ if (EXISTS /opt/vc/include)
 endif()
 
 if (NANOGUI_INSTALL)
-  install (TARGETS nanogui LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-  install(DIRECTORY include/nanogui DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
-
-  install(DIRECTORY ext/nanovg/src/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nanovg FILES_MATCHING PATTERN "*.h")
+  install (TARGETS nanogui LIBRARY 
+           DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  install (DIRECTORY include/nanogui 
+           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
+  install (DIRECTORY ext/nanovg/src/ 
+           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nanovg FILES_MATCHING PATTERN "*.h")
 
   if (NANOGUI_BUILD_GLFW)
-    install(DIRECTORY ext/glfw/include/GLFW DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
+    install (DIRECTORY ext/glfw/include/GLFW 
+             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
   endif()
 
   if (NANOGUI_BUILD_GLAD)
-    install(DIRECTORY ext/glad/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glad FILES_MATCHING PATTERN "*.h")
+    install (DIRECTORY ext/glad/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glad FILES_MATCHING PATTERN "*.h")
   endif()
 
-  install(TARGETS nanogui EXPORT nanoguiTargets)
+  install (TARGETS nanogui EXPORT nanoguiTargets)
 
-  set(NANOGUI_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATAROOTDIR}/cmake/nanogui")
+  set (NANOGUI_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATAROOTDIR}/cmake/nanogui")
 
   configure_package_config_file (resources/nanoguiConfig.cmake.in nanoguiConfig.cmake
                                  INSTALL_DESTINATION ${NANOGUI_CMAKECONFIG_INSTALL_DIR})
 
   write_basic_package_version_file (nanoguiConfigVersion.cmake
                                     VERSION ${PROJECT_VERSION}
-                                    COMPATIBILITY AnyNewerVersion ARCH_INDEPENDENT)
+                                    COMPATIBILITY AnyNewerVersion 
+                                    ARCH_INDEPENDENT)
 
   install (EXPORT nanoguiTargets DESTINATION ${NANOGUI_CMAKECONFIG_INSTALL_DIR})
 
@@ -387,6 +388,6 @@ endif()
 # Quench warnings while compiling NanoVG
 if (CMAKE_COMPILER_IS_GNUCC)
   set_source_files_properties (ext/nanovg/src/nanovg.c PROPERTIES COMPILE_FLAGS -Wno-unused-result)
-elseif(MSVC)
+elseif (MSVC)
   set_source_files_properties (ext/nanovg/src/nanovg.c PROPERTIES COMPILE_FLAGS "/wd4005 /wd4456 /wd4457")
 endif()

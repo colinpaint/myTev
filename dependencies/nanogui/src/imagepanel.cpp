@@ -1,3 +1,4 @@
+//{{{
 /*
     src/imagepanel.cpp -- Image panel widget which shows a number of
     square-shaped icons
@@ -9,16 +10,20 @@
     All rights reserved. Use of this source code is governed by a
     BSD-style license that can be found in the LICENSE.txt file.
 */
-
+//}}}
+//{{{  includes
 #include <nanogui/imagepanel.h>
 #include <nanogui/opengl.h>
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
+//{{{
 ImagePanel::ImagePanel(Widget *parent)
     : Widget(parent), m_thumb_size(64), m_spacing(10), m_margin(10),
       m_mouse_index(-1) {}
+//}}}
 
+//{{{
 Vector2i ImagePanel::grid_size() const {
     int n_cols = 1 + std::max(0,
         (int) ((m_size.x() - 2 * m_margin - m_thumb_size) /
@@ -26,7 +31,9 @@ Vector2i ImagePanel::grid_size() const {
     int n_rows = ((int) m_images.size() + n_cols - 1) / n_cols;
     return Vector2i(n_cols, n_rows);
 }
+//}}}
 
+//{{{
 int ImagePanel::index_for_position(const Vector2i &p) const {
     Vector2f pp = (Vector2f(p - m_pos) - Vector2f(m_margin)) /
                   (float)(m_thumb_size + m_spacing);
@@ -39,13 +46,16 @@ int ImagePanel::index_for_position(const Vector2i &p) const {
                   grid_pos.y() < grid.y();
     return over_image ? (grid_pos.x() + grid_pos.y() * grid.x()) : -1;
 }
+//}}}
 
+//{{{
 bool ImagePanel::mouse_motion_event(const Vector2i &p, const Vector2i & /* rel */,
                                     int /* button */, int /* modifiers */) {
     m_mouse_index = index_for_position(p);
     return true;
 }
-
+//}}}
+//{{{
 bool ImagePanel::mouse_button_event(const Vector2i &p, int /* button */, bool down,
                                     int /* modifiers */) {
     int index = index_for_position(p);
@@ -53,7 +63,9 @@ bool ImagePanel::mouse_button_event(const Vector2i &p, int /* button */, bool do
         m_callback(index);
     return true;
 }
+//}}}
 
+//{{{
 Vector2i ImagePanel::preferred_size(NVGcontext *) const {
     Vector2i grid = grid_size();
     return Vector2i(
@@ -61,7 +73,9 @@ Vector2i ImagePanel::preferred_size(NVGcontext *) const {
         grid.y() * m_thumb_size + (grid.y() - 1) * m_spacing + 2*m_margin
     );
 }
+//}}}
 
+//{{{
 void ImagePanel::draw(NVGcontext* ctx) {
     Vector2i grid = grid_size();
 
@@ -110,5 +124,6 @@ void ImagePanel::draw(NVGcontext* ctx) {
         nvgStroke(ctx);
     }
 }
+//}}}
 
 NAMESPACE_END(nanogui)

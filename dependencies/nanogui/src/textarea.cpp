@@ -1,3 +1,4 @@
+//{{{
 /*
     src/textarea.cpp -- Multi-line read-only text widget
 
@@ -9,59 +10,54 @@
     BSD-style license that can be found in the LICENSE.txt file.
 */
 
+//}}}
+//{{{  includes
 #include <nanogui/textarea.h>
 #include <nanogui/opengl.h>
 #include <nanogui/theme.h>
 #include <nanogui/screen.h>
 #include <nanogui/vscrollpanel.h>
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
-TextArea::TextArea(Widget *parent) : Widget(parent),
+//{{{
+TextArea::TextArea (Widget *parent) : Widget(parent),
   m_foreground_color(Color(0, 0)), m_background_color(Color(0, 0)),
   m_selection_color(.5f, 1.f), m_font("sans"), m_offset(0),
   m_max_size(0), m_padding(0), m_selectable(true),
   m_selection_start(-1), m_selection_end(-1) { }
+//}}}
 
-void TextArea::append(const std::string &text) {
-    NVGcontext *ctx = screen()->nvg_context();
-
-    nvgFontSize(ctx, font_size());
-    nvgFontFace(ctx, m_font.c_str());
-
-    const char *str = text.c_str();
-    do {
-        const char *begin = str;
-
-        while (*str != 0 && *str != '\n')
-            str++;
-
-        std::string line(begin, str);
-        if (line.empty())
-            continue;
-        int width = nvgTextBounds(ctx, 0, 0, line.c_str(), nullptr, nullptr);
-        m_blocks.push_back(Block { m_offset, width, line, m_foreground_color });
-
-        m_offset.x() += width;
-        m_max_size = max(m_max_size, m_offset);
-        if (*str == '\n') {
-            m_offset = Vector2i(0, m_offset.y() + font_size());
-            m_max_size = max(m_max_size, m_offset);
-        }
-    } while (*str++ != 0);
-
-    VScrollPanel *vscroll = dynamic_cast<VScrollPanel *>(m_parent);
-    if (vscroll)
-        vscroll->perform_layout(ctx);
+//{{{
+Vector2i TextArea::preferred_size (NVGcontext *) const {
+    return m_max_size + m_padding * 2;
 }
+//}}}
+//{{{
+bool TextArea::mouse_button_event (const Vector2i &p, int button, bool down,
+                                  int /* modifiers */) {
+    if (down && button == GLFW_MOUSE_BUTTON_1 && m_selectable) {
+        m_selection_start = m_selection_end =
+            position_to_block(p - m_pos - m_padding);
+        request_focus();
+        return true;
+    }
 
-void TextArea::clear() {
-    m_blocks.clear();
-    m_offset = m_max_size = 0;
-    m_selection_start = m_selection_end = -1;
+    return false;
 }
-
-bool TextArea::keyboard_event(int key, int /* scancode */, int action, int modifiers) {
+//}}}
+//{{{
+bool TextArea::mouse_drag_event (const Vector2i &p, const Vector2i &/* rel */,
+                                int /* button */, int /* modifiers */) {
+    if (m_selection_start != -1 && m_selectable) {
+        m_selection_end = position_to_block(p - m_pos - m_padding);
+        return true;
+    }
+    return false;
+}
+//}}}
+//{{{
+bool TextArea::keyboard_event (int key, int /* scancode */, int action, int modifiers) {
     if (m_selectable && focused()) {
         if (key == GLFW_KEY_C && modifiers == SYSTEM_COMMAND_MOD && action == GLFW_PRESS &&
             m_selection_start != -1 && m_selection_end != -1) {
@@ -97,12 +93,10 @@ bool TextArea::keyboard_event(int key, int /* scancode */, int action, int modif
     }
     return false;
 }
+//}}}
 
-Vector2i TextArea::preferred_size(NVGcontext *) const {
-    return m_max_size + m_padding * 2;
-}
-
-void TextArea::draw(NVGcontext *ctx) {
+//{{{
+void TextArea::draw (NVGcontext *ctx) {
     VScrollPanel *vscroll = dynamic_cast<VScrollPanel *>(m_parent);
 
     std::vector<Block>::iterator start_it = m_blocks.begin(),
@@ -200,29 +194,51 @@ void TextArea::draw(NVGcontext *ctx) {
                 block.text.c_str(), nullptr);
     }
 }
+//}}}
 
-bool TextArea::mouse_button_event(const Vector2i &p, int button, bool down,
-                                  int /* modifiers */) {
-    if (down && button == GLFW_MOUSE_BUTTON_1 && m_selectable) {
-        m_selection_start = m_selection_end =
-            position_to_block(p - m_pos - m_padding);
-        request_focus();
-        return true;
-    }
-
-    return false;
+//{{{
+void TextArea::clear() {
+    m_blocks.clear();
+    m_offset = m_max_size = 0;
+    m_selection_start = m_selection_end = -1;
 }
+//}}}
+//{{{
+void TextArea::append (const std::string &text) {
+    NVGcontext *ctx = screen()->nvg_context();
 
-bool TextArea::mouse_drag_event(const Vector2i &p, const Vector2i &/* rel */,
-                                int /* button */, int /* modifiers */) {
-    if (m_selection_start != -1 && m_selectable) {
-        m_selection_end = position_to_block(p - m_pos - m_padding);
-        return true;
-    }
-    return false;
+    nvgFontSize(ctx, font_size());
+    nvgFontFace(ctx, m_font.c_str());
+
+    const char *str = text.c_str();
+    do {
+        const char *begin = str;
+
+        while (*str != 0 && *str != '\n')
+            str++;
+
+        std::string line(begin, str);
+        if (line.empty())
+            continue;
+        int width = nvgTextBounds(ctx, 0, 0, line.c_str(), nullptr, nullptr);
+        m_blocks.push_back(Block { m_offset, width, line, m_foreground_color });
+
+        m_offset.x() += width;
+        m_max_size = max(m_max_size, m_offset);
+        if (*str == '\n') {
+            m_offset = Vector2i(0, m_offset.y() + font_size());
+            m_max_size = max(m_max_size, m_offset);
+        }
+    } while (*str++ != 0);
+
+    VScrollPanel *vscroll = dynamic_cast<VScrollPanel *>(m_parent);
+    if (vscroll)
+        vscroll->perform_layout(ctx);
 }
+//}}}
 
-Vector2i TextArea::position_to_block(const Vector2i &pos) const {
+//{{{
+Vector2i TextArea::position_to_block (const Vector2i &pos) const {
     NVGcontext *ctx = screen()->nvg_context();
     auto it = std::lower_bound(
         m_blocks.begin(),
@@ -265,8 +281,9 @@ Vector2i TextArea::position_to_block(const Vector2i &pos) const {
         selection
     );
 }
-
-Vector2i TextArea::block_to_position(const Vector2i &pos) const {
+//}}}
+//{{{
+Vector2i TextArea::block_to_position (const Vector2i &pos) const {
     if (pos.x() < 0 || pos.x() >= (int) m_blocks.size())
         return Vector2i(-1, -1);
     NVGcontext *ctx = screen()->nvg_context();
@@ -285,5 +302,6 @@ Vector2i TextArea::block_to_position(const Vector2i &pos) const {
 
     return block.offset + Vector2i(glyphs[pos.y()].x, 0);
 }
+//}}}
 
 NAMESPACE_END(nanogui)

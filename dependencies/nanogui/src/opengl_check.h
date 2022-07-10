@@ -7,4 +7,3 @@
       (void) nanogui_check_glerror(#cmd); \
       } while (0)
 #endif
-
