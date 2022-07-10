@@ -1,3 +1,4 @@
+//{{{
 /*
     nanogui/imageview.cpp -- Widget used to display images.
 
@@ -8,7 +9,8 @@
     All rights reserved. Use of this source code is governed by a
     BSD-style license that can be found in the LICENSE.txt file.
 */
-
+//}}}
+//{{{  includes
 #include <nanogui/imageview.h>
 #include <nanogui/renderpass.h>
 #include <nanogui/shader.h>
@@ -16,9 +18,11 @@
 #include <nanogui/screen.h>
 #include <nanogui/opengl.h>
 #include <nanogui_resources.h>
+//}}}
 
 NAMESPACE_BEGIN(nanogui)
 
+//{{{
 ImageView::ImageView(Widget *parent) : Canvas(parent, 1, false, false, false) {
     render_pass()->set_clear_color(0, Color(0.3f, 0.3f, 0.32f, 1.f));
 
@@ -44,7 +48,9 @@ ImageView::ImageView(Widget *parent) : Canvas(parent, 1, false, false, false) {
     m_draw_image_border = true;
     m_image_background_color = Color(0.f, 0.f, 0.f, 0.f);
 }
+//}}}
 
+//{{{
 void ImageView::set_image(Texture *image) {
     if (image->mag_interpolation_mode() != Texture::InterpolationMode::Nearest)
         throw std::runtime_error(
@@ -52,40 +58,51 @@ void ImageView::set_image(Texture *image) {
     m_image_shader->set_texture("image", image);
     m_image = image;
 }
+//}}}
 
+//{{{
 float ImageView::scale() const {
     return std::pow(2.f, m_scale / 5.f);
 }
-
+//}}}
+//{{{
 void ImageView::set_scale(float scale) {
     m_scale = std::log2(scale) * 5.f;
 }
-
+//}}}
+//{{{
 void ImageView::center() {
     if (!m_image)
         return;
     m_offset = Vector2i(.5f * (Vector2f(m_size) * screen()->pixel_ratio() - Vector2f(m_image->size()) * scale()));
 }
+//}}}
 
+//{{{
 void ImageView::reset() {
     m_scale = 0.f;
     center();
 }
+//}}}
 
+//{{{
 Vector2f ImageView::pos_to_pixel(const Vector2f &p) const {
     Vector2f p2 = p;
     if (m_draw_border)
         p2 -= 1.f;
     return (p2 * screen()->pixel_ratio() - m_offset) / scale();
 }
-
+//}}}
+//{{{
 Vector2f ImageView::pixel_to_pos(const Vector2f &p) const {
     Vector2i pos = (p * scale() + m_offset) / screen()->pixel_ratio();
     if (m_draw_border)
         pos += 1.f;
     return pos;
 }
+//}}}
 
+//{{{
 bool ImageView::keyboard_event(int key, int /* scancode */, int action, int /* modifiers */) {
     if (!m_enabled || !m_image)
         return false;
@@ -98,7 +115,8 @@ bool ImageView::keyboard_event(int key, int /* scancode */, int action, int /* m
     }
     return false;
 }
-
+//}}}
+//{{{
 bool ImageView::mouse_drag_event(const Vector2i & /* p */, const Vector2i &rel,
                                  int /* button */, int /* modifiers */) {
     if (!m_enabled || !m_image)
@@ -108,7 +126,8 @@ bool ImageView::mouse_drag_event(const Vector2i & /* p */, const Vector2i &rel,
 
     return true;
 }
-
+//}}}
+//{{{
 bool ImageView::scroll_event(const Vector2i &p, const Vector2f &rel) {
     if (!m_enabled || !m_image)
         return false;
@@ -126,7 +145,9 @@ bool ImageView::scroll_event(const Vector2i &p, const Vector2f &rel) {
     m_offset += (p2 - p1) * scale();
     return true;
 }
+//}}}
 
+//{{{
 void ImageView::draw(NVGcontext *ctx) {
     if (!m_enabled || !m_image)
         return;
@@ -190,7 +211,8 @@ void ImageView::draw(NVGcontext *ctx) {
 
     nvgRestore(ctx);
 }
-
+//}}}
+//{{{
 void ImageView::draw_contents() {
     if (!m_image)
         return;
@@ -229,5 +251,6 @@ void ImageView::draw_contents() {
     m_image_shader->draw_array(Shader::PrimitiveType::Triangle, 0, 6, false);
     m_image_shader->end();
 }
+//}}}
 
 NAMESPACE_END(nanogui)

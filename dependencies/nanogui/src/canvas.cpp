@@ -1,3 +1,4 @@
+//{{{
 /*
     nanogui/canvas.cpp -- Canvas widget for rendering full-fledged
     OpenGL content within its designated area. Very useful for
@@ -11,7 +12,8 @@
     All rights reserved. Use of this source code is governed by a
     BSD-style license that can be found in the LICENSE.txt file.
 */
-
+//}}}
+//{{{  includes
 #include <nanogui/screen.h>
 #include <nanogui/canvas.h>
 #include <nanogui/texture.h>
@@ -19,13 +21,13 @@
 #include <nanogui/theme.h>
 #include <nanogui/opengl.h>
 #include "opengl_check.h"
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
-Canvas::Canvas(Widget *parent, uint8_t samples,
-               bool has_depth_buffer, bool has_stencil_buffer,
-               bool clear)
+//{{{
+Canvas::Canvas (Widget* parent, uint8_t samples, bool has_depth_buffer, bool has_stencil_buffer, bool clear)
     : Widget(parent), m_draw_border(true) {
+
     m_size = Vector2i(250, 250);
     m_border_color = m_theme->m_border_light;
 
@@ -114,18 +116,24 @@ Canvas::Canvas(Widget *parent, uint8_t samples,
         clear
     );
 }
+//}}}
 
-void Canvas::set_background_color(const Color &background_color) {
-    m_render_pass->set_clear_color(0, background_color);
-}
+//{{{
+void Canvas::set_background_color (const Color &background_color) {
+  m_render_pass->set_clear_color(0, background_color);
+  }
+//}}}
 
+//{{{
 const Color& Canvas::background_color() const {
-    return m_render_pass->clear_color(0);
-}
+  return m_render_pass->clear_color(0);
+  }
+//}}}
 
 void Canvas::draw_contents() { /* No-op. */ }
+//{{{
+void Canvas::draw (NVGcontext *ctx) {
 
-void Canvas::draw(NVGcontext *ctx) {
     Screen *scr = screen();
     if (scr == nullptr)
         throw std::runtime_error("Canvas::draw(): could not find parent screen!");
@@ -178,7 +186,7 @@ void Canvas::draw(NVGcontext *ctx) {
     }
 
     if (m_render_to_texture) {
-        RenderPass *rp = m_render_pass;
+        RenderPass* rp = m_render_pass;
 #if defined(NANOGUI_USE_METAL)
         if (m_render_pass_resolved)
             rp = m_render_pass_resolved;
@@ -186,5 +194,6 @@ void Canvas::draw(NVGcontext *ctx) {
         rp->blit_to(Vector2i(0, 0), fbsize, scr, offset);
     }
 }
+//}}}
 
 NAMESPACE_END(nanogui)

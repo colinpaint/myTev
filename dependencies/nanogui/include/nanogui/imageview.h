@@ -1,3 +1,4 @@
+//{{{
 /*
     nanogui/imageview.h -- Widget used to display images.
 
@@ -9,19 +10,14 @@
     BSD-style license that can be found in the LICENSE.txt file.
 */
 /** \file */
-
+//}}}
+//{{{  includes
 #pragma once
 
 #include <nanogui/canvas.h>
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
-/**
- * \class ImageView imageview.h nanogui/imageview.h
- *
- * \brief A widget for displaying, panning, and zooming images. Numerical RGBA
- * pixel information is shown at large magnifications.
- */
 class NANOGUI_EXPORT ImageView : public Canvas {
 public:
     using PixelCallback = std::function<void(const Vector2i &, char **, size_t)>;

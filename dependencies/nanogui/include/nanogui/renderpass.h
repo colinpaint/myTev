@@ -1,3 +1,4 @@
+//{{{
 /*
     NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
@@ -13,12 +14,14 @@
  * \brief Defines abstractions for rendering passes that work with OpenGL,
  * OpenGL ES, and Metal.
  */
-
+//}}}
+//{{{  includes
 #pragma once
 
 #include <nanogui/object.h>
 #include <nanogui/vector.h>
 #include <unordered_map>
+//}}}
 
 NAMESPACE_BEGIN(nanogui)
 
@@ -43,6 +46,7 @@ public:
         Back
     };
 
+    //{{{
     /**
      * \brief Create a new render pass for rendering to a specific
      * set of targets
@@ -72,12 +76,14 @@ public:
      * \param clear
      *     Should \ref enter() begin by clearing all buffers?
      */
+    //}}}
     RenderPass(std::vector<Object *> color_targets,
                Object *depth_target = nullptr,
                Object *stencil_target = nullptr,
                Object *blit_target = nullptr,
                bool clear = true);
 
+    //{{{
     /**
      * \brief Begin the render pass
      *
@@ -90,6 +96,7 @@ public:
      * aliases so that the render pass can be activated via Pythons 'with'
      * statement.
      */
+    //}}}
     void begin();
 
     /// Finish the render pass

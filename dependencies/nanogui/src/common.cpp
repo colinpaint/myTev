@@ -1,3 +1,4 @@
+//{{{
 /*
     nanogui/nanogui.cpp -- Basic initialization and utility routines
 
@@ -8,14 +9,15 @@
     All rights reserved. Use of this source code is governed by a
     BSD-style license that can be found in the LICENSE.txt file.
 */
-
+//}}}
+//{{{  includes
 #include <nanogui/screen.h>
 
 #if defined(_WIN32)
-#  ifndef NOMINMAX
-#  define NOMINMAX 1
-#  endif
-#  include <windows.h>
+  #ifndef NOMINMAX
+    #define NOMINMAX 1
+  #endif
+  #include <windows.h>
 #endif
 
 #include <nanogui/opengl.h>
@@ -27,14 +29,15 @@
 #include <iostream>
 
 #if !defined(_WIN32)
-#  include <locale.h>
-#  include <signal.h>
-#  include <dirent.h>
+  #include <locale.h>
+  #include <signal.h>
+  #include <dirent.h>
 #endif
 
 #if defined(EMSCRIPTEN)
-#  include <emscripten/emscripten.h>
+  #include <emscripten/emscripten.h>
 #endif
+//}}}
 
 NAMESPACE_BEGIN(nanogui)
 
@@ -44,6 +47,7 @@ extern std::map<GLFWwindow *, Screen *> __nanogui_screens;
   extern void disable_saved_application_state_osx();
 #endif
 
+//{{{
 void init() {
     #if !defined(_WIN32)
         /* Avoid locale-related number parsing issues */
@@ -72,6 +76,7 @@ void init() {
 
     glfwSetTime(0);
 }
+//}}}
 
 static bool mainloop_active = false;
 
@@ -83,6 +88,7 @@ static float emscripten_refresh = 0;
 std::mutex m_async_mutex;
 std::vector<std::function<void()>> m_async_functions;
 
+//{{{
 void mainloop(float refresh) {
     if (mainloop_active)
         throw std::runtime_error("Main loop is already running!");
@@ -193,20 +199,25 @@ void mainloop(float refresh) {
 
     refresh_thread.join();
 }
+//}}}
 
+//{{{
 void async(const std::function<void()> &func) {
     std::lock_guard<std::mutex> guard(m_async_mutex);
     m_async_functions.push_back(func);
 }
-
+//}}}
+//{{{
 void leave() {
     mainloop_active = false;
 }
-
+//}}}
+//{{{
 bool active() {
     return mainloop_active;
 }
-
+//}}}
+//{{{
 std::pair<bool, bool> test_10bit_edr_support() {
 #if defined(NANOGUI_USE_METAL)
     return metal_10bit_edr_support();
@@ -215,7 +226,8 @@ std::pair<bool, bool> test_10bit_edr_support() {
 #endif
 }
 
-
+//}}}
+//{{{
 void shutdown() {
     glfwTerminate();
 
@@ -223,16 +235,19 @@ void shutdown() {
     metal_shutdown();
 #endif
 }
+//}}}
 
 #if defined(__clang__)
-#  define NANOGUI_FALLTHROUGH [[clang::fallthrough]];
+  #define NANOGUI_FALLTHROUGH [[clang::fallthrough]];
 #elif defined(__GNUG__)
-#  define NANOGUI_FALLTHROUGH __attribute__ ((fallthrough));
+  #define NANOGUI_FALLTHROUGH __attribute__ ((fallthrough));
 #else
-#  define NANOGUI_FALLTHROUGH
+  #define NANOGUI_FALLTHROUGH
 #endif
 
-std::string utf8(uint32_t c) {
+//{{{
+std::string utf8 (uint32_t c) {
+
     char seq[8];
     int n = 0;
     if (c < 0x80) n = 1;
@@ -252,8 +267,9 @@ std::string utf8(uint32_t c) {
     }
     return std::string(seq, seq + n);
 }
-
-int __nanogui_get_image(NVGcontext *ctx, const std::string &name, uint8_t *data, uint32_t size) {
+//}}}
+//{{{
+int __nanogui_get_image (NVGcontext *ctx, const std::string &name, uint8_t *data, uint32_t size) {
     static std::map<std::string, int> icon_cache;
     auto it = icon_cache.find(name);
     if (it != icon_cache.end())
@@ -264,9 +280,10 @@ int __nanogui_get_image(NVGcontext *ctx, const std::string &name, uint8_t *data,
     icon_cache[name] = icon_id;
     return icon_id;
 }
+//}}}
+//{{{
+std::vector<std::pair<int, std::string>> load_image_directory (NVGcontext *ctx, const std::string &path) {
 
-std::vector<std::pair<int, std::string>>
-load_image_directory(NVGcontext *ctx, const std::string &path) {
     std::vector<std::pair<int, std::string> > result;
 #if !defined(_WIN32)
     DIR *dp = opendir(path.c_str());
@@ -301,151 +318,157 @@ load_image_directory(NVGcontext *ctx, const std::string &path) {
 #endif
     return result;
 }
-
+//}}}
+//{{{
 std::string file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes, bool save) {
     auto result = file_dialog(filetypes, save, false);
     return result.empty() ? "" : result.front();
 }
+//}}}
 
 #if !defined(__APPLE__)
-std::vector<std::string> file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes, bool save, bool multiple) {
-    static const int FILE_DIALOG_MAX_BUFFER = 16384;
-    if (save && multiple) {
-        throw std::invalid_argument("save and multiple must not both be true.");
-    }
+  //{{{
+  std::vector<std::string> file_dialog (const std::vector<std::pair<std::string, std::string>> &filetypes, bool save, bool multiple) {
+      static const int FILE_DIALOG_MAX_BUFFER = 16384;
+      if (save && multiple) {
+          throw std::invalid_argument("save and multiple must not both be true.");
+      }
 
-#if defined(EMSCRIPTEN)
-    throw std::runtime_error("Opening files is not supported when NanoGUI is compiled via Emscripten");
-#elif defined(_WIN32)
-    OPENFILENAMEW ofn;
-    ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
-    ofn.lStructSize = sizeof(OPENFILENAMEW);
-    wchar_t tmp[FILE_DIALOG_MAX_BUFFER];
-    ofn.lpstrFile = tmp;
-    ZeroMemory(tmp, sizeof(tmp));
-    ofn.nMaxFile = FILE_DIALOG_MAX_BUFFER;
-    ofn.nFilterIndex = 1;
+  #if defined(EMSCRIPTEN)
+      throw std::runtime_error("Opening files is not supported when NanoGUI is compiled via Emscripten");
+  #elif defined(_WIN32)
+      OPENFILENAMEW ofn;
+      ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
+      ofn.lStructSize = sizeof(OPENFILENAMEW);
+      wchar_t tmp[FILE_DIALOG_MAX_BUFFER];
+      ofn.lpstrFile = tmp;
+      ZeroMemory(tmp, sizeof(tmp));
+      ofn.nMaxFile = FILE_DIALOG_MAX_BUFFER;
+      ofn.nFilterIndex = 1;
 
-    std::string filter;
+      std::string filter;
 
-    if (!save && filetypes.size() > 1) {
-        filter.append("Supported file types (");
-        for (size_t i = 0; i < filetypes.size(); ++i) {
-            filter.append("*.");
-            filter.append(filetypes[i].first);
-            if (i + 1 < filetypes.size())
-                filter.append(";");
-        }
-        filter.append(")");
-        filter.push_back('\0');
-        for (size_t i = 0; i < filetypes.size(); ++i) {
-            filter.append("*.");
-            filter.append(filetypes[i].first);
-            if (i + 1 < filetypes.size())
-                filter.append(";");
-        }
-        filter.push_back('\0');
-    }
-    for (auto pair : filetypes) {
-        filter.append(pair.second);
-        filter.append(" (*.");
-        filter.append(pair.first);
-        filter.append(")");
-        filter.push_back('\0');
-        filter.append("*.");
-        filter.append(pair.first);
-        filter.push_back('\0');
-    }
-    filter.push_back('\0');
+      if (!save && filetypes.size() > 1) {
+          filter.append("Supported file types (");
+          for (size_t i = 0; i < filetypes.size(); ++i) {
+              filter.append("*.");
+              filter.append(filetypes[i].first);
+              if (i + 1 < filetypes.size())
+                  filter.append(";");
+          }
+          filter.append(")");
+          filter.push_back('\0');
+          for (size_t i = 0; i < filetypes.size(); ++i) {
+              filter.append("*.");
+              filter.append(filetypes[i].first);
+              if (i + 1 < filetypes.size())
+                  filter.append(";");
+          }
+          filter.push_back('\0');
+      }
+      for (auto pair : filetypes) {
+          filter.append(pair.second);
+          filter.append(" (*.");
+          filter.append(pair.first);
+          filter.append(")");
+          filter.push_back('\0');
+          filter.append("*.");
+          filter.append(pair.first);
+          filter.push_back('\0');
+      }
+      filter.push_back('\0');
 
-    int size = MultiByteToWideChar(CP_UTF8, 0, &filter[0], (int)filter.size(), NULL, 0);
-    std::wstring wfilter(size, 0);
-    MultiByteToWideChar(CP_UTF8, 0, &filter[0], (int)filter.size(), &wfilter[0], size);
+      int size = MultiByteToWideChar(CP_UTF8, 0, &filter[0], (int)filter.size(), NULL, 0);
+      std::wstring wfilter(size, 0);
+      MultiByteToWideChar(CP_UTF8, 0, &filter[0], (int)filter.size(), &wfilter[0], size);
 
-    ofn.lpstrFilter = wfilter.data();
+      ofn.lpstrFilter = wfilter.data();
 
-    if (save) {
-        ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
-        if (GetSaveFileNameW(&ofn) == FALSE)
-            return {};
-    } else {
-        ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-        if (multiple)
-            ofn.Flags |= OFN_ALLOWMULTISELECT;
-        if (GetOpenFileNameW(&ofn) == FALSE)
-            return {};
-    }
+      if (save) {
+          ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+          if (GetSaveFileNameW(&ofn) == FALSE)
+              return {};
+      } else {
+          ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+          if (multiple)
+              ofn.Flags |= OFN_ALLOWMULTISELECT;
+          if (GetOpenFileNameW(&ofn) == FALSE)
+              return {};
+      }
 
-    size_t i = 0;
-    std::vector<std::string> result;
-    while (tmp[i] != '\0') {
-        std::string filename;
-        int tmpSize = (int)wcslen(&tmp[i]);
-        if (tmpSize > 0) {
-            int filenameSize = WideCharToMultiByte(CP_UTF8, 0, &tmp[i], tmpSize, NULL, 0, NULL, NULL);
-            filename.resize(filenameSize, 0);
-            WideCharToMultiByte(CP_UTF8, 0, &tmp[i], tmpSize, &filename[0], filenameSize, NULL, NULL);
-        }
+      size_t i = 0;
+      std::vector<std::string> result;
+      while (tmp[i] != '\0') {
+          std::string filename;
+          int tmpSize = (int)wcslen(&tmp[i]);
+          if (tmpSize > 0) {
+              int filenameSize = WideCharToMultiByte(CP_UTF8, 0, &tmp[i], tmpSize, NULL, 0, NULL, NULL);
+              filename.resize(filenameSize, 0);
+              WideCharToMultiByte(CP_UTF8, 0, &tmp[i], tmpSize, &filename[0], filenameSize, NULL, NULL);
+          }
 
-        result.emplace_back(filename);
-        i += tmpSize + 1;
-    }
+          result.emplace_back(filename);
+          i += tmpSize + 1;
+      }
 
-    if (result.size() > 1) {
-        for (i = 1; i < result.size(); ++i) {
-            result[i] = result[0] + "\\" + result[i];
-        }
-        result.erase(begin(result));
-    }
+      if (result.size() > 1) {
+          for (i = 1; i < result.size(); ++i) {
+              result[i] = result[0] + "\\" + result[i];
+          }
+          result.erase(begin(result));
+      }
 
-    return result;
-#else
-    char buffer[FILE_DIALOG_MAX_BUFFER];
-    buffer[0] = '\0';
+      return result;
+  #else
+      char buffer[FILE_DIALOG_MAX_BUFFER];
+      buffer[0] = '\0';
 
-    std::string cmd = "zenity --file-selection ";
-    // The safest separator for multiple selected paths is /, since / can never occur
-    // in file names. Only where two paths are concatenated will there be two / following
-    // each other.
-    if (multiple)
-        cmd += "--multiple --separator=\"/\" ";
-    if (save)
-        cmd += "--save ";
-    cmd += "--file-filter=\"";
-    for (auto pair : filetypes)
-        cmd += "\"*." + pair.first + "\" ";
-    cmd += "\"";
-    FILE *output = popen(cmd.c_str(), "r");
-    if (output == nullptr)
-        throw std::runtime_error("popen() failed -- could not launch zenity!");
-    while (fgets(buffer, FILE_DIALOG_MAX_BUFFER, output) != NULL)
-        ;
-    pclose(output);
-    std::string paths(buffer);
-    paths.erase(std::remove(paths.begin(), paths.end(), '\n'), paths.end());
+      std::string cmd = "zenity --file-selection ";
+      // The safest separator for multiple selected paths is /, since / can never occur
+      // in file names. Only where two paths are concatenated will there be two / following
+      // each other.
+      if (multiple)
+          cmd += "--multiple --separator=\"/\" ";
+      if (save)
+          cmd += "--save ";
+      cmd += "--file-filter=\"";
+      for (auto pair : filetypes)
+          cmd += "\"*." + pair.first + "\" ";
+      cmd += "\"";
+      FILE *output = popen(cmd.c_str(), "r");
+      if (output == nullptr)
+          throw std::runtime_error("popen() failed -- could not launch zenity!");
+      while (fgets(buffer, FILE_DIALOG_MAX_BUFFER, output) != NULL)
+          ;
+      pclose(output);
+      std::string paths(buffer);
+      paths.erase(std::remove(paths.begin(), paths.end(), '\n'), paths.end());
 
-    std::vector<std::string> result;
-    while (!paths.empty()) {
-        size_t end = paths.find("//");
-        if (end == std::string::npos) {
-            result.emplace_back(paths);
-            paths = "";
-        } else {
-            result.emplace_back(paths.substr(0, end));
-            paths = paths.substr(end + 1);
-        }
-    }
+      std::vector<std::string> result;
+      while (!paths.empty()) {
+          size_t end = paths.find("//");
+          if (end == std::string::npos) {
+              result.emplace_back(paths);
+              paths = "";
+          } else {
+              result.emplace_back(paths.substr(0, end));
+              paths = paths.substr(end + 1);
+          }
+      }
 
-    return result;
+      return result;
+  #endif
+  }
+  //}}}
 #endif
-}
-#endif
 
+//{{{
 void Object::inc_ref() const {
     m_ref_count++;
 }
-
-void Object::dec_ref(bool dealloc) const noexcept {
+//}}}
+//{{{
+void Object::dec_ref (bool dealloc) const noexcept {
     --m_ref_count;
     if (m_ref_count == 0 && dealloc) {
         delete this;
@@ -454,8 +477,8 @@ void Object::dec_ref(bool dealloc) const noexcept {
         abort();
     }
 }
+//}}}
 
 Object::~Object() { }
 
 NAMESPACE_END(nanogui)
-

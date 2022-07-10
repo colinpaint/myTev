@@ -1,16 +1,18 @@
+//{{{  includes
 #include <nanogui/renderpass.h>
 #include <nanogui/screen.h>
 #include <nanogui/opengl.h>
 #include <nanogui/texture.h>
 #include "opengl_check.h"
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
-RenderPass::RenderPass(std::vector<Object *> color_targets,
-                       Object *depth_target,
-                       Object *stencil_target,
-                       Object *blit_target,
-                       bool clear)
+//{{{
+RenderPass::RenderPass (std::vector<Object *> color_targets,
+                        Object *depth_target,
+                        Object *stencil_target,
+                        Object *blit_target,
+                        bool clear)
     : m_targets(color_targets.size() + 2), m_clear(clear),
       m_clear_color(color_targets.size()), m_viewport_offset(0),
       m_viewport_size(0), m_framebuffer_size(0), m_depth_test(DepthTest::Less),
@@ -20,16 +22,16 @@ RenderPass::RenderPass(std::vector<Object *> color_targets,
     m_targets[0] = depth_target;
     m_targets[1] = stencil_target;
     for (size_t i = 0; i < color_targets.size(); ++i) {
-        m_targets[i + 2] = color_targets[i];
-        m_clear_color[i] = Color(0, 0, 0, 0);
-    }
+      m_targets[i + 2] = color_targets[i];
+      m_clear_color[i] = Color(0, 0, 0, 0);
+      }
     m_clear_stencil = 0;
     m_clear_depth = 1.f;
 
     if (!m_targets[0].get()) {
-        m_depth_write = false;
-        m_depth_test = DepthTest::Always;
-    }
+      m_depth_write = false;
+      m_depth_test = DepthTest::Always;
+      }
 
     CHK(glGenFramebuffers(1, &m_framebuffer_handle));
     CHK(glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_handle));
@@ -81,6 +83,7 @@ RenderPass::RenderPass(std::vector<Object *> color_targets,
         CHK(glDeleteFramebuffers(1, &m_framebuffer_handle));
         m_framebuffer_handle = 0;
     } else {
+
 #if defined(NANOGUI_USE_OPENGL)
         CHK(glDrawBuffers((GLsizei) draw_buffers.size(), draw_buffers.data()));
 #endif
@@ -135,12 +138,16 @@ RenderPass::RenderPass(std::vector<Object *> color_targets,
 
     CHK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
-
+//}}}
+//{{{
 RenderPass::~RenderPass() {
     CHK(glDeleteFramebuffers(1, &m_framebuffer_handle));
 }
+//}}}
 
+//{{{
 void RenderPass::begin() {
+
 #if !defined(NDEBUG)
     if (m_active)
         throw std::runtime_error("RenderPass::begin(): render pass is already active!");
@@ -240,8 +247,10 @@ void RenderPass::end() {
 
     m_active = false;
 }
+//}}}
 
-void RenderPass::resize(const Vector2i &size) {
+//{{{
+void RenderPass::resize (const Vector2i &size) {
     for (size_t i = 0; i < m_targets.size(); ++i) {
         Texture *texture = dynamic_cast<Texture *>(m_targets[i].get());
         if (texture)
@@ -251,20 +260,25 @@ void RenderPass::resize(const Vector2i &size) {
     m_viewport_offset = Vector2i(0, 0);
     m_viewport_size = size;
 }
+//}}}
 
-void RenderPass::set_clear_color(size_t index, const Color &color) {
+//{{{
+void RenderPass::set_clear_color (size_t index, const Color &color) {
     m_clear_color.at(index) = color;
 }
-
-void RenderPass::set_clear_depth(float depth) {
+//}}}
+//{{{
+void RenderPass::set_clear_depth (float depth) {
     m_clear_depth = depth;
 }
-
-void RenderPass::set_clear_stencil(uint8_t stencil) {
+//}}}
+//{{{
+void RenderPass::set_clear_stencil (uint8_t stencil) {
     m_clear_stencil = stencil;
 }
-
-void RenderPass::set_viewport(const Vector2i &offset, const Vector2i &size) {
+//}}}
+//{{{
+void RenderPass::set_viewport (const Vector2i &offset, const Vector2i &size) {
     m_viewport_offset = offset;
     m_viewport_size = size;
 
@@ -282,8 +296,9 @@ void RenderPass::set_viewport(const Vector2i &offset, const Vector2i &size) {
             CHK(glEnable(GL_SCISSOR_TEST));
     }
 }
-
-void RenderPass::set_depth_test(DepthTest depth_test, bool depth_write) {
+//}}}
+//{{{
+void RenderPass::set_depth_test (DepthTest depth_test, bool depth_write) {
     m_depth_test = depth_test;
     m_depth_write = depth_write;
 
@@ -309,8 +324,9 @@ void RenderPass::set_depth_test(DepthTest depth_test, bool depth_write) {
         CHK(glDepthMask(depth_write ? GL_TRUE : GL_FALSE));
     }
 }
-
-void RenderPass::set_cull_mode(CullMode cull_mode) {
+//}}}
+//{{{
+void RenderPass::set_cull_mode (CullMode cull_mode) {
     m_cull_mode = cull_mode;
 
     if (m_active) {
@@ -327,11 +343,11 @@ void RenderPass::set_cull_mode(CullMode cull_mode) {
         }
     }
 }
+//}}}
 
-void RenderPass::blit_to(const Vector2i &src_offset,
-                         const Vector2i &src_size,
-                         Object *dst,
-                         const Vector2i &dst_offset) {
+//{{{
+void RenderPass::blit_to (const Vector2i &src_offset, const Vector2i &src_size, Object *dst, const Vector2i &dst_offset) {
+
 #if defined(NANOGUI_USE_GLES) && NANOGUI_GLES_VERSION == 2
     (void) src_offset; (void) src_size; (void) dst; (void) src_offset;
     throw std::runtime_error("RenderPass::blit_to(): not supported on GLES 2!");
@@ -365,8 +381,8 @@ void RenderPass::blit_to(const Vector2i &src_offset,
         what = GL_COLOR_BUFFER_BIT;
     #endif
 
-    CHK(glBindFramebuffer(GL_READ_FRAMEBUFFER, m_framebuffer_handle));
-    CHK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target_id));
+    CHK(glBindFramebuffer (GL_READ_FRAMEBUFFER, m_framebuffer_handle));
+    CHK(glBindFramebuffer (GL_DRAW_FRAMEBUFFER, target_id));
 
     if (target_id == 0) {
         #if defined(NANOGUI_USE_OPENGL)
@@ -389,5 +405,6 @@ void RenderPass::blit_to(const Vector2i &src_offset,
     CHK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 #endif
 }
+//}}}
 
 NAMESPACE_END(nanogui)

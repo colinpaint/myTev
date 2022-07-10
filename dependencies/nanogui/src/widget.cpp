@@ -1,3 +1,4 @@
+//{{{
 /*
     src/widget.cpp -- Base class of all widgets
 
@@ -8,21 +9,21 @@
     All rights reserved. Use of this source code is governed by a
     BSD-style license that can be found in the LICENSE.txt file.
 */
-
+//}}}
+//{{{  includes
 #include <nanogui/widget.h>
 #include <nanogui/layout.h>
 #include <nanogui/theme.h>
 #include <nanogui/window.h>
 #include <nanogui/opengl.h>
 #include <nanogui/screen.h>
-
+//}}}
 /* Uncomment the following definition to draw red bounding
    boxes around widgets (useful for debugging drawing code) */
-
 // #define NANOGUI_SHOW_WIDGET_BOUNDS 1
-
 NAMESPACE_BEGIN(nanogui)
 
+//{{{
 Widget::Widget(Widget *parent)
     : m_parent(nullptr), m_theme(nullptr), m_layout(nullptr),
       m_pos(0), m_size(0), m_fixed_size(0), m_visible(true), m_enabled(true),
@@ -31,7 +32,8 @@ Widget::Widget(Widget *parent)
     if (parent)
         parent->add_child(this);
 }
-
+//}}}
+//{{{
 Widget::~Widget() {
     if (std::uncaught_exceptions() > 0) {
         /* If a widget constructor throws an exception, it is immediately
@@ -45,7 +47,9 @@ Widget::~Widget() {
             child->dec_ref();
     }
 }
+//}}}
 
+//{{{
 void Widget::set_theme(Theme *theme) {
     if (m_theme.get() == theme)
         return;
@@ -53,18 +57,24 @@ void Widget::set_theme(Theme *theme) {
     for (auto child : m_children)
         child->set_theme(theme);
 }
+//}}}
 
+//{{{
 int Widget::font_size() const {
     return (m_font_size < 0 && m_theme) ? m_theme->m_standard_font_size : m_font_size;
 }
+//}}}
 
+//{{{
 Vector2i Widget::preferred_size(NVGcontext *ctx) const {
     if (m_layout)
         return m_layout->preferred_size(ctx, this);
     else
         return m_size;
 }
+//}}}
 
+//{{{
 void Widget::perform_layout(NVGcontext *ctx) {
     if (m_layout) {
         m_layout->perform_layout(ctx, this);
@@ -79,7 +89,9 @@ void Widget::perform_layout(NVGcontext *ctx) {
         }
     }
 }
+//}}}
 
+//{{{
 Widget *Widget::find_widget(const Vector2i &p) {
     for (auto it = m_children.rbegin(); it != m_children.rend(); ++it) {
         Widget *child = *it;
@@ -88,7 +100,8 @@ Widget *Widget::find_widget(const Vector2i &p) {
     }
     return contains(p) ? this : nullptr;
 }
-
+//}}}
+//{{{
 const Widget *Widget::find_widget(const Vector2i &p) const {
     for (auto it = m_children.rbegin(); it != m_children.rend(); ++it) {
         Widget *child = *it;
@@ -97,7 +110,9 @@ const Widget *Widget::find_widget(const Vector2i &p) const {
     }
     return contains(p) ? this : nullptr;
 }
+//}}}
 
+//{{{
 bool Widget::mouse_button_event(const Vector2i &p, int button, bool down, int modifiers) {
     for (auto it = m_children.rbegin(); it != m_children.rend(); ++it) {
         Widget *child = *it;
@@ -109,7 +124,8 @@ bool Widget::mouse_button_event(const Vector2i &p, int button, bool down, int mo
         request_focus();
     return false;
 }
-
+//}}}
+//{{{
 bool Widget::mouse_motion_event(const Vector2i &p, const Vector2i &rel, int button, int modifiers) {
     bool handled = false;
 
@@ -130,7 +146,8 @@ bool Widget::mouse_motion_event(const Vector2i &p, const Vector2i &rel, int butt
 
     return handled;
 }
-
+//}}}
+//{{{
 bool Widget::scroll_event(const Vector2i &p, const Vector2f &rel) {
     for (auto it = m_children.rbegin(); it != m_children.rend(); ++it) {
         Widget *child = *it;
@@ -141,29 +158,36 @@ bool Widget::scroll_event(const Vector2i &p, const Vector2f &rel) {
     }
     return false;
 }
-
+//}}}
+//{{{
 bool Widget::mouse_drag_event(const Vector2i &, const Vector2i &, int, int) {
     return false;
 }
-
+//}}}
+//{{{
 bool Widget::mouse_enter_event(const Vector2i &, bool enter) {
     m_mouse_focus = enter;
     return false;
 }
-
+//}}}
+//{{{
 bool Widget::focus_event(bool focused) {
     m_focused = focused;
     return false;
 }
-
+//}}}
+//{{{
 bool Widget::keyboard_event(int, int, int, int) {
     return false;
 }
-
+//}}}
+//{{{
 bool Widget::keyboard_character_event(unsigned int) {
     return false;
 }
+//}}}
 
+//{{{
 void Widget::add_child(int index, Widget * widget) {
     assert(index <= child_count());
     m_children.insert(m_children.begin() + index, widget);
@@ -171,21 +195,26 @@ void Widget::add_child(int index, Widget * widget) {
     widget->set_parent(this);
     widget->set_theme(m_theme);
 }
-
+//}}}
+//{{{
 void Widget::add_child(Widget * widget) {
     add_child(child_count(), widget);
 }
-
+//}}}
+//{{{
 void Widget::remove_child(const Widget *widget) {
     remove_child_helper(std::find(m_children.begin(), m_children.end(), widget));
 }
+//}}}
+//{{{
 
 void Widget::remove_child_at(int index) {
     assert(index >= 0);
     assert(index < child_count());
     remove_child_helper(m_children.begin() + index);
 }
-
+//}}}
+//{{{
 void Widget::remove_child_helper(const std::vector<Widget *>::iterator& child_it) {
     if (child_it == m_children.end())
         return;
@@ -196,14 +225,17 @@ void Widget::remove_child_helper(const std::vector<Widget *>::iterator& child_it
 
     widget->dec_ref();
 }
-
+//}}}
+//{{{
 int Widget::child_index(Widget *widget) const {
     auto it = std::find(m_children.begin(), m_children.end(), widget);
     if (it == m_children.end())
         return -1;
     return (int) (it - m_children.begin());
 }
+//}}}
 
+//{{{
 Window *Widget::window() {
     Widget *widget = this;
     while (true) {
@@ -215,7 +247,8 @@ Window *Widget::window() {
         widget = widget->parent();
     }
 }
-
+//}}}
+//{{{
 Screen *Widget::screen() {
     Widget *widget = this;
     while (true) {
@@ -227,18 +260,22 @@ Screen *Widget::screen() {
         widget = widget->parent();
     }
 }
+//}}}
 
 const Screen *Widget::screen() const { return const_cast<Widget*>(this)->screen(); }
 const Window *Widget::window() const { return const_cast<Widget*>(this)->window(); }
 
+//{{{
 void Widget::request_focus() {
     Widget *widget = this;
     while (widget->parent())
         widget = widget->parent();
     ((Screen *) widget)->update_focus(this);
 }
+//}}}
 
-void Widget::draw(NVGcontext *ctx) {
+//{{{
+void Widget::draw (NVGcontext *ctx) {
     #if defined(NANOGUI_SHOW_WIDGET_BOUNDS)
         nvgStrokeWidth(ctx, 1.0f);
         nvgBeginPath(ctx);
@@ -269,5 +306,6 @@ void Widget::draw(NVGcontext *ctx) {
     }
     nvgTranslate(ctx, -m_pos.x(), -m_pos.y());
 }
+//}}}
 
 NAMESPACE_END(nanogui)

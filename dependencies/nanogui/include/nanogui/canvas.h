@@ -1,3 +1,4 @@
+//{{{
 /*
     NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
@@ -12,13 +13,14 @@
  * \brief Canvas widget for rendering OpenGL content.  This widget was
  *        contributed by Jan Winkler.
  */
-
+//}}}
+//{{{  includes
 #pragma once
-
 #include <nanogui/widget.h>
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
+//{{{
 /**
  * \class GLCanvas canvas.h nanogui/canvas.h
  *
@@ -36,8 +38,10 @@ NAMESPACE_BEGIN(nanogui)
  *
  * \endrst
  */
+//}}}
 class NANOGUI_EXPORT Canvas : public Widget {
 public:
+    //{{{
     /**
      * Creates a new Canvas widget
      *
@@ -58,6 +62,7 @@ public:
      * \param clear
      *     Should the widget clear its color/depth/stencil buffer?
      */
+    //}}}
     Canvas(
         Widget *parent,
         uint8_t samples = 4,
