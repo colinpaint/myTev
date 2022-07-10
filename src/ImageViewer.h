@@ -36,6 +36,7 @@ public:
   void focusWindow();
   void draw_contents() override;
 
+  //{{{  image
   void insertImage(std::shared_ptr<Image> image, size_t index, bool shallSelect = false);
   void moveImageInList(size_t oldIndex, size_t newIndex);
   //{{{
@@ -83,7 +84,8 @@ public:
   void selectImage(const std::shared_ptr<Image>& image, bool stopPlayback = true);
   void selectGroup(std::string name);
   void selectReference(const std::shared_ptr<Image>& image);
-
+  //}}}
+  //{{{  tonemap
   //{{{
   float exposure() const {
       return mExposureSlider->value();
@@ -110,59 +112,41 @@ public:
       return mImageCanvas->tonemap();
   }
   //}}}
-  void setTonemap(ETonemap tonemap);
+  void setTonemap (ETonemap tonemap);
+  //}}}
 
   //{{{
   EMetric metric() const {
       return mImageCanvas->metric();
   }
   //}}}
-  void setMetric(EMetric metric);
+  void setMetric (EMetric metric);
 
-  nanogui::Vector2i sizeToFitImage(const std::shared_ptr<Image>& image);
+  nanogui::Vector2i sizeToFitImage (const std::shared_ptr<Image>& image);
   nanogui::Vector2i sizeToFitAllImages();
-  bool setFilter(const std::string& filter);
+  bool setFilter (const std::string& filter);
 
   bool useRegex() const;
-  void setUseRegex(bool value);
+  void setUseRegex (bool value);
 
   bool watchFilesForChanges() const;
-  void setWatchFilesForChanges(bool value);
+  void setWatchFilesForChanges (bool value);
 
   void maximize();
   bool isMaximized();
   void toggleMaximized();
 
-  //{{{
-  bool isUiVisible() {
-      return mSidebar->visible();
-  }
-  //}}}
-  void setUiVisible(bool shouldBeVisible);
+  bool isUiVisible() { return mSidebar->visible(); }
+  void setUiVisible (bool shouldBeVisible);
 
   void toggleHelpWindow();
 
   void openImageDialog();
   void saveImageDialog();
 
-  //{{{
-  void requestLayoutUpdate() {
-      mRequiresLayoutUpdate = true;
-  }
-  //}}}
-
-  template <typename T>
-  //{{{
-  void scheduleToUiThread(const T& fun) {
-      mTaskQueue.push(fun);
-  }
-  //}}}
-
-  //{{{
-  BackgroundImagesLoader& imagesLoader() const {
-      return *mImagesLoader;
-  }
-  //}}}
+  void requestLayoutUpdate() { mRequiresLayoutUpdate = true; }
+  template <typename T> void scheduleToUiThread (const T& fun) { mTaskQueue.push(fun); }
+  BackgroundImagesLoader& imagesLoader() const { return *mImagesLoader; }
 
 private:
   void updateFilter();
@@ -196,11 +180,19 @@ private:
   }
   //}}}
 
+  // vars
+  ImageCanvas* mImageCanvas;
+  std::vector<std::shared_ptr<Image>> mImages;
+
   SharedQueue<std::function<void(void)>> mTaskQueue;
 
   bool mRequiresFilterUpdate = true;
   bool mRequiresLayoutUpdate = true;
+  size_t mClipboardIndex = 0;
+  bool mSupportsHdr = false;
+  int mDidFitToImage = 0;
 
+  //{{{  widgets
   nanogui::Widget* mVerticalScreenSplit;
 
   nanogui::Widget* mSidebar;
@@ -226,8 +218,6 @@ private:
   std::shared_ptr<Image> mCurrentImage;
   std::shared_ptr<Image> mCurrentReference;
 
-  std::vector<std::shared_ptr<Image>> mImages;
-
   MultiGraph* mHistogram;
   std::set<std::shared_ptr<Image>> mToBump;
 
@@ -252,26 +242,18 @@ private:
   nanogui::Widget* mScrollContent;
   nanogui::VScrollPanel* mImageScrollContainer;
 
-  ImageCanvas* mImageCanvas;
-
   nanogui::Widget* mGroupButtonContainer;
   std::string mCurrentGroup;
 
   HelpWindow* mHelpWindow = nullptr;
 
+  nanogui::Button* mClipToLdrButton;
+  //}}}
   bool mIsDraggingSidebar = false;
   bool mIsDraggingImage = false;
   bool mIsDraggingImageButton = false;
   size_t mDraggedImageButtonId;
-
   nanogui::Vector2f mDraggingStartPosition;
-
-  size_t mClipboardIndex = 0;
-
-  bool mSupportsHdr = false;
-  nanogui::Button* mClipToLdrButton;
-
-  int mDidFitToImage = 0;
   };
 
 TEV_NAMESPACE_END

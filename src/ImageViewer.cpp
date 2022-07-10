@@ -140,17 +140,15 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       }, 0, "Shortcut: R");
 
     if (mSupportsHdr) {
-        mClipToLdrButton = new Button{buttonContainer, "LDR", 0};
-        mClipToLdrButton->set_font_size(15);
-        mClipToLdrButton->set_change_callback([this](bool value) {
-            mImageCanvas->setClipToLdr(value);
+      mClipToLdrButton = new Button{buttonContainer, "LDR", 0};
+      mClipToLdrButton->set_font_size(15);
+      mClipToLdrButton->set_change_callback([this](bool value) {
+        mImageCanvas->setClipToLdr(value);
         });
-        mClipToLdrButton->set_tooltip(
-            "Clips the image to [0,1] as if displayed on an LDR screen.\n\n"
-            "Shortcut: L"
-        );
-        mClipToLdrButton->set_flags(Button::ToggleButton);
-    }
+      mClipToLdrButton->set_tooltip ("Clips the image to [0,1] as if displayed on an LDR screen.\n\n"
+                                     "Shortcut: L");
+      mClipToLdrButton->set_flags(Button::ToggleButton);
+      }
 
     auto popupBtn = new PopupButton{buttonContainer, "", FA_PAINT_BRUSH};
     popupBtn->set_font_size(15);
@@ -260,42 +258,38 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
     spacer->set_height (10);
 
     auto panel = new Widget {mSidebarLayout};
-    panel->set_layout (new BoxLayout{Orientation::Vertical, Alignment::Fill, 5});
+    panel->set_layout (new BoxLayout {Orientation::Vertical, Alignment::Fill, 5});
 
     auto label = new Label{panel, "Images", "sans-bold", 25};
-    label->set_tooltip (
-      "Select images either by left-clicking on them or by pressing arrow/number keys on your keyboard.\n"
-      "Right-clicking an image marks it as the 'reference' image. "
-      "While a reference image is set, the currently selected image is not simply displayed, but compared to the reference image"
-      );
+    label->set_tooltip ("Select images either by left-clicking on them or by pressing arrow/number keys on your keyboard\n"
+                        "Right-clicking an image marks it as the 'reference' image "
+                        "with reference image is set, selected image compared to reference image");
 
     //{{{  Histogram of selected image
     {
-      panel = new Widget{mSidebarLayout};
-      panel->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 5});
+      panel = new Widget {mSidebarLayout};
+      panel->set_layout (new BoxLayout {Orientation::Vertical, Alignment::Fill, 5});
 
-      mHistogram = new MultiGraph{panel, ""};
+      mHistogram = new MultiGraph {panel, ""};
     }
     //}}}
     //{{{  Fuzzy filter of open images
     {
-      panel = new Widget{mSidebarLayout};
-      panel->set_layout(new GridLayout{Orientation::Horizontal, 2, Alignment::Fill, 5, 2});
+      panel = new Widget {mSidebarLayout};
+      panel->set_layout (new GridLayout {Orientation::Horizontal, 2, Alignment::Fill, 5, 2});
 
-      mFilter = new TextBox{panel, ""};
-      mFilter->set_editable(true);
-      mFilter->set_alignment(TextBox::Alignment::Left);
-      mFilter->set_callback([this](const string& filter) {
-        return setFilter(filter);
+      mFilter = new TextBox {panel, ""};
+      mFilter->set_editable (true);
+      mFilter->set_alignment (TextBox::Alignment::Left);
+      mFilter->set_callback ([this](const string& filter) {
+        return setFilter (filter);
         });
 
-      mFilter->set_placeholder("Find");
-      mFilter->set_tooltip(tfm::format (
-        "Filters visible images and channel groups according to a supplied string. "
-        "The string must have the format 'image:group'. "
-        "Only images whose name contains 'image' and groups whose name contains 'group' will be visible.\n\n"
-        "Keyboard shortcut:\n%s+P",
-        HelpWindow::COMMAND));
+      mFilter->set_placeholder ("Find");
+      mFilter->set_tooltip (tfm::format ("Filters visible images and channel groups according to a supplied string "
+                                         "The string must have the format image:group "
+                                         "images name contains 'image' groups name contains 'group' will be visible\n\n"
+                                         "Keyboard shortcut:\n%s+P", HelpWindow::COMMAND));
 
       mRegexButton = new Button {panel, "", FA_SEARCH};
       mRegexButton->set_tooltip ("Treat filter as regular expression");
@@ -303,14 +297,14 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       mRegexButton->set_flags (Button::ToggleButton);
       mRegexButton->set_font_size (15);
       mRegexButton->set_change_callback ([this](bool value) {
-        setUseRegex(value);
+        setUseRegex (value);
         });
     }
     //}}}
     //{{{  Playback controls
     {
       auto playback = new Widget {mSidebarLayout};
-      playback->set_layout(new GridLayout {Orientation::Horizontal, 4, Alignment::Fill, 5, 2});
+      playback->set_layout (new GridLayout {Orientation::Horizontal, 4, Alignment::Fill, 5, 2});
 
       auto makePlaybackButton = [&](const string& name, bool enabled, function<void()> callback, int icon = 0, string tooltip = "") {
         auto button = new Button {playback, name, icon};
@@ -326,11 +320,13 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
 
       mAnyImageButtons.push_back (makePlaybackButton ("", false, [this] {
         selectImage (nthVisibleImage (0));
-        }, FA_FAST_BACKWARD, "Front (Home)"));
+        }, 
+        FA_FAST_BACKWARD, "Front (Home)"));
 
       mAnyImageButtons.push_back (makePlaybackButton ("", false, [this] {
         selectImage (nthVisibleImage (mImages.size()));
-        }, FA_FAST_FORWARD, "Back (End)"));
+        }, 
+        FA_FAST_FORWARD, "Back (End)"));
 
       mFpsTextBox = new IntBox<int>{playback, 24};
       mFpsTextBox->set_default_value ("24");
@@ -344,7 +340,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
         while (mShallRunPlaybackThread) {
           auto fps = clamp (mFpsTextBox->value(), 1, 1000);
           auto microseconds = 1000000.0f / fps;
-          this_thread::sleep_for (chrono::microseconds{std::max((size_t)microseconds, (size_t)1)});
+          this_thread::sleep_for (chrono::microseconds {std::max((size_t)microseconds, (size_t)1)});
 
           if (mPlayButton->pushed() && mTaskQueue.empty()) {
             mTaskQueue.push ([&]() {
@@ -372,19 +368,23 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
 
       makeImageButton ("", true, [this] {
         openImageDialog();
-        }, FA_FOLDER, tfm::format ("Open (%s+O)", HelpWindow::COMMAND));
+        }, 
+        FA_FOLDER, tfm::format ("Open (%s+O)", HelpWindow::COMMAND));
 
       mCurrentImageButtons.push_back (makeImageButton ("", false, [this] {
         saveImageDialog();
-        }, FA_SAVE, tfm::format ("Save (%s+S)", HelpWindow::COMMAND)));
+        }, 
+        FA_SAVE, tfm::format ("Save (%s+S)", HelpWindow::COMMAND)));
 
       mCurrentImageButtons.push_back (makeImageButton ("", false, [this] {
         reloadImage (mCurrentImage);
-        }, FA_RECYCLE, tfm::format ("Reload (%s+R or F5)", HelpWindow::COMMAND)));
+        }, 
+        FA_RECYCLE, tfm::format ("Reload (%s+R or F5)", HelpWindow::COMMAND)));
 
       mAnyImageButtons.push_back (makeImageButton ("A", false, [this] {
         reloadAllImages();
-        }, 0, tfm::format("Reload All (%s+Shift+R or %s+F5)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
+        }, 
+        0, tfm::format("Reload All (%s+Shift+R or %s+F5)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
 
       mWatchFilesForChangesButton = makeImageButton ("W", true, {}, 0, "Watch image files and directories for changes and reload them automatically");
       mWatchFilesForChangesButton->set_flags (Button::Flags::ToggleButton);
@@ -396,12 +396,13 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
         auto* glfwWindow = screen()->glfw_window();
         // There is no explicit access to the currently pressed modifier keys here, so we
         // need to directly ask GLFW. In case this is needed more often, it may be worth
-         // inheriting Button and overriding mouse_button_event (similar to ImageButton).
+        // inheriting Button and overriding mouse_button_event (similar to ImageButton).
         if (glfwGetKey (glfwWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey (glfwWindow, GLFW_KEY_RIGHT_SHIFT))
           removeAllImages();
         else
           removeImage (mCurrentImage);
-        }, FA_TIMES, tfm::format ("Close (%s+W); Close All (%s+Shift+W)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
+        }, 
+        FA_TIMES, tfm::format ("Close (%s+W); Close All (%s+Shift+W)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
 
       spacer = new Widget {mSidebarLayout};
       spacer->set_height (3);
