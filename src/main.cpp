@@ -6,7 +6,7 @@
 #include <Ipc.h>
 #include <ThreadPool.h>
 
-#include <args.hxx>
+#include <args.h>
 #include <ImfThreading.h>
 
 #include <utf8.h>
@@ -49,13 +49,39 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
   switch (packet.type()) {
     case IpcPacket::OpenImage:
     //{{{
+    case IpcPacket::CreateImage: {
+
+      while (!sImageViewer) {}
+
+      auto info = packet.interpretAsCreateImage();
+      sImageViewer->scheduleToUiThread ([&,info] {
+        stringstream imageStream;
+        imageStream << "empty" << " " << info.width << " " << info.height << " " << info.nChannels << " ";
+
+        for (int i = 0; i < info.nChannels; ++i)
+          // The following lines encode strings by prefixing their length.
+          // The reason for using this encoding is to allow  arbitrary characters,
+          // including whitespaces, in the channel names.
+          imageStream << info.channelNames[i].length() << info.channelNames[i];
+
+        auto images = tryLoadImage (toPath(info.imageName), imageStream, "").get();
+        if (!images.empty()) {
+          sImageViewer->replaceImage (ensureUtf8 (info.imageName), images.front(), info.grabFocus);
+          TEV_ASSERT (images.size() == 1, "IPC CreateImage should never create more than 1 image at once.");
+          }
+        });
+
+      sImageViewer->redraw();
+      break;
+      }
+    //}}}
+    //{{{
     case IpcPacket::OpenImageV2: {
       auto info = packet.interpretAsOpenImage();
       imagesLoader->enqueue (toPath (info.imagePath), ensureUtf8 (info.channelSelector), info.grabFocus);
       break;
       }
     //}}}
-
     //{{{
     case IpcPacket::ReloadImage: {
       while (!sImageViewer) {}
@@ -90,38 +116,12 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
       while (!sImageViewer) {}
 
       auto info = packet.interpretAsUpdateImage();
+
       sImageViewer->scheduleToUiThread([&,info] {
         string imageString = ensureUtf8 (info.imageName);
         for (int i = 0; i < info.nChannels; ++i)
-          sImageViewer->updateImage (imageString, info.grabFocus, info.channelNames[i], info.x, info.y, info.width, info.height, info.imageData[i]);
-        });
-
-      sImageViewer->redraw();
-      break;
-      }
-    //}}}
-
-    //{{{
-    case IpcPacket::CreateImage: {
-
-      while (!sImageViewer) {}
-
-      auto info = packet.interpretAsCreateImage();
-      sImageViewer->scheduleToUiThread([&,info] {
-        stringstream imageStream;
-        imageStream << "empty" << " " << info.width << " " << info.height << " " << info.nChannels << " ";
-
-        for (int i = 0; i < info.nChannels; ++i)
-          // The following lines encode strings by prefixing their length.
-          // The reason for using this encoding is to allow  arbitrary characters,
-          // including whitespaces, in the channel names.
-          imageStream << info.channelNames[i].length() << info.channelNames[i];
-
-        auto images = tryLoadImage (toPath(info.imageName), imageStream, "").get();
-        if (!images.empty()) {
-          sImageViewer->replaceImage (ensureUtf8(info.imageName), images.front(), info.grabFocus);
-          TEV_ASSERT(images.size() == 1, "IPC CreateImage should never create more than 1 image at once.");
-          }
+          sImageViewer->updateImage (imageString, info.grabFocus, info.channelNames[i], 
+                                     info.x, info.y, info.width, info.height, info.imageData[i]);
         });
 
       sImageViewer->redraw();
@@ -280,7 +280,7 @@ int mainFunc (const vector<string>& arguments) {
   try {
     TEV_ASSERT (arguments.size() > 0, "Number of arguments must be bigger than 0.");
     parser.Prog (arguments.front());
-    parser.ParseArgs (begin(arguments) + 1, end(arguments));
+    parser.ParseArgs (begin (arguments) + 1, end (arguments));
     }
   catch (const Help&) {
     cout << parser;
@@ -498,7 +498,7 @@ int mainFunc (const vector<string>& arguments) {
   // sImageViewer is a raw pointer to make sure it will never get deleted.
   // nanogui crashes upon cleanup, so we better not try.
   sImageViewer = new ImageViewer { imagesLoader, maximize, capability10bit || capabilityEdr, capabilityEdr };
-  sImageViewer->draw_all ();
+  sImageViewer->draw_all();
   sImageViewer->set_visible (true);
   sImageViewer->redraw();
 
