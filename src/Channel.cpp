@@ -15,7 +15,7 @@ TEV_NAMESPACE_BEGIN
 Channel::Channel (const std::string& name, const nanogui::Vector2i& size)
     : mName{name}, mSize{size} {
 
-  mData.resize((size_t)mSize.x() * mSize.y());
+  mData.resize ((size_t)mSize.x() * mSize.y());
   }
 //}}}
 
@@ -23,14 +23,12 @@ Channel::Channel (const std::string& name, const nanogui::Vector2i& size)
 Task<void> Channel::divideByAsync (const Channel& other, int priority) {
 
   co_await ThreadPool::global().parallelForAsync<size_t>(0, other.numPixels(), [&](size_t i) {
-    if (other.at(i) != 0) {
+    if (other.at(i) != 0)
       at(i) /= other.at(i);
-      }
-    else {
+    else
       at(i) = 0;
-      }
     }, priority);
-}
+  }
 //}}}
 //{{{
 Task<void> Channel::multiplyWithAsync (const Channel& other, int priority) {
@@ -51,21 +49,19 @@ void Channel::updateTile (int x, int y, int width, int height, const vector<floa
     return;
     }
 
-  for (int posY = 0; posY < height; ++posY) {
-    for (int posX = 0; posX < width; ++posX) {
+  for (int posY = 0; posY < height; ++posY)
+    for (int posX = 0; posX < width; ++posX)
       at ({x + posX, y + posY}) = newData[posX + posY * width];
-      }
-    }
   }
 //}}}
 
 //{{{
 pair<string, string> Channel::split (const string& channel) {
 
-  size_t dotPosition = channel.rfind(".");
-  if (dotPosition != string::npos) {
-    return {channel.substr(0, dotPosition + 1), channel.substr(dotPosition + 1)};
-    }
+  size_t dotPosition = channel.rfind (".");
+
+  if (dotPosition != string::npos)
+    return {channel.substr (0, dotPosition + 1), channel.substr (dotPosition + 1)};
 
   return {"", channel};
   }
@@ -74,37 +70,34 @@ pair<string, string> Channel::split (const string& channel) {
 //{{{
 string Channel::tail (const string& channel) {
 
-  return split(channel).second;
+  return split (channel).second;
   }
 //}}}
 //{{{
 string Channel::head (const string& channel) {
 
-  return split(channel).first;
+  return split (channel).first;
   }
 //}}}
 
 //{{{
 bool Channel::isTopmost (const string& channel) {
 
-  return tail(channel) == channel;
+  return tail (channel) == channel;
   }
 //}}}
 
 //{{{
 Color Channel::color (string channel) {
 
-  channel = toLower(tail(channel));
+  channel = toLower (tail (channel));
 
-  if (channel == "r") {
+  if (channel == "r")
     return Color(0.8f, 0.2f, 0.2f, 1.0f);
-    }
-  else if (channel == "g") {
+  else if (channel == "g")
     return Color(0.2f, 0.8f, 0.2f, 1.0f);
-    }
-  else if (channel == "b") {
+  else if (channel == "b")
     return Color(0.2f, 0.3f, 1.0f, 1.0f);
-    }
 
   return Color(1.0f, 1.0f);
   }

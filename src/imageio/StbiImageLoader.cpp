@@ -56,7 +56,7 @@ Task<vector<ImageData>> StbiImageLoader::load(istream& iStream, const fs::path&,
     data = stbi_load_from_callbacks (&callbacks, &iStream, &size.x(), &size.y(), &numChannels, 0);
 
   if (!data)
-    throw invalid_argument{tfm::format ("%s", stbi_failure_reason())};
+    throw invalid_argument {tfm::format ("%s", stbi_failure_reason())};
   if (size.x() == 0 || size.y() == 0)
     throw invalid_argument {"Image has zero pixels."};
 
@@ -71,18 +71,18 @@ Task<vector<ImageData>> StbiImageLoader::load(istream& iStream, const fs::path&,
       auto typedData = reinterpret_cast<float*>(data);
       size_t baseIdx = i * numChannels;
       for (int c = 0; c < numChannels; ++c)
-        resultData.channels[c].at(i) = typedData[baseIdx + c];
+        resultData.channels[c].at (i) = typedData[baseIdx + c];
       }, priority);
-    } 
+    }
   else {
     co_await ThreadPool::global().parallelForAsync<size_t>(0, numPixels, [&](size_t i) {
       auto typedData = reinterpret_cast<unsigned char*>(data);
       size_t baseIdx = i * numChannels;
       for (int c = 0; c < numChannels; ++c) {
         if (c == alphaChannelIndex)
-          resultData.channels[c].at(i) = (typedData[baseIdx + c]) / 255.0f;
+          resultData.channels[c].at (i) = (typedData[baseIdx + c]) / 255.0f;
         else
-          resultData.channels[c].at(i) = toLinear((typedData[baseIdx + c]) / 255.0f);
+          resultData.channels[c].at (i) = toLinear((typedData[baseIdx + c]) / 255.0f);
         }
       }, priority);
     }

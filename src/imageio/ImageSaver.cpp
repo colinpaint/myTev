@@ -1,5 +1,6 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 #include <imageio/ImageSaver.h>
 #include <imageio/ExrImageSaver.h>
 #include <imageio/QoiImageSaver.h>
@@ -7,6 +8,7 @@
 #include <imageio/StbiLdrImageSaver.h>
 #include <vector>
 using namespace std;
+//}}}
 
 TEV_NAMESPACE_BEGIN
 

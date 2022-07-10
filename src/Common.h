@@ -4,7 +4,7 @@
 #pragma once
 
 #include <tinyformat.h>
-#include <tinylogger/tinylogger.h>
+#include <tinylogger.h>
 
 #include <nanogui/vector.h>
 

@@ -29,7 +29,8 @@ TEV_NAMESPACE_BEGIN
 static const int SIDEBAR_MIN_WIDTH = 230;
 
 //{{{
-ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader, bool maximize, bool floatBuffer, bool /*supportsHdr*/)
+ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader,
+                          bool maximize, bool floatBuffer, bool /*supportsHdr*/)
     : nanogui::Screen{nanogui::Vector2i{1024, 799}, "tev", true, maximize, false, true, true, floatBuffer},
       mImagesLoader{imagesLoader} {
 
@@ -38,7 +39,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
 
   mSupportsHdr = m_float_buffer;
 
-  // At this point we no longer need the standalone console (if it exists).
+  // no longer need the standalone console (if it exists).
   toggleConsole();
 
   m_background = Color {0.23f, 1.0f};
@@ -63,14 +64,14 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
 
   mImageCanvas = new ImageCanvas {horizontalScreenSplit, pixel_ratio()};
 
-  //{{{  Tonemapping sectionim
+  //{{{  Tonemapping section
   {
     auto panel = new Widget{mSidebarLayout};
     panel->set_layout (new BoxLayout{Orientation::Horizontal, Alignment::Fill, 5});
     new Label {panel, "Tonemapping", "sans-bold", 25};
     panel->set_tooltip ("Various tonemapping options. Hover the individual controls to learn more!");
 
-    //{{{  Exposure label and slider
+    // exposure label and slider
     {
       panel = new Widget {mSidebarLayout};
       panel->set_layout (new BoxLayout {Orientation::Vertical, Alignment::Fill, 5});
@@ -87,8 +88,8 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       panel->set_tooltip ("Exposure scales the brightness of an image prior to tonemapping by 2^Exposure.\n\n"
                           "Keyboard shortcuts:\nE and Shift+E");
     }
-    //}}}
-    //{{{  Offset/Gamma label and slider
+
+    // offset/Gamma label and slider
     {
       panel = new Widget {mSidebarLayout};
       panel->set_layout (new GridLayout {Orientation::Vertical, 2, Alignment::Fill, 5, 0});
@@ -116,7 +117,6 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
                           "Gamma is the exponent used when gamma-tonemapping.\n"
                           "Keyboard shortcuts: G and Shift+G\n\n");
     }
-    //}}}
   }
   //}}}
   //{{{  Exposure/offset buttons
@@ -125,17 +125,19 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
     buttonContainer->set_layout(new GridLayout{Orientation::Horizontal, mSupportsHdr ? 4 : 3, Alignment::Fill, 5, 2});
 
     auto makeButton = [&](const string& name, function<void()> callback, int icon = 0, string tooltip = "") {
-        auto button = new Button{buttonContainer, name, icon};
-        button->set_font_size(15);
-        button->set_callback(callback);
-        button->set_tooltip(tooltip);
-        return button;
-    };
+      auto button = new Button{buttonContainer, name, icon};
+      button->set_font_size(15);
+      button->set_callback(callback);
+      button->set_tooltip(tooltip);
+      return button;
+      };
 
-    mCurrentImageButtons.push_back(
-        makeButton("Normalize", [this]() { normalizeExposureAndOffset(); }, 0, "Shortcut: N")
-    );
-    makeButton("Reset", [this]() { resetImage(); }, 0, "Shortcut: R");
+    mCurrentImageButtons.push_back (makeButton ("Normalize", [this]() {
+      normalizeExposureAndOffset();
+      }, 0, "Shortcut: N"));
+    makeButton ("Reset", [this]() {
+      resetImage();
+      }, 0, "Shortcut: R");
 
     if (mSupportsHdr) {
         mClipToLdrButton = new Button{buttonContainer, "LDR", 0};
@@ -155,41 +157,29 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
     popupBtn->set_chevron_icon(0);
     popupBtn->set_tooltip("Background Color");
 
-    //{{{  Background color popup
-    {
-        auto popup = popupBtn->popup();
-        popup->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 10});
+    { //  Background color popup
+      auto popup = popupBtn->popup();
+      popup->set_layout(new BoxLayout{Orientation::Vertical, Alignment::Fill, 10});
 
-        new Label{popup, "Background Color"};
-        auto colorwheel = new ColorWheel{popup, mImageCanvas->backgroundColor()};
-        colorwheel->set_color(popupBtn->background_color());
+      new Label{popup, "Background Color"};
+      auto colorwheel = new ColorWheel{popup, mImageCanvas->backgroundColor()};
+      colorwheel->set_color(popupBtn->background_color());
 
-        new Label{popup, "Background Alpha"};
-        auto bgAlphaSlider = new Slider{popup};
-        bgAlphaSlider->set_range({0.0f, 1.0f});
-        bgAlphaSlider->set_callback([this](float value) {
-            auto col = mImageCanvas->backgroundColor();
-            mImageCanvas->setBackgroundColor(Color{
-                col.r(),
-                col.g(),
-                col.b(),
-                value,
-            });
+      new Label{popup, "Background Alpha"};
+      auto bgAlphaSlider = new Slider{popup};
+      bgAlphaSlider->set_range({0.0f, 1.0f});
+      bgAlphaSlider->set_callback([this](float value) {
+        auto col = mImageCanvas->backgroundColor();
+        mImageCanvas->setBackgroundColor (Color {col.r(), col.g(), col.b(), value,});
         });
 
-        bgAlphaSlider->set_value(0);
+      bgAlphaSlider->set_value(0);
 
-        colorwheel->set_callback([bgAlphaSlider, this](const Color& value) {
-            //popupBtn->set_background_color(value);
-            mImageCanvas->setBackgroundColor(Color{
-                value.r(),
-                value.g(),
-                value.b(),
-                bgAlphaSlider->value(),
-            });
-        });
+      colorwheel->set_callback([bgAlphaSlider, this](const Color& value) {
+          //popupBtn->set_background_color(value);
+          mImageCanvas->setBackgroundColor (Color {value.r(), value.g(), value.b(), bgAlphaSlider->value(),});
+      });
     }
-    //}}}
   }
   //}}}
   //{{{  Tonemap options
@@ -236,11 +226,11 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       return button;
       };
 
-    makeMetricButton ("E",   [this]() { setMetric(EMetric::Error); });
-    makeMetricButton ("AE",  [this]() { setMetric(EMetric::AbsoluteError); });
-    makeMetricButton ("SE",  [this]() { setMetric(EMetric::SquaredError); });
-    makeMetricButton ("RAE", [this]() { setMetric(EMetric::RelativeAbsoluteError); });
-    makeMetricButton ("RSE", [this]() { setMetric(EMetric::RelativeSquaredError); });
+    makeMetricButton ("E",   [this]() { setMetric (EMetric::Error); });
+    makeMetricButton ("AE",  [this]() { setMetric (EMetric::AbsoluteError); });
+    makeMetricButton ("SE",  [this]() { setMetric (EMetric::SquaredError); });
+    makeMetricButton ("RAE", [this]() { setMetric (EMetric::RelativeAbsoluteError); });
+    makeMetricButton ("RSE", [this]() { setMetric (EMetric::RelativeSquaredError); });
 
     setMetric (EMetric::AbsoluteError);
 
@@ -374,7 +364,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       auto makeImageButton = [&](const string& name, bool enabled, function<void()> callback, int icon = 0, string tooltip = "") {
         auto button = new Button {tools, name, icon};
         button->set_callback (callback);
-        button->set_tooltip( tooltip);
+        button->set_tooltip (tooltip);
         button->set_font_size (15);
         button->set_enabled (enabled);
         return button;
@@ -386,11 +376,11 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
 
       mCurrentImageButtons.push_back (makeImageButton ("", false, [this] {
         saveImageDialog();
-        }, FA_SAVE, tfm::format("Save (%s+S)", HelpWindow::COMMAND)));
+        }, FA_SAVE, tfm::format ("Save (%s+S)", HelpWindow::COMMAND)));
 
       mCurrentImageButtons.push_back (makeImageButton ("", false, [this] {
-        reloadImage(mCurrentImage);
-        }, FA_RECYCLE, tfm::format("Reload (%s+R or F5)", HelpWindow::COMMAND)));
+        reloadImage (mCurrentImage);
+        }, FA_RECYCLE, tfm::format ("Reload (%s+R or F5)", HelpWindow::COMMAND)));
 
       mAnyImageButtons.push_back (makeImageButton ("A", false, [this] {
         reloadAllImages();
@@ -399,7 +389,7 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       mWatchFilesForChangesButton = makeImageButton ("W", true, {}, 0, "Watch image files and directories for changes and reload them automatically");
       mWatchFilesForChangesButton->set_flags (Button::Flags::ToggleButton);
       mWatchFilesForChangesButton->set_change_callback ([this](bool value) {
-        setWatchFilesForChanges(value);
+        setWatchFilesForChanges (value);
         });
 
       mCurrentImageButtons.push_back (makeImageButton ("", false, [this] {
@@ -413,8 +403,8 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
           removeImage (mCurrentImage);
         }, FA_TIMES, tfm::format ("Close (%s+W); Close All (%s+Shift+W)", HelpWindow::COMMAND, HelpWindow::COMMAND)));
 
-      spacer = new Widget{mSidebarLayout};
-      spacer->set_height(3);
+      spacer = new Widget {mSidebarLayout};
+      spacer->set_height (3);
     }
     //}}}
     //{{{  List of open images
@@ -426,20 +416,20 @@ ImageViewer::ImageViewer (const shared_ptr<BackgroundImagesLoader>& imagesLoader
       mScrollContent->set_layout (new BoxLayout {Orientation::Vertical, Alignment::Fill});
 
       mImageButtonContainer = new Widget {mScrollContent};
-      mImageButtonContainer->set_layout(new BoxLayout {Orientation::Vertical, Alignment::Fill});
+      mImageButtonContainer->set_layout (new BoxLayout {Orientation::Vertical, Alignment::Fill});
     }
     //}}}
   }
   //}}}
   //{{{  Group selection
   {
-      mFooter = new Widget{mVerticalScreenSplit};
+    mFooter = new Widget {mVerticalScreenSplit};
 
-      mGroupButtonContainer = new Widget{mFooter};
-      mGroupButtonContainer->set_layout(new BoxLayout{Orientation::Horizontal, Alignment::Fill});
-      mGroupButtonContainer->set_fixed_height(25);
-      mFooter->set_fixed_height(25);
-      mFooter->set_visible(false);
+    mGroupButtonContainer = new Widget {mFooter};
+    mGroupButtonContainer->set_layout (new BoxLayout {Orientation::Horizontal, Alignment::Fill});
+    mGroupButtonContainer->set_fixed_height (25);
+    mFooter->set_fixed_height (25);
+    mFooter->set_visible (false);
   }
   //}}}
 
@@ -852,6 +842,7 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
       mImageCanvas->scale (scaleAmount, {origin.x(), origin.y()});
       }
       //}}}
+
     if (key == GLFW_KEY_E) {
       //{{{  E
       if (modifiers & GLFW_MOD_SHIFT)
@@ -860,6 +851,7 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
         setExposure (exposure() + 0.5f);
       }
       //}}}
+
     if (key == GLFW_KEY_O) {
       //{{{  O
       if (modifiers & GLFW_MOD_SHIFT)
@@ -868,6 +860,7 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
         setOffset(offset() + 0.1f);
       }
       //}}}
+
     if (mGammaSlider->enabled()) {
       if (key == GLFW_KEY_G) {
         //{{{  G
@@ -878,6 +871,7 @@ bool ImageViewer::keyboard_event (int key, int scancode, int action, int modifie
         }
         //}}}
       }
+
     if (key == GLFW_KEY_W && modifiers & SYSTEM_COMMAND_MOD) {
       //{{{  W
       if (modifiers & GLFW_MOD_SHIFT)
@@ -953,8 +947,8 @@ void ImageViewer::draw_contents() {
 
   clear();
 
-  // If watching files for changes, do so every 100ms
   if (watchFilesForChanges()) {
+    //{{{  watching files for changes, do so every 100ms
     auto now = chrono::steady_clock::now();
     if (now - mLastFileChangesCheck > 100ms) {
       reloadImagesWhoseFileChanged();
@@ -962,12 +956,14 @@ void ImageViewer::draw_contents() {
       mLastFileChangesCheck = now;
       }
     }
+    //}}}
 
-  // In case any images got loaded in the background, they sit around in mImagesLoader. Here is the
-  // place where we actually add them to the GUI. Focus the application in case one of the
-  // new images is meant to override the current selection.
   bool newFocus = false;
   while (auto addition = mImagesLoader->tryPop()) {
+    //{{{  background images
+    // In case any images got loaded in the background, they sit around in mImagesLoader. Here is the
+    // place where we actually add them to the GUI. Focus the application in case one of the
+    // new images is meant to override the current selection.
     newFocus |= addition->shallSelect;
 
     bool first = true;
@@ -982,12 +978,13 @@ void ImageViewer::draw_contents() {
       first = false;
       }
     }
+    //}}}
 
   if (newFocus)
     focusWindow();
 
   // mTaskQueue contains jobs that should be executed on the main thread.
-  // It is useful for handling callbacks from background threads
+  // - useful for handling callbacks from background threads
   while (auto task = mTaskQueue.tryPop())
     (*task)();
 
@@ -1026,8 +1023,7 @@ void ImageViewer::draw_contents() {
     }
 
   updateTitle();
-
-  // Update histogram
+  //{{{  Update histogram
   static const string histogramTooltipBase = "Histogram of color values. Adapts to the currently chosen channel group and error metric";
   auto lazyCanvasStatistics = mImageCanvas->canvasStatistics();
   if (lazyCanvasStatistics) {
@@ -1056,6 +1052,7 @@ void ImageViewer::draw_contents() {
     mHistogram->setZero (0);
     mHistogram->set_tooltip (tfm::format("%s", histogramTooltipBase));
     }
+  //}}}
   }
 //}}}
 
@@ -1069,15 +1066,15 @@ void ImageViewer::insertImage (shared_ptr<Image> image, size_t index, bool shall
     ++mDraggedImageButtonId;
 
   for (auto button : mAnyImageButtons)
-    button->set_enabled(true);
+    button->set_enabled (true);
 
-  auto button = new ImageButton{nullptr, image->name(), true};
-  button->set_font_size(15);
-  button->setId(index + 1);
-  button->set_tooltip(image->toString());
+  auto button = new ImageButton {nullptr, image->name(), true};
+  button->set_font_size (15);
+  button->setId (index + 1);
+  button->set_tooltip (image->toString());
 
   button->setSelectedCallback ([this, image]() {
-    selectImage(image);
+    selectImage (image);
     });
 
   button->setReferenceCallback ([this, image](bool isReference) {
@@ -1102,9 +1099,8 @@ void ImageViewer::insertImage (shared_ptr<Image> image, size_t index, bool shall
   // First image got added, let's select it.
   if ((index == 0 && mImages.size() == 1) || shallSelect) {
     selectImage (image);
-    if (!isMaximized()) {
+    if (!isMaximized()) 
       set_size (sizeToFitImage (image));
-      }
     }
   }
 //}}}
@@ -1114,25 +1110,25 @@ void ImageViewer::moveImageInList (size_t oldIndex, size_t newIndex) {
   if (oldIndex == newIndex)
     return;
 
-  TEV_ASSERT(oldIndex < mImages.size(), "oldIndex must be smaller than the number of images");
-  TEV_ASSERT(newIndex < mImages.size(), "newIndex must be smaller than the number of images");
+  TEV_ASSERT (oldIndex < mImages.size(), "oldIndex must be smaller than the number of images");
+  TEV_ASSERT (newIndex < mImages.size(), "newIndex must be smaller than the number of images");
 
   auto* button = mImageButtonContainer->child_at((int)oldIndex);
   button->inc_ref();
-  mImageButtonContainer->remove_child_at((int)oldIndex);
-  mImageButtonContainer->add_child((int)newIndex, button);
+  mImageButtonContainer->remove_child_at ((int)oldIndex);
+  mImageButtonContainer->add_child ((int)newIndex, button);
   button->dec_ref();
 
-  auto startI = std::min(oldIndex, newIndex);
-  auto endI = std::max(oldIndex, newIndex);
+  auto startI = std::min (oldIndex, newIndex);
+  auto endI = std::max (oldIndex, newIndex);
   for (size_t i = startI; i <= endI; ++i) {
     auto* curButton = dynamic_cast<ImageButton*>(mImageButtonContainer->child_at((int)i));
-    curButton->setId(i+1);
+    curButton->setId (i+1);
     }
 
   auto img = mImages[oldIndex];
-  mImages.erase(mImages.begin() + oldIndex);
-  mImages.insert(mImages.begin() + newIndex, img);
+  mImages.erase (mImages.begin() + oldIndex);
+  mImages.insert (mImages.begin() + newIndex, img);
 
   requestLayoutUpdate();
   }
@@ -1177,10 +1173,10 @@ void ImageViewer::removeImage (shared_ptr<Image> image) {
     }
 
   if (mCurrentImage == image)
-    selectImage(nextCandidate);
+    selectImage (nextCandidate);
 
   if (mCurrentReference == image)
-   selectReference(nextCandidate);
+   selectReference (nextCandidate);
   }
 //}}}
 //{{{
@@ -1221,13 +1217,13 @@ void ImageViewer::replaceImage (shared_ptr<Image> image, shared_ptr<Image> repla
   // regardless of the `shallSelect` parameter.
   shallSelect |= currentId == id;
 
-  int referenceId = imageId(mCurrentReference);
+  int referenceId = imageId (mCurrentReference);
 
-  removeImage(image);
-  insertImage(replacement, id, shallSelect);
+  removeImage (image);
+  insertImage (replacement, id, shallSelect);
 
   if (referenceId != -1)
-    selectReference(mImages[referenceId]);
+    selectReference (mImages[referenceId]);
   }
 //}}}
 //{{{
@@ -1332,7 +1328,7 @@ void ImageViewer::selectImage (const shared_ptr<Image>& image, bool stopPlayback
   size_t id = (size_t)max(0, imageId(image));
 
   // Don't do anything if the image that wants to be selected is not visible.
-  if (!mImageButtonContainer->child_at((int)id)->visible())
+  if (!mImageButtonContainer->child_at ((int)id)->visible())
     return;
 
   auto& buttons = mImageButtonContainer->children();
@@ -1340,7 +1336,7 @@ void ImageViewer::selectImage (const shared_ptr<Image>& image, bool stopPlayback
     dynamic_cast<ImageButton*>(buttons[i])->setIsSelected(i == id);
 
   mCurrentImage = image;
-  mImageCanvas->setImage(mCurrentImage);
+  mImageCanvas->setImage (mCurrentImage);
 
   // Clear group buttons
   while (mGroupButtonContainer->child_count() > 0)
@@ -1349,11 +1345,11 @@ void ImageViewer::selectImage (const shared_ptr<Image>& image, bool stopPlayback
   size_t numGroups = mCurrentImage->channelGroups().size();
   for (size_t i = 0; i < numGroups; ++i) {
     auto group = groupName(i);
-    auto button = new ImageButton{mGroupButtonContainer, group, false};
+    auto button = new ImageButton {mGroupButtonContainer, group, false};
     button->set_font_size(15);
     button->setId(i + 1);
-    button->setSelectedCallback([this, group]() {
-      selectGroup(group);
+    button->setSelectedCallback ([this, group]() {
+      selectGroup (group);
       });
     }
 
@@ -1390,14 +1386,14 @@ void ImageViewer::selectImage (const shared_ptr<Image>& image, bool stopPlayback
 void ImageViewer::selectGroup (string group) {
 
   // If the group does not exist, select the first group.
-  size_t id = (size_t)max(0, groupId(group));
+  size_t id = (size_t)max (0, groupId(group));
 
   auto& buttons = mGroupButtonContainer->children();
   for (size_t i = 0; i < buttons.size(); ++i)
     dynamic_cast<ImageButton*>(buttons[i])->setIsSelected(i == id);
 
-  mCurrentGroup = groupName(id);
-  mImageCanvas->setRequestedChannelGroup(mCurrentGroup);
+  mCurrentGroup = groupName (id);
+  mImageCanvas->setRequestedChannelGroup (mCurrentGroup);
 
   // Ensure the currently active group button is always fully on-screen
   Widget* activeGroupButton = nullptr;
@@ -1412,7 +1408,7 @@ void ImageViewer::selectGroup (string group) {
   if (activeGroupButton) {
     mGroupButtonContainer->set_position (nanogui::Vector2i {
       clamp (mGroupButtonContainer->position().x(),
-             -activeGroupButton->position().x(),
+             -activeGroupButton->position().x(), 
              m_size.x() - activeGroupButton->position().x() - activeGroupButton->width()), 0 });
     }
   }
@@ -1434,7 +1430,7 @@ void ImageViewer::selectReference (const shared_ptr<Image>& image) {
     return;
     }
 
-  size_t id = (size_t)max(0, imageId(image));
+  size_t id = (size_t)max (0, imageId(image));
 
   auto& buttons = mImageButtonContainer->children();
   for (size_t i = 0; i < buttons.size(); ++i)
@@ -1445,7 +1441,7 @@ void ImageViewer::selectReference (const shared_ptr<Image>& image) {
     dynamic_cast<Button*>(metricButtons[i])->set_enabled(true);
 
   mCurrentReference = image;
-  mImageCanvas->setReference(mCurrentReference);
+  mImageCanvas->setReference (mCurrentReference);
 
   // Ensure the currently active reference button is always fully on-screen
   Widget* activeReferenceButton = nullptr;
@@ -1505,12 +1501,12 @@ void ImageViewer::normalizeExposureAndOffset() {
   if (!mCurrentImage)
     return;
 
-  auto channels = mCurrentImage->channelsInGroup(mCurrentGroup);
+  auto channels = mCurrentImage->channelsInGroup (mCurrentGroup);
 
   float minimum = numeric_limits<float>::max();
   float maximum = numeric_limits<float>::min();
   for (const auto& channelName : channels) {
-    const auto& channel = mCurrentImage->channel(channelName);
+    const auto& channel = mCurrentImage->channel (channelName);
     auto [cmin, cmax, cmean] = channel->minMaxMean();
     maximum = max (maximum, cmax);
     minimum = min (minimum, cmin);
@@ -1524,89 +1520,93 @@ void ImageViewer::normalizeExposureAndOffset() {
 
 //{{{
 void ImageViewer::resetImage() {
-    setExposure(0);
-    setOffset(0);
-    setGamma(2.2f);
-    mImageCanvas->resetTransform();
-}
+
+  setExposure (0);
+  setOffset (0);
+  setGamma (2.2f);
+  mImageCanvas->resetTransform();
+  }
 //}}}
 //{{{
 void ImageViewer::setTonemap (ETonemap tonemap) {
-    mImageCanvas->setTonemap(tonemap);
-    auto& buttons = mTonemapButtonContainer->children();
-    for (size_t i = 0; i < buttons.size(); ++i) {
-        Button* b = dynamic_cast<Button*>(buttons[i]);
-        b->set_pushed((ETonemap)i == tonemap);
+
+  mImageCanvas->setTonemap (tonemap);
+
+  auto& buttons = mTonemapButtonContainer->children();
+  for (size_t i = 0; i < buttons.size(); ++i) {
+    Button* b = dynamic_cast<Button*>(buttons[i]);
+    b->set_pushed ((ETonemap)i == tonemap);
     }
 
-    mGammaSlider->set_enabled(tonemap == ETonemap::Gamma);
-    mGammaLabel->set_color(
-        tonemap == ETonemap::Gamma ? mGammaLabel->theme()->m_text_color : Color{0.5f, 1.0f}
-    );
-}
+  mGammaSlider->set_enabled (tonemap == ETonemap::Gamma);
+  mGammaLabel->set_color (tonemap == ETonemap::Gamma ? mGammaLabel->theme()->m_text_color : Color{0.5f, 1.0f});
+  }
 //}}}
 //{{{
 void ImageViewer::setMetric (EMetric metric) {
-    mImageCanvas->setMetric(metric);
-    auto& buttons = mMetricButtonContainer->children();
-    for (size_t i = 0; i < buttons.size(); ++i) {
-        Button* b = dynamic_cast<Button*>(buttons[i]);
-        b->set_pushed((EMetric)i == metric);
+
+  mImageCanvas->setMetric (metric);
+
+  auto& buttons = mMetricButtonContainer->children();
+  for (size_t i = 0; i < buttons.size(); ++i) {
+    Button* b = dynamic_cast<Button*>(buttons[i]);
+    b->set_pushed ((EMetric)i == metric);
     }
-}
+  }
 //}}}
 
 //{{{
 nanogui::Vector2i ImageViewer::sizeToFitImage (const shared_ptr<Image>& image) {
-    if (!image) {
-        return m_size;
-    }
 
-    nanogui::Vector2i requiredSize{image->size().x(), image->size().y()};
+  if (!image)
+    return m_size;
 
-    // Convert from image pixel coordinates to nanogui coordinates.
-    requiredSize = nanogui::Vector2i{nanogui::Vector2f{requiredSize} / pixel_ratio()};
+  nanogui::Vector2i requiredSize {image->size().x(), image->size().y()};
 
-    // Take into account the size of the UI.
-    if (mSidebar->visible()) {
-        requiredSize.x() += mSidebar->fixed_width();
-    }
+  // Convert from image pixel coordinates to nanogui coordinates.
+  requiredSize = nanogui::Vector2i {nanogui::Vector2f{requiredSize} / pixel_ratio()};
 
-    if (mFooter->visible()) {
-        requiredSize.y() += mFooter->fixed_height();
-    }
+  // Take into account the size of the UI.
+  if (mSidebar->visible())
+    requiredSize.x() += mSidebar->fixed_width();
 
-    // Only increase our current size if we are larger than the current size of the window.
-    return max(m_size, requiredSize);
-}
+  if (mFooter->visible())
+    requiredSize.y() += mFooter->fixed_height();
+
+  // Only increase our current size if we are larger than the current size of the window.
+  return max (m_size, requiredSize);
+  }
 //}}}
 //{{{
 nanogui::Vector2i ImageViewer::sizeToFitAllImages() {
-    nanogui::Vector2i result = m_size;
-    for (const auto& image : mImages) {
-        result = max(result, sizeToFitImage(image));
-    }
-    return result;
-}
+
+  nanogui::Vector2i result = m_size;
+  for (const auto& image : mImages) 
+    result = max (result, sizeToFitImage (image));
+
+  return result;
+  }
 //}}}
 
 //{{{
 bool ImageViewer::setFilter (const string& filter) {
-    mFilter->set_value(filter);
-    mRequiresFilterUpdate = true;
-    return true;
-}
+
+  mFilter->set_value (filter);
+  mRequiresFilterUpdate = true;
+  return true;
+  }
 //}}}
 //{{{
 bool ImageViewer::useRegex() const {
-    return mRegexButton->pushed();
-}
+  return mRegexButton->pushed();
+  }
 //}}}
 //{{{
 void ImageViewer::setUseRegex (bool value) {
-    mRegexButton->set_pushed(value);
-    mRequiresFilterUpdate = true;
-}
+
+  mRegexButton->set_pushed (value);
+  mRequiresFilterUpdate = true;
+  }
 //}}}
 
 //{{{
@@ -1616,7 +1616,7 @@ bool ImageViewer::watchFilesForChanges() const {
 //}}}
 //{{{
 void ImageViewer::setWatchFilesForChanges (bool value) {
-   mWatchFilesForChangesButton->set_pushed(value);
+  mWatchFilesForChangesButton->set_pushed (value);
   }
 //}}}
 
@@ -1669,7 +1669,7 @@ void ImageViewer::toggleHelpWindow() {
     mHelpWindow = nullptr;
     }
   else {
-    mHelpWindow = new HelpWindow{this, mSupportsHdr, [this] { toggleHelpWindow(); }};
+    mHelpWindow = new HelpWindow {this, mSupportsHdr, [this] { toggleHelpWindow(); }};
     mHelpWindow->center();
     mHelpWindow->request_focus();
     }
@@ -1682,11 +1682,11 @@ void ImageViewer::toggleHelpWindow() {
 void ImageViewer::openImageDialog() {
 
   vector<string> paths = file_dialog (
-    {
-      // HDR formats
+    { // HDR formats
       {"exr",  "OpenEXR image"},
       {"hdr",  "HDR image"},
       {"pfm",  "Portable Float Map image"},
+
       // LDR formats
       {"bmp",  "Bitmap Image File"},
       {"gif",  "Graphics Interchange Format image"},
@@ -1920,7 +1920,7 @@ void ImageViewer::updateTitle() {
 
     string valuesString;
     for (size_t i = 0; i < channelTails.size(); ++i)
-      valuesString += tfm::format("%.2f,", values[i]);
+      valuesString += tfm::format ("%.2f,", values[i]);
 
     valuesString.pop_back();
     valuesString += " / 0x";
@@ -1944,7 +1944,7 @@ string ImageViewer::groupName (size_t index) {
   if (!mCurrentImage)
     return "";
 
-  return mCurrentImage->channelGroups().at(index).name;
+  return mCurrentImage->channelGroups().at (index).name;
   }
 //}}}
 //{{{
@@ -1965,14 +1965,14 @@ int ImageViewer::groupId (const string& groupName) const {
 //{{{
 int ImageViewer::imageId (const shared_ptr<Image>& image) const {
 
-  auto pos = static_cast<size_t>(distance(begin(mImages), find(begin(mImages), end(mImages), image)));
+  auto pos = static_cast<size_t>(distance (begin (mImages), find (begin (mImages), end (mImages), image)));
   return pos >= mImages.size() ? -1 : (int)pos;
   }
 //}}}
 //{{{
 int ImageViewer::imageId (const string& imageName) const {
 
-  auto pos = static_cast<size_t>(distance (begin(mImages), find_if(begin(mImages), end(mImages),
+  auto pos = static_cast<size_t>(distance (begin (mImages), find_if (begin (mImages), end (mImages),
                                  [&](const shared_ptr<Image>& image) {
                                    return image->name() == imageName;}) ) );
 
@@ -1988,14 +1988,14 @@ string ImageViewer::nextGroup (const string& group, EDirection direction) {
   int dir = direction == Forward ? 1 : -1;
 
   // If the group does not exist, start at index 0.
-  int startId = max(0, groupId(group));
+  int startId = max (0, groupId (group));
 
   int id = startId;
   do {
     id = (id + mGroupButtonContainer->child_count() + dir) % mGroupButtonContainer->child_count();
     } while (!mGroupButtonContainer->child_at(id)->visible() && id != startId);
 
-  return groupName(id);
+  return groupName (id);
   }
 //}}}
 //{{{
@@ -2004,7 +2004,7 @@ string ImageViewer::nthVisibleGroup (size_t n) {
   string lastVisible = mCurrentGroup;
   for (int i = 0; i < mGroupButtonContainer->child_count(); ++i) {
     if (mGroupButtonContainer->child_at (i)->visible()) {
-      lastVisible = groupName(i);
+      lastVisible = groupName (i);
       if (n == 0)
         break;
       --n;
@@ -2022,12 +2022,12 @@ shared_ptr<Image> ImageViewer::nextImage (const shared_ptr<Image>& image, EDirec
   int dir = direction == Forward ? 1 : -1;
 
   // If the image does not exist, start at image 0.
-  int startId = max(0, imageId(image));
+  int startId = max(0, imageId (image));
 
   int id = startId;
   do {
     id = (id + mImageButtonContainer->child_count() + dir) % mImageButtonContainer->child_count();
-    } while (!mImageButtonContainer->child_at(id)->visible() && id != startId);
+    } while (!mImageButtonContainer->child_at (id)->visible() && id != startId);
 
   return mImages[id];
   }
@@ -2050,7 +2050,7 @@ shared_ptr<Image> ImageViewer::nthVisibleImage (size_t n) {
 //{{{
 shared_ptr<Image> ImageViewer::imageByName (const string& imageName) {
 
-  int id = imageId(imageName);
+  int id = imageId (imageName);
   if (id != -1)
     return mImages[id];
   else

@@ -160,8 +160,6 @@ include_directories (${ARGS_INCLUDE}
                      ${OPENEXR_INCLUDE_DIRS}
                      ${QOI_INCLUDE}
                      ${STB_INCLUDE}
-                     ${TINYFORMAT_INCLUDE}
-                     ${TINYLOGGER_INCLUDE}
                      ${UTFCPP_INCLUDE}
                      "${CMAKE_CURRENT_SOURCE_DIR}/src")
 

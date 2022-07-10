@@ -1,17 +1,18 @@
 // This file was developed by Thomas Müller <thomas94@gmx.net>.
 // It is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 #pragma once
 #include <Common.h>
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
-template <typename T, uint32_t N_DIMS>
-struct Box {
+template <typename T, uint32_t N_DIMS> struct Box {
+
   using Vector = nanogui::Array<T, N_DIMS>;
 
   Box (const Vector& min, const Vector& max) : min{min}, max{max} {}
-  Box (const Vector& max) : Box{Vector{(T)0}, max} {}
-  Box() : Box {Vector{std::numeric_limits<T>::max()}, Vector{std::numeric_limits<T>::min()}} {}
+  Box (const Vector& max) : Box{Vector {(T)0}, max} {}
+  Box() : Box {Vector {std::numeric_limits<T>::max()}, Vector {std::numeric_limits<T>::min()}} {}
 
   // Casting boxes of other types to this one
   template <typename U>
@@ -43,18 +44,18 @@ struct Box {
   //}}}
   //{{{
   Box<T, N_DIMS> inflate (T amount) const {
-      return {min - Vector{amount}, max + Vector{amount}};
-  }
+    return {min - Vector{amount}, max + Vector{amount}};
+    }
   //}}}
 
   Vector min, max;
   };
 
-using Box2f = Box<float, 2>;
-using Box3f = Box<float, 3>;
-using Box4f = Box<float, 4>;
-using Box2i = Box<int32_t, 2>;
-using Box3i = Box<int32_t, 3>;
-using Box4i = Box<int32_t, 4>;
+using Box2f = Box <float, 2>;
+using Box3f = Box <float, 3>;
+using Box4f = Box <float, 4>;
+using Box2i = Box <int32_t, 2>;
+using Box3i = Box <int32_t, 3>;
+using Box4i = Box <int32_t, 4>;
 
 TEV_NAMESPACE_END

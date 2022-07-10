@@ -168,18 +168,17 @@ private:
   void updateFilter();
   void updateLayout();
   void updateTitle();
-  std::string groupName(size_t index);
 
-  int groupId(const std::string& groupName) const;
-  int imageId(const std::shared_ptr<Image>& image) const;
-  int imageId(const std::string& imageName) const;
+  std::string groupName (size_t index);
+  int groupId (const std::string& groupName) const;
+  int imageId (const std::shared_ptr<Image>& image) const;
+  int imageId (const std::string& imageName) const;
+  std::string nextGroup (const std::string& groupName, EDirection direction);
+  std::string nthVisibleGroup (size_t n);
 
-  std::string nextGroup(const std::string& groupName, EDirection direction);
-  std::string nthVisibleGroup(size_t n);
-
-  std::shared_ptr<Image> nextImage(const std::shared_ptr<Image>& image, EDirection direction);
-  std::shared_ptr<Image> nthVisibleImage(size_t n);
-  std::shared_ptr<Image> imageByName(const std::string& imageName);
+  std::shared_ptr<Image> nextImage (const std::shared_ptr<Image>& image, EDirection direction);
+  std::shared_ptr<Image> nthVisibleImage (size_t n);
+  std::shared_ptr<Image> imageByName (const std::string& imageName);
 
   //{{{
   bool canDragSidebarFrom(const nanogui::Vector2i& p) {

@@ -1,3 +1,4 @@
+//{{{
 // tinyformat.h
 // Copyright (C) 2011, Chris Foster [chris42f (at) gmail (d0t) com]
 //
@@ -119,15 +120,13 @@
 //
 // User defined types: Uses operator<< for user defined types by default.
 // Overload formatValue() for more control.
-
-
-#ifndef TINYFORMAT_H_INCLUDED
-#define TINYFORMAT_H_INCLUDED
+//}}}
+#pragma once
 
 namespace tinyformat {}
+//{{{  includes
 //------------------------------------------------------------------------------
 // Config section.  Customize to your liking!
-
 // Namespace alias to encourage brevity
 namespace tfm = tinyformat;
 
@@ -137,8 +136,6 @@ namespace tfm = tinyformat;
 // Define for C++11 variadic templates which make the code shorter & more
 // general.  If you don't define this, C++11 support is autodetected below.
 // #define TINYFORMAT_USE_VARIADIC_TEMPLATES
-
-
 //------------------------------------------------------------------------------
 // Implementation details.
 #include <algorithm>
@@ -175,10 +172,9 @@ namespace tfm = tinyformat;
 #else
 #   define TINYFORMAT_HIDDEN
 #endif
+//}}}
 
 namespace tinyformat {
-
-//------------------------------------------------------------------------------
 namespace detail {
 
 // Test whether type T1 is convertible to type T2
@@ -1157,8 +1153,4 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 #undef TINYFORMAT_MAKE_FORMAT_FUNCS
 
 #endif
-
-
 } // namespace tinyformat
-
-#endif // TINYFORMAT_H_INCLUDED

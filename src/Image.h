@@ -20,7 +20,6 @@
 TEV_NAMESPACE_BEGIN
 
 class ImageLoader;
-
 //{{{
 struct ImageData {
   ImageData() = default;
@@ -252,7 +251,6 @@ private:
   int mId;
   };
 //}}}
-
 Task<std::vector<std::shared_ptr<Image>>> tryLoadImage (int imageId, fs::path path, std::istream& iStream, std::string channelSelector);
 Task<std::vector<std::shared_ptr<Image>>> tryLoadImage (fs::path path, std::istream& iStream, std::string channelSelector);
 Task<std::vector<std::shared_ptr<Image>>> tryLoadImage (int imageId, fs::path path, std::string channelSelector);
@@ -265,11 +263,13 @@ struct ImageAddition {
   std::vector<std::shared_ptr<Image>> images;
   std::shared_ptr<Image> toReplace;
 
+  //{{{
   struct Comparator {
     bool operator()(const ImageAddition& a, const ImageAddition& b) {
       return a.loadId > b.loadId;
       }
     };
+  //}}}
   };
 //}}}
 //{{{
@@ -277,31 +277,37 @@ struct PathAndChannelSelector {
   fs::path path;
   std::string channelSelector;
 
+  //{{{
   bool operator<(const PathAndChannelSelector& other) const {
     return path == other.path ? (channelSelector < other.channelSelector) : (path < other.path);
     }
+  //}}}
   };
 //}}}
 //{{{
 class BackgroundImagesLoader {
 public:
-  void enqueue(const fs::path& path, const std::string& channelSelector, bool shallSelect, const std::shared_ptr<Image>& toReplace = nullptr);
+  void enqueue (const fs::path& path, const std::string& channelSelector, bool shallSelect, const std::shared_ptr<Image>& toReplace = nullptr);
   void checkDirectoriesForNewFilesAndLoadThose();
 
   std::optional<ImageAddition> tryPop() { return mLoadedImages.tryPop(); }
 
   bool publishSortedLoads();
+  //{{{
   bool hasPendingLoads() const {
     return mLoadCounter != mUnsortedLoadCounter;
     }
-
+  //}}}
+  //{{{
   bool recursiveDirectories() const {
     return mRecursiveDirectories;
     }
-
+  //}}}
+  //{{{
   void setRecursiveDirectories(bool value) {
     mRecursiveDirectories = value;
     }
+  //}}}
 
 private:
   SharedQueue<ImageAddition> mLoadedImages;
