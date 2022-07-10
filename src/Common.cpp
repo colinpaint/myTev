@@ -61,7 +61,7 @@ string utf16to8 (const wstring& utf16) {
 
 //{{{
 fs::path toPath (const string& utf8) {
-// tev's strings are always utf8 encoded, however fs::path does not know this. 
+// tev's strings are always utf8 encoded, however fs::path does not know this.
 // Therefore: convert the string to a std::u8string // and pass _that_ string to the fs::path constructor
 // which will then take care of converting the utf8 string to the native file name encoding.
 
@@ -87,7 +87,7 @@ vector<string> split (string text, const string& delim) {
     if (end == string::npos) {
       result.emplace_back(text.substr(begin));
       return result;
-      } 
+      }
     else {
       result.emplace_back(text.substr(begin, end - begin));
       begin = end + 1;
@@ -131,7 +131,7 @@ bool matchesFuzzy (string text, string filter, size_t* matchedPartId) {
   // We don't want people entering multiple spaces in a row to match everything.
   words.erase(remove(begin(words), end(words), ""), end(words));
 
-  if (words.empty()) 
+  if (words.empty())
     return true;
 
   // Match every word of the filter separately.
@@ -166,11 +166,9 @@ bool matchesRegex (string text, string filter) {
 void drawTextWithShadow (NVGcontext* ctx, float x, float y, string text, float shadowAlpha) {
 
   nvgSave (ctx);
-
   nvgFontBlur (ctx, 2);
   nvgFillColor (ctx, Color{0.0f, shadowAlpha});
   nvgText (ctx, x + 1, y + 1, text.c_str(), NULL);
-
   nvgRestore (ctx);
 
   nvgText (ctx, x, y, text.c_str(), NULL);
@@ -203,7 +201,7 @@ string errorString (int errorId) {
   #ifdef _WIN32
     char* s = NULL;
     FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                   NULL, errorId, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+                   NULL, errorId, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                    (LPSTR)&s, 0, NULL);
 
     string result = tfm::format ("%s (%d)", s, errorId);
@@ -241,9 +239,9 @@ void toggleConsole() {
     DWORD consoleProcessId;
     GetWindowThreadProcessId (console, &consoleProcessId);
 
-    // Only toggle the console if it was actually spawned by tev. 
+    // Only toggle the console if it was actually spawned by tev.
     // If we are running in a foreign console, then we should leave it be.
-    if (GetCurrentProcessId() == consoleProcessId) 
+    if (GetCurrentProcessId() == consoleProcessId)
       ShowWindow (console, IsWindowVisible(console) ? SW_HIDE : SW_SHOW);
   #endif
   }
@@ -268,7 +266,7 @@ ETonemap toTonemap (string name) {
   // Perform matching on uppercase strings
   name = toUpper(name);
 
-  if (name == "SRGB") 
+  if (name == "SRGB")
     return SRGB;
   else if (name == "GAMMA")
     return Gamma;

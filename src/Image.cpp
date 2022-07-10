@@ -18,7 +18,7 @@ using namespace std;
 TEV_NAMESPACE_BEGIN
 
 //{{{
-vector<string> ImageData::channelsInLayer(string layerName) const {
+vector<string> ImageData::channelsInLayer (string layerName) const {
 
   vector<string> result;
 
@@ -26,10 +26,10 @@ vector<string> ImageData::channelsInLayer(string layerName) const {
     // If the layer name starts at the beginning, and
     // if no other dot is found after the end of the layer name,
     // then we have found a channel of this layer.
-    if (c.name().starts_with(layerName)) {
-      const auto& channelWithoutLayer = c.name().substr(layerName.length());
-      if (channelWithoutLayer.find(".") == string::npos)
-        result.emplace_back(c.name());
+    if (c.name().starts_with (layerName)) {
+      const auto& channelWithoutLayer = c.name().substr (layerName.length());
+      if (channelWithoutLayer.find (".") == string::npos)
+        result.emplace_back (c.name());
       }
     }
 
@@ -37,7 +37,7 @@ vector<string> ImageData::channelsInLayer(string layerName) const {
   }
 //}}}
 //{{{
-Task<void> ImageData::convertToRec709(int priority) {
+Task<void> ImageData::convertToRec709 (int priority) {
 
   // No need to do anything for identity transforms
   if (toRec709 == Matrix4f{1.0f})
@@ -55,7 +55,7 @@ Task<void> ImageData::convertToRec709(int priority) {
       // No RGB-triplet found
       continue;
 
-    TEV_ASSERT(r && g && b, "RGB triplet of channels must exist.");
+    TEV_ASSERT (r && g && b, "RGB triplet of channels must exist.");
 
     tasks.emplace_back (
       ThreadPool::global().parallelForAsync<size_t>(0, r->numPixels(), [r, g, b, this](size_t i) {
@@ -76,18 +76,18 @@ Task<void> ImageData::convertToRec709(int priority) {
   }
 //}}}
 //{{{
-void ImageData::alphaOperation(const function<void(Channel&, const Channel&)>& func) {
+void ImageData::alphaOperation (const function<void(Channel&, const Channel&)>& func) {
 
   for (const auto& layer : layers) {
     string alphaChannelName = layer + "A";
 
-    if (!hasChannel(alphaChannelName))
+    if (!hasChannel (alphaChannelName))
       continue;
 
-    const Channel* alphaChannel = channel(alphaChannelName);
-    for (auto& channelName : channelsInLayer(layer))
+    const Channel* alphaChannel = channel (alphaChannelName);
+    for (auto& channelName : channelsInLayer (layer))
       if (channelName != alphaChannelName)
-        func(*mutableChannel(channelName), *alphaChannel);
+        func (*mutableChannel (channelName), *alphaChannel);
     }
   }
 //}}}
@@ -95,11 +95,11 @@ void ImageData::alphaOperation(const function<void(Channel&, const Channel&)>& f
 Task<void> ImageData::multiplyAlpha(int priority) {
 
   if (hasPremultipliedAlpha)
-    throw runtime_error{"Can't multiply with alpha twice."};
+    throw runtime_error {"Can't multiply with alpha twice."};
 
   vector<Task<void>> tasks;
   alphaOperation([&] (Channel& target, const Channel& alpha) {
-    tasks.emplace_back(target.multiplyWithAsync(alpha, priority));
+    tasks.emplace_back (target.multiplyWithAsync(alpha, priority));
     });
 
   for (auto& task : tasks)
@@ -109,14 +109,14 @@ Task<void> ImageData::multiplyAlpha(int priority) {
   }
 //}}}
 //{{{
-Task<void> ImageData::unmultiplyAlpha(int priority) {
+Task<void> ImageData::unmultiplyAlpha (int priority) {
 
   if (!hasPremultipliedAlpha)
-    throw runtime_error{"Can't divide by alpha twice."};
+    throw runtime_error {"Can't divide by alpha twice."};
 
   vector<Task<void>> tasks;
   alphaOperation([&] (Channel& target, const Channel& alpha) {
-    tasks.emplace_back(target.divideByAsync(alpha, priority));
+    tasks.emplace_back (target.divideByAsync(alpha, priority));
     });
 
   for (auto& task : tasks)
@@ -126,10 +126,10 @@ Task<void> ImageData::unmultiplyAlpha(int priority) {
   }
 //}}}
 //{{{
-Task<void> ImageData::ensureValid(const string& channelSelector, int taskPriority) {
+Task<void> ImageData::ensureValid (const string& channelSelector, int taskPriority) {
 
   if (channels.empty())
-    throw runtime_error{"Images must have at least one channel."};
+    throw runtime_error {"Images must have at least one channel."};
 
   // No data window? Default to the channel size
   if (!dataWindow.isValid())
@@ -140,31 +140,31 @@ Task<void> ImageData::ensureValid(const string& channelSelector, int taskPriorit
 
   for (const auto& c : channels)
     if (c.size() != size())
-     throw runtime_error{tfm::format ("All channels must have the same size as the data window. (%s:%dx%d != %dx%d)",
-                                      c.name(), c.size().x(), c.size().y(), size().x(), size().y() )};
+     throw runtime_error {tfm::format ("All channels must have the same size as the data window. (%s:%dx%d != %dx%d)",
+                                       c.name(), c.size().x(), c.size().y(), size().x(), size().y() )};
 
   if (!channelSelector.empty()) {
     vector<pair<size_t, size_t>> matches;
     for (size_t i = 0; i < channels.size(); ++i) {
       size_t matchId;
-      if (matchesFuzzy(channels[i].name(), channelSelector, &matchId))
-        matches.emplace_back(matchId, i);
+      if (matchesFuzzy (channels[i].name(), channelSelector, &matchId))
+        matches.emplace_back (matchId, i);
       }
 
-    sort(begin(matches), end(matches));
+    sort (begin (matches), end (matches));
 
     // Prune and sort channels by the channel selector
-    vector<Channel> tmp = move(channels);
+    vector<Channel> tmp = move (channels);
     channels.clear();
 
     for (const auto& match : matches)
-      channels.emplace_back(move(tmp[match.second]));
+      channels.emplace_back (move (tmp[match.second]));
     }
 
   if (layers.empty()) {
     set<string> layerNames;
     for (auto& c : channels)
-      layerNames.insert (Channel::head(c.name()));
+      layerNames.insert (Channel::head (c.name()));
     for (const string& l : layerNames)
       layers.emplace_back (l);
     }
@@ -224,16 +224,16 @@ string Image::shortName() const {
   }
 //}}}
 //{{{
-Texture* Image::texture(const string& channelGroupName) {
+Texture* Image::texture (const string& channelGroupName) {
   return texture (channelsInGroup (channelGroupName));
   }
 //}}}
 //{{{
-Texture* Image::texture(const vector<string>& channelNames) {
+Texture* Image::texture (const vector<string>& channelNames) {
 
   string lookup = join(channelNames, ",");
-  auto iter = mTextures.find(lookup);
-  if (iter != end(mTextures)) {
+  auto iter = mTextures.find (lookup);
+  if (iter != end (mTextures)) {
     auto& texture = iter->second;
     if (texture.mipmapDirty) {
       texture.nanoguiTexture->generate_mipmap();
@@ -242,16 +242,16 @@ Texture* Image::texture(const vector<string>& channelNames) {
     return texture.nanoguiTexture.get();
     }
 
-  mTextures.emplace(lookup, ImageTexture{
-    new Texture {
-      Texture::PixelFormat::RGBA,
-      Texture::ComponentFormat::Float32,
-      {size().x(), size().y()},
-      Texture::InterpolationMode::Trilinear,
-      Texture::InterpolationMode::Nearest,
-      Texture::WrapMode::ClampToEdge,
-      1, Texture::TextureFlags::ShaderRead,
-      true, }, channelNames, false, });
+  mTextures.emplace(lookup, ImageTexture {
+    new Texture { Texture::PixelFormat::RGBA,
+                  Texture::ComponentFormat::Float32,
+                  {size().x(), size().y()},
+                  Texture::InterpolationMode::Trilinear,
+                  Texture::InterpolationMode::Nearest,
+                  Texture::WrapMode::ClampToEdge,
+                  1, Texture::TextureFlags::ShaderRead,
+                  true, },
+    channelNames, false, });
   auto& texture = mTextures.at (lookup).nanoguiTexture;
 
   auto numPixels = this->numPixels();
@@ -261,16 +261,17 @@ Texture* Image::texture(const vector<string>& channelNames) {
   for (size_t i = 0; i < 4; ++i) {
     if (i < channelNames.size()) {
       const auto& channelName = channelNames[i];
-      const auto* chan = channel(channelName);
+      const auto* chan = channel (channelName);
       if (!chan)
-        throw invalid_argument{tfm::format("Cannot obtain texture of %s:%s, because the channel does not exist.", path(), channelName)};
+        throw invalid_argument {tfm::format ("Cannot obtain texture of %s:%s, because the channel does not exist.",
+                                             path(), channelName)};
 
       const auto& channelData = chan->data();
-      tasks.emplace_back(
+      tasks.emplace_back (
         ThreadPool::global().parallelForAsync<size_t>(0, numPixels, [&channelData, &data, i](size_t j) {
           data[j * 4 + i] = channelData[j];
-          }, std::numeric_limits<int>::max())
-        );
+          },
+        std::numeric_limits<int>::max()));
       }
     else {
       float val = i == 3 ? 1 : 0;
@@ -281,7 +282,7 @@ Texture* Image::texture(const vector<string>& channelNames) {
         );
       }
     }
-  waitAll(tasks);
+  waitAll (tasks);
 
   texture->upload ((uint8_t*)data.data());
   texture->generate_mipmap();
@@ -290,7 +291,7 @@ Texture* Image::texture(const vector<string>& channelNames) {
 //}}}
 
 //{{{
-vector<string> Image::channelsInGroup(const string& groupName) const {
+vector<string> Image::channelsInGroup (const string& groupName) const {
 
   for (const auto& group : mChannelGroups)
     if (group.name == groupName)
@@ -300,7 +301,7 @@ vector<string> Image::channelsInGroup(const string& groupName) const {
   }
 //}}}
 //{{{
-vector<ChannelGroup> Image::getGroupedChannels(const string& layerName) const {
+vector<ChannelGroup> Image::getGroupedChannels (const string& layerName) const {
 
   //{{{
   vector<vector<string>> groups = {
@@ -382,7 +383,7 @@ vector<ChannelGroup> Image::getGroupedChannels(const string& layerName) const {
   }
 //}}}
 //{{{
-vector<string> Image::getSortedChannels(const string& layerName) const {
+vector<string> Image::getSortedChannels (const string& layerName) const {
 
   string alphaChannelName = layerName + "A";
 
@@ -392,12 +393,12 @@ vector<string> Image::getSortedChannels(const string& layerName) const {
   for (const auto& group : getGroupedChannels(layerName)) {
     for (auto name : group.channels) {
       if (name == alphaChannelName) {
-        if (includesAlphaChannel) {
+        if (includesAlphaChannel)
           continue;
-          }
 
         includesAlphaChannel = true;
         }
+
       result.emplace_back(name);
       }
     }
@@ -406,15 +407,15 @@ vector<string> Image::getSortedChannels(const string& layerName) const {
   }
 //}}}
 //{{{
-void Image::updateChannel(const string& channelName, int x, int y, int width, int height, const vector<float>& data) {
+void Image::updateChannel (const string& channelName, int x, int y, int width, int height, const vector<float>& data) {
 
-  Channel* chan = mutableChannel(channelName);
+  Channel* chan = mutableChannel (channelName);
   if (!chan) {
     tlog::warning() << "Channel " << channelName << " could not be updated, because it does not exist.";
     return;
     }
 
-  chan->updateTile(x, y, width, height, data);
+  chan->updateTile (x, y, width, height, data);
 
   // Update textures that are cached for this channel
   for (auto& kv : mTextures) {
@@ -453,13 +454,13 @@ void Image::updateChannel(const string& channelName, int x, int y, int width, in
 //}}}
 
 //{{{
-template <typename T> time_t to_time_t(T timePoint) {
+template <typename T> time_t to_time_t (T timePoint) {
 // `clock_cast` appears to throw errors on some systems, so we're using this slightly hacky
 // inaccurate/random time conversion (now() is not called simultaneously for both clocks)
 // in order to convert to system time.
 
   using namespace chrono;
-  return system_clock::to_time_t(time_point_cast<system_clock::duration>(timePoint - T::clock::now() + system_clock::now()));
+  return system_clock::to_time_t (time_point_cast<system_clock::duration>(timePoint - T::clock::now() + system_clock::now()));
   }
 //}}}
 //{{{
@@ -469,54 +470,59 @@ string Image::toString() const {
   sstream << mName << "\n\n";
 
   {
-    time_t cftime = to_time_t(mFileLastModified);
-    sstream << "Last modified:\n" << asctime(localtime(&cftime)) << "\n";
+    time_t cftime = to_time_t (mFileLastModified);
+    sstream << "Last modified:\n" << asctime (localtime (&cftime)) << "\n";
   }
 
   sstream << "Resolution: (" << size().x() << ", " << size().y() << ")\n";
   if (displayWindow() != dataWindow() || displayWindow().min != Vector2i{0}) {
-    sstream << "Display window: (" << displayWindow().min.x() << ", " << displayWindow().min.y() << ")(" << displayWindow().max.x() << ", " << displayWindow().max.y() << ")\n";
-    sstream << "Data window: (" << dataWindow().min.x() << ", " << dataWindow().min.y() << ")(" << dataWindow().max.x() << ", " << dataWindow().max.y() << ")\n";
+    sstream << "Display window: (" << displayWindow().min.x()
+            << ", " << displayWindow().min.y()
+            << ")(" << displayWindow().max.x()
+            << ", " << displayWindow().max.y() << ")\n";
+    sstream << "Data window: (" << dataWindow().min.x() << ", " << dataWindow().min.y()
+            << ")(" << dataWindow().max.x() << ", " << dataWindow().max.y() << ")\n";
     }
 
   sstream << "\nChannels:\n";
 
   auto localLayers = mData.layers;
-  transform(begin(localLayers), end(localLayers), begin(localLayers), [this](string layer) {
+  transform (begin (localLayers), end (localLayers), begin (localLayers), [this](string layer) {
     auto channels = mData.channelsInLayer(layer);
     transform(begin(channels), end(channels), begin(channels), [](string channel) {
       return Channel::tail(channel);
       });
+
     if (layer.empty())
-      return join(channels, ",");
+      return join (channels, ",");
     else if (channels.size() == 1)
       return layer + channels.front();
     else
       return layer + "("s + join(channels, ",") + ")"s;
     });
 
-  sstream << join(localLayers, "\n");
+  sstream << join (localLayers, "\n");
   return sstream.str();
   }
 //}}}
 
 //{{{
-Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, istream& iStream, string channelSelector) {
+Task<vector<shared_ptr<Image>>> tryLoadImage (int taskPriority, fs::path path, istream& iStream, string channelSelector) {
 
   auto handleException = [&](const exception& e) {
-    if (channelSelector.empty()) 
+    if (channelSelector.empty())
       tlog::error() << tfm::format ("Could not load %s. %s", toString(path), e.what());
-    else 
+    else
       tlog::error() << tfm::format ("Could not load %s:%s. %s", toString(path), channelSelector, e.what());
     };
 
   // No need to keep loading images if tev is already shutting down again.
-  if (shuttingDown()) 
+  if (shuttingDown())
     co_return {};
 
   try {
     auto start = chrono::system_clock::now();
-    if (!iStream) 
+    if (!iStream)
       throw invalid_argument {tfm::format ("Image %s could not be opened", path)};
 
     fs::file_time_type fileLastModified = fs::file_time_type::clock::now();
@@ -525,7 +531,7 @@ Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, is
       // else might have happened to it that makes obtaining its last modified time impossible. Ignore such errors.
       try {
         fileLastModified = fs::last_write_time (path);
-        } 
+        }
       catch (...) {}
       }
 
@@ -571,16 +577,16 @@ Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, is
       }
 
     throw runtime_error {"No suitable image loader found."};
-    } 
+    }
   catch (const invalid_argument& e) {
     handleException (e);
-    } 
+    }
   catch (const runtime_error& e) {
     handleException (e);
-    } 
+    }
   catch (const Iex::BaseExc& e) {
     handleException (e);
-    } 
+    }
   catch (const future_error& e) {
     handleException (e);
     }
@@ -589,12 +595,12 @@ Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, is
   }
 //}}}
 //{{{
-Task<vector<shared_ptr<Image>>> tryLoadImage(fs::path path, istream& iStream, string channelSelector) {
-  co_return co_await tryLoadImage(-Image::drawId(), path, iStream, channelSelector);
+Task<vector<shared_ptr<Image>>> tryLoadImage (fs::path path, istream& iStream, string channelSelector) {
+  co_return co_await tryLoadImage (-Image::drawId(), path, iStream, channelSelector);
   }
 //}}}
 //{{{
-Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, string channelSelector) {
+Task<vector<shared_ptr<Image>>> tryLoadImage (int taskPriority, fs::path path, string channelSelector) {
 
   try {
     path = fs::absolute(path);
@@ -604,28 +610,30 @@ Task<vector<shared_ptr<Image>>> tryLoadImage(int taskPriority, fs::path path, st
     // try to open the image at the given path just to make sure.
     }
 
-  ifstream fileStream{path, ios_base::binary};
-  co_return co_await tryLoadImage(taskPriority, path, fileStream, channelSelector);
+  ifstream fileStream {path, ios_base::binary};
+  co_return co_await tryLoadImage (taskPriority, path, fileStream, channelSelector);
   }
 //}}}
 //{{{
-Task<vector<shared_ptr<Image>>> tryLoadImage(fs::path path, string channelSelector) {
-  co_return co_await tryLoadImage(-Image::drawId(), path, channelSelector);
+Task<vector<shared_ptr<Image>>> tryLoadImage (fs::path path, string channelSelector) {
+  co_return co_await tryLoadImage (-Image::drawId(), path, channelSelector);
   }
 //}}}
 
 //{{{
-void BackgroundImagesLoader::enqueue(const fs::path& path, const string& channelSelector, bool shallSelect, const shared_ptr<Image>& toReplace) {
+void BackgroundImagesLoader::enqueue (const fs::path& path, const string& channelSelector,
+                                      bool shallSelect, const shared_ptr<Image>& toReplace) {
 
   // If we're trying to open a directory, try loading all the images inside of that directory
-  if (fs::exists(path) && fs::is_directory(path)) {
-    tlog::info() << "Loading images " << (mRecursiveDirectories ? "recursively " : "") << "from directory " << toString(path);
+  if (fs::exists (path) && fs::is_directory (path)) {
+    tlog::info() << "Loading images " << (mRecursiveDirectories ? "recursively " : "") << "from directory " << toString (path);
+
     fs::path canonicalPath = fs::canonical (path);
     mDirectories[canonicalPath].emplace (channelSelector);
     bool first = true;
     forEachFileInDir (mRecursiveDirectories, canonicalPath, [&](auto const& entry) {
       if (!entry.is_directory()) {
-        mFilesFoundInDirectories.emplace (PathAndChannelSelector{entry, channelSelector});
+        mFilesFoundInDirectories.emplace (PathAndChannelSelector {entry, channelSelector});
         enqueue (entry, channelSelector, first ? shallSelect : false);
         first = false;
         }
@@ -636,11 +644,11 @@ void BackgroundImagesLoader::enqueue(const fs::path& path, const string& channel
   int loadId = mUnsortedLoadCounter++;
   invokeTaskDetached([loadId, path, channelSelector, shallSelect, toReplace, this]() -> Task<void> {
     int taskPriority = -Image::drawId();
-    co_await ThreadPool::global().enqueueCoroutine(taskPriority);
-    auto images = co_await tryLoadImage(taskPriority, path, channelSelector);
+    co_await ThreadPool::global().enqueueCoroutine (taskPriority);
+    auto images = co_await tryLoadImage (taskPriority, path, channelSelector);
     {
-      std::lock_guard lock{mPendingLoadedImagesMutex};
-      mPendingLoadedImages.push({ loadId, shallSelect, images, toReplace });
+      std::lock_guard lock {mPendingLoadedImagesMutex};
+      mPendingLoadedImages.push ({loadId, shallSelect, images, toReplace});
     }
     if (publishSortedLoads())
       redrawWindow();
@@ -651,13 +659,13 @@ void BackgroundImagesLoader::enqueue(const fs::path& path, const string& channel
 void BackgroundImagesLoader::checkDirectoriesForNewFilesAndLoadThose() {
 
   for (const auto& dir : mDirectories) {
-    forEachFileInDir(mRecursiveDirectories, dir.first, [&](auto const& entry) {
+    forEachFileInDir (mRecursiveDirectories, dir.first, [&](auto const& entry) {
       if (!entry.is_directory()) {
         for (const auto& channelSelector : dir.second) {
           PathAndChannelSelector p = {entry, channelSelector};
-          if (!mFilesFoundInDirectories.contains(p)) {
-            mFilesFoundInDirectories.emplace(p);
-            enqueue(entry, channelSelector, false);
+          if (!mFilesFoundInDirectories.contains (p)) {
+            mFilesFoundInDirectories.emplace (p);
+            enqueue (entry, channelSelector, false);
             }
           }
         }

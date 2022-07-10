@@ -25,9 +25,11 @@ using namespace std;
 //}}}
 TEV_NAMESPACE_BEGIN
 
-// Image viewer is a static variable to allow other parts of the program to easily schedule operations onto the main nanogui thread loop.
-// In a truly modular program, this would never be required, but OpenGL's state-machine nature throws a wrench into modularity.
-// Currently, the only use case is the destruction of OpenGL textures, which _must_ happen on the thread on which the GL context is "current"
+// Image viewer is static variable
+// - allows others to easily schedule operations onto the main nanogui thread loop.
+// - OpenGL's state-machine nature throws a wrench into modularity.
+//    - Currently, the only use case is the destruction of OpenGL textures, 
+//      - must happen on the thread on which the GL context is "current"
 static ImageViewer* sImageViewer = nullptr;
 
 //{{{
@@ -120,7 +122,7 @@ void handleIpcPacket (const IpcPacket& packet, const std::shared_ptr<BackgroundI
       sImageViewer->scheduleToUiThread([&,info] {
         string imageString = ensureUtf8 (info.imageName);
         for (int i = 0; i < info.nChannels; ++i)
-          sImageViewer->updateImage (imageString, info.grabFocus, info.channelNames[i], 
+          sImageViewer->updateImage (imageString, info.grabFocus, info.channelNames[i],
                                      info.x, info.y, info.width, info.height, info.imageData[i]);
         });
 
