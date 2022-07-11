@@ -73,7 +73,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_FLAGS MATCHES "-stdl
   endif()
 endif()
 
-set (STB_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/stb)
+set (UTILS_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/utils)
 set (QOI_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/qoi)
 set (UTFCPP_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/utfcpp/source)
 
@@ -216,15 +216,14 @@ endif()
 
 add_executable (tev ${TEV_SOURCES})
 
-include_directories (${ARGS_INCLUDE}
-                     ${CLIP_INCLUDE}
+include_directories (${CLIP_INCLUDE}
                      ${DIRECTXTEX_INCLUDE}
                      ${GLFW_INCLUDE}
                      ${NANOGUI_EXTRA_INCS}
                      ${NANOGUI_INCLUDE}
                      ${OPENEXR_INCLUDE_DIRS}
                      ${QOI_INCLUDE}
-                     ${STB_INCLUDE}
+                     ${UTILS_INCLUDE}
                      ${UTFCPP_INCLUDE}
                      "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
