@@ -1,29 +1,25 @@
+//{{{
 // Clip Library
 // Copyright (c) 2015-2018 David Capello
 //
 // This file is released under the terms of the MIT license.
 // Read LICENSE.txt for more information.
-
-#ifndef CLIP_H_INCLUDED
-#define CLIP_H_INCLUDED
+//}}}
+//{{{  includes
 #pragma once
 
 #include <cassert>
 #include <memory>
 #include <string>
-
+//}}}
 namespace clip {
-
-  // ======================================================================
-  // Low-level API to lock the clipboard/pasteboard and modify it
-  // ======================================================================
-
   // Clipboard format identifier.
   typedef size_t format;
 
   class image;
   struct image_spec;
 
+  //{{{
   class lock {
   public:
     // You can give your current HWND as the "native_window_handle."
@@ -60,6 +56,7 @@ namespace clip {
     class impl;
     std::unique_ptr<impl> p;
   };
+  //}}}
 
   format register_format(const std::string& name);
 
@@ -78,33 +75,22 @@ namespace clip {
   // Clears the clipboard content.
   bool clear();
 
-  // ======================================================================
-  // Error handling
-  // ======================================================================
-
+  //{{{
   enum class ErrorCode {
     CannotLock,
     ImageNotSupported,
   };
-
+  //}}}
   typedef void (*error_handler)(ErrorCode code);
-
   void set_error_handler(error_handler f);
   error_handler get_error_handler();
-
-  // ======================================================================
-  // Text
-  // ======================================================================
 
   // High-level API to put/get UTF8 text in/from the clipboard. These
   // functions returns false in case of error.
   bool set_text(const std::string& value);
   bool get_text(std::string& value);
 
-  // ======================================================================
-  // Image
-  // ======================================================================
-
+  //{{{
   struct image_spec {
     unsigned long width = 0;
     unsigned long height = 0;
@@ -119,7 +105,8 @@ namespace clip {
     unsigned long blue_shift = 0;
     unsigned long alpha_shift = 0;
   };
-
+  //}}}
+  //{{{
   // The image data must contain straight RGB values
   // (non-premultiplied by alpha). The image retrieved from the
   // clipboard will be non-premultiplied too. Basically you will be
@@ -156,16 +143,10 @@ namespace clip {
     char* m_data;
     image_spec m_spec;
   };
-
-  // High-level API to set/get an image in/from the clipboard. These
-  // functions returns false in case of error.
+  //}}}
   bool set_image(const image& img);
   bool get_image(image& img);
   bool get_image_spec(image_spec& spec);
-
-  // ======================================================================
-  // Platform-specific
-  // ======================================================================
 
   // Only for X11: Sets the time (in milliseconds) that we must wait
   // for the selection/clipboard owner to receive the content. This
@@ -173,6 +154,4 @@ namespace clip {
   void set_x11_wait_timeout(int msecs);
   int get_x11_wait_timeout();
 
-} // namespace clip
-
-#endif // CLIP_H_INCLUDED
+  }
