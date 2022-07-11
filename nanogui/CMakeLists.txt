@@ -20,7 +20,7 @@ message (STATUS "NanoGUI v${NANOGUI_VERSION} ${NANOGUI_VERSION_TYPE}")
 
 project (nanogui DESCRIPTION "NanoGUI" LANGUAGES CXX C VERSION ${NANOGUI_VERSION} )
 
-if (NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ext/glfw/src")
+if (NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/glfw/src")
   message (FATAL_ERROR "The NanoGUI dependency repositories (GLFW, etc.) are missing! ")
 endif()
 
@@ -171,7 +171,7 @@ if (NANOGUI_BUILD_GLFW)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
   endif()
 
-  add_subdirectory (ext/glfw)
+  add_subdirectory (glfw)
 
   # Two targets have now been defined: `glfw_objects`, which will be merged into
   # NanoGUI at the end, and `glfw`.  The `glfw` target is the library itself
@@ -188,11 +188,11 @@ endif()
 
 if (NANOGUI_BUILD_GLAD)
   # Build and include GLAD on Windows
-  list (APPEND NANOGUI_EXTRA ext/glad/src/glad.c
-                             ext/glad/include/glad/glad.h
-                             ext/glad/include/KHR/khrplatform.h)
+  list (APPEND NANOGUI_EXTRA glad/src/glad.c
+                             glad/include/glad/glad.h
+                             glad/include/KHR/khrplatform.h)
   if (MSVC)
-    set_source_files_properties (ext/glad/src/glad.c PROPERTIES COMPILE_FLAGS /wd4055)
+    set_source_files_properties (glad/src/glad.c PROPERTIES COMPILE_FLAGS /wd4055)
   endif()
 endif()
 
@@ -278,8 +278,8 @@ endif()
 # Compile main NanoGUI library
 add_library (nanogui ${NANOGUI_LIBRARY_TYPE}
   # Merge NanoVG into the NanoGUI library
-  ext/nanovg/src/nanovg.c
-  ext/nanovg/src/stb_image.h
+  nanovg/src/nanovg.c
+  nanovg/src/stb_image.h
 
   # Merge GLAD into the NanoGUI library (only if needed)
   ${NANOGUI_EXTRA}
@@ -327,19 +327,19 @@ target_compile_definitions (nanogui PUBLIC ${NANOGUI_BACKEND_DEFS}
 
 target_include_directories(nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-                                   PRIVATE ext/nanovg/src ${CMAKE_CURRENT_BINARY_DIR})
+                                   PRIVATE nanovg/src ${CMAKE_CURRENT_BINARY_DIR})
 
-target_include_directories (nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ext/nanovg/src>
+target_include_directories (nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/nanovg/src>
                                            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/nanovg>)
 
 if (NANOGUI_BUILD_GLAD)
   target_compile_definitions(nanogui PUBLIC -DNANOGUI_GLAD)
-  target_include_directories(nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ext/glad/include>
+  target_include_directories(nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/glad/include>
                                             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/glad>)
 endif()
 
 if (NANOGUI_BUILD_GLFW)
-  target_include_directories (nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ext/glfw/include>)
+  target_include_directories (nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/glfw/include>)
 endif()
 
 target_link_libraries (nanogui PUBLIC ${NANOGUI_LIBS})
@@ -350,20 +350,20 @@ if (EXISTS /opt/vc/include)
 endif()
 
 if (NANOGUI_INSTALL)
-  install (TARGETS nanogui LIBRARY 
+  install (TARGETS nanogui LIBRARY
            DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install (DIRECTORY include/nanogui 
+  install (DIRECTORY include/nanogui
            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
-  install (DIRECTORY ext/nanovg/src/ 
+  install (DIRECTORY nanovg/src/
            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nanovg FILES_MATCHING PATTERN "*.h")
 
   if (NANOGUI_BUILD_GLFW)
-    install (DIRECTORY ext/glfw/include/GLFW 
+    install (DIRECTORY glfw/include/GLFW
              DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
   endif()
 
   if (NANOGUI_BUILD_GLAD)
-    install (DIRECTORY ext/glad/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glad FILES_MATCHING PATTERN "*.h")
+    install (DIRECTORY glad/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glad FILES_MATCHING PATTERN "*.h")
   endif()
 
   install (TARGETS nanogui EXPORT nanoguiTargets)
@@ -375,7 +375,7 @@ if (NANOGUI_INSTALL)
 
   write_basic_package_version_file (nanoguiConfigVersion.cmake
                                     VERSION ${PROJECT_VERSION}
-                                    COMPATIBILITY AnyNewerVersion 
+                                    COMPATIBILITY AnyNewerVersion
                                     ARCH_INDEPENDENT)
 
   install (EXPORT nanoguiTargets DESTINATION ${NANOGUI_CMAKECONFIG_INSTALL_DIR})
@@ -387,7 +387,7 @@ endif()
 
 # Quench warnings while compiling NanoVG
 if (CMAKE_COMPILER_IS_GNUCC)
-  set_source_files_properties (ext/nanovg/src/nanovg.c PROPERTIES COMPILE_FLAGS -Wno-unused-result)
+  set_source_files_properties (nanovg/src/nanovg.c PROPERTIES COMPILE_FLAGS -Wno-unused-result)
 elseif (MSVC)
-  set_source_files_properties (ext/nanovg/src/nanovg.c PROPERTIES COMPILE_FLAGS "/wd4005 /wd4456 /wd4457")
+  set_source_files_properties (nanovg/src/nanovg.c PROPERTIES COMPILE_FLAGS "/wd4005 /wd4456 /wd4457")
 endif()

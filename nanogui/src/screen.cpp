@@ -143,296 +143,276 @@ Screen::Screen (const Vector2i &size, const std::string &caption, bool resizable
       m_cursor(Cursor::Arrow), m_background(0.3f, 0.3f, 0.32f, 1.f), m_caption(caption),
       m_shutdown_glfw(false), m_fullscreen(fullscreen), m_depth_buffer(depth_buffer),
       m_stencil_buffer(stencil_buffer), m_float_buffer(float_buffer), m_redraw(false) {
-    memset(m_cursors, 0, sizeof(GLFWcursor *) * (int) Cursor::CursorCount);
 
-#if defined(NANOGUI_USE_OPENGL)
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+  memset (m_cursors, 0, sizeof(GLFWcursor *) * (int) Cursor::CursorCount);
 
-    /* Request a forward compatible OpenGL gl_major.gl_minor core profile context.
-       Default value is an OpenGL 3.3 core profile context. */
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gl_major);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gl_minor);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#elif defined(NANOGUI_USE_GLES)
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, NANOGUI_GLES_VERSION);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-#elif defined(NANOGUI_USE_METAL)
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  #if defined(NANOGUI_USE_OPENGL)
+    glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_API);
+    // Request a forward compatible OpenGL gl_major.gl_minor core profile context. Default OpenGL 3.3 core profile context
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, gl_major);
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, gl_minor);
+    glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  #elif defined(NANOGUI_USE_GLES)
+    glfwWindowHint (GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint (GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, NANOGUI_GLES_VERSION);
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
+  #elif defined (NANOGUI_USE_METAL)
+    glfwWindowHint (GLFW_CLIENT_API, GLFW_NO_API);
     m_stencil_buffer = stencil_buffer = false;
-#else
-#  error Did not select a graphics API!
-#endif
+  #else
+    #error Did not select a graphics API!
+  #endif
 
-    int color_bits = 8, depth_bits = 0, stencil_bits = 0;
+  int color_bits = 8, depth_bits = 0, stencil_bits = 0;
 
-    if (stencil_buffer && !depth_buffer)
-        throw std::runtime_error(
-            "Screen::Screen(): stencil_buffer = True requires depth_buffer = True");
-    if (depth_buffer)
-        depth_bits = 32;
-    if (stencil_buffer) {
-        depth_bits = 24;
-        stencil_bits = 8;
+  if (stencil_buffer && !depth_buffer)
+    throw std::runtime_error ("Screen::Screen(): stencil_buffer = True requires depth_buffer = True");
+  if (depth_buffer)
+    depth_bits = 32;
+  if (stencil_buffer) {
+    depth_bits = 24;
+    stencil_bits = 8;
     }
-    if (m_float_buffer)
-        color_bits = 16;
+  if (m_float_buffer)
+    color_bits = 16;
 
-    glfwWindowHint(GLFW_RED_BITS, color_bits);
-    glfwWindowHint(GLFW_GREEN_BITS, color_bits);
-    glfwWindowHint(GLFW_BLUE_BITS, color_bits);
-    glfwWindowHint(GLFW_ALPHA_BITS, color_bits);
-    glfwWindowHint(GLFW_STENCIL_BITS, stencil_bits);
-    glfwWindowHint(GLFW_DEPTH_BITS, depth_bits);
+  glfwWindowHint (GLFW_RED_BITS, color_bits);
+  glfwWindowHint (GLFW_GREEN_BITS, color_bits);
+  glfwWindowHint (GLFW_BLUE_BITS, color_bits);
+  glfwWindowHint (GLFW_ALPHA_BITS, color_bits);
+  glfwWindowHint (GLFW_STENCIL_BITS, stencil_bits);
+  glfwWindowHint (GLFW_DEPTH_BITS, depth_bits);
 
-#if (defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_METAL)) && defined(GLFW_FLOATBUFFER)
-    glfwWindowHint(GLFW_FLOATBUFFER, m_float_buffer ? GL_TRUE : GL_FALSE);
-#else
-    m_float_buffer = false;
-#endif
+  #if (defined (NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_METAL)) && defined(GLFW_FLOATBUFFER)
+    glfwWindowHint (GLFW_FLOATBUFFER, m_float_buffer ? GL_TRUE : GL_FALSE);
+  #else
+     m_float_buffer = false;
+  #endif
 
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
-    glfwWindowHint(GLFW_MAXIMIZED, maximized ? GL_TRUE : GL_FALSE);
-    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+  glfwWindowHint (GLFW_VISIBLE, GL_FALSE);
+  glfwWindowHint (GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
+  glfwWindowHint (GLFW_MAXIMIZED, maximized ? GL_TRUE : GL_FALSE);
+  glfwWindowHint (GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
-    for (int i = 0; i < 2; ++i) {
-        if (fullscreen) {
-            GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-            const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-            m_glfw_window = glfwCreateWindow(mode->width, mode->height,
-                                             caption.c_str(), monitor, nullptr);
-        } else {
-            m_glfw_window = glfwCreateWindow(size.x(), size.y(),
-                                             caption.c_str(), nullptr, nullptr);
-        }
+  for (int i = 0; i < 2; ++i) {
+    if (fullscreen) {
+      GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+      const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+      m_glfw_window = glfwCreateWindow(mode->width, mode->height, caption.c_str(), monitor, nullptr);
+      } 
+    else {
+      m_glfw_window = glfwCreateWindow(size.x(), size.y(), caption.c_str(), nullptr, nullptr);
+      }
 
-        if (m_glfw_window == nullptr && m_float_buffer) {
-            m_float_buffer = false;
-#if defined(GLFW_FLOATBUFFER)
-            glfwWindowHint(GLFW_FLOATBUFFER, GL_FALSE);
-#endif
-            fprintf(stderr, "Could not allocate floating point framebuffer, retrying without..\n");
-        } else {
-            break;
-        }
-    }
-
-    if (!m_glfw_window) {
-        (void) gl_major; (void) gl_minor;
-#if defined(NANOGUI_USE_OPENGL)
-        throw std::runtime_error("Could not create an OpenGL " +
-                                 std::to_string(gl_major) + "." +
-                                 std::to_string(gl_minor) + " context!");
-#elif defined(NANOGUI_USE_GLES)
-        throw std::runtime_error("Could not create a GLES 2 context!");
-#elif defined(NANOGUI_USE_METAL)
-        throw std::runtime_error(
-            "Could not create a GLFW window for rendering using Metal!");
-#endif
-    }
-
-#if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
-    glfwMakeContextCurrent(m_glfw_window);
-#endif
-
-    glfwSetInputMode(m_glfw_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
-#if defined(NANOGUI_GLAD)
-    if (!glad_initialized) {
-        glad_initialized = true;
-        if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
-            throw std::runtime_error("Could not initialize GLAD!");
-        glGetError(); // pull and ignore unhandled errors like GL_INVALID_ENUM
-    }
-#endif
-
-#if defined(NANOGUI_USE_OPENGL)
-    if (m_float_buffer) {
-      GLboolean float_mode;
-      CHK(glGetBooleanv(GL_RGBA_FLOAT_MODE, &float_mode));
-      if (!float_mode) {
-        fprintf(stderr, "Could not allocate floating point framebuffer.\n");
-        m_float_buffer = false;
+    if (m_glfw_window == nullptr && m_float_buffer) {
+      m_float_buffer = false;
+      #if defined(GLFW_FLOATBUFFER)
+        glfwWindowHint(GLFW_FLOATBUFFER, GL_FALSE);
+      #endif
+      fprintf(stderr, "Could not allocate floating point framebuffer, retrying without..\n");
+      } 
+    else {
+      break;
       }
     }
-#endif
 
-    glfwGetFramebufferSize(m_glfw_window, &m_fbsize[0], &m_fbsize[1]);
-
-#if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
-    CHK(glViewport(0, 0, m_fbsize[0], m_fbsize[1]));
-    CHK(glClearColor(m_background[0], m_background[1],
-                     m_background[2], m_background[3]));
-    CHK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-                GL_STENCIL_BUFFER_BIT));
-
-    glfwSwapInterval(0);
-    glfwSwapBuffers(m_glfw_window);
-#endif
-
-#if defined(__APPLE__)
-    /* Poll for events once before starting a potentially
-       lengthy loading process. This is needed to be
-       classified as "interactive" by other software such
-       as iTerm2 */
-
-    glfwPollEvents();
-#endif
-
-    /* Propagate GLFW events to the appropriate Screen instance */
-    glfwSetCursorPosCallback(m_glfw_window,
-        [](GLFWwindow *w, double x, double y) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-            Screen *s = it->second;
-            if (!s->m_process_events)
-                return;
-            s->cursor_pos_callback_event(x, y);
-        }
-    );
-
-    glfwSetMouseButtonCallback(m_glfw_window,
-        [](GLFWwindow *w, int button, int action, int modifiers) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-            Screen *s = it->second;
-            if (!s->m_process_events)
-                return;
-            s->mouse_button_callback_event(button, action, modifiers);
-        }
-    );
-
-    glfwSetKeyCallback(m_glfw_window,
-        [](GLFWwindow *w, int key, int scancode, int action, int mods) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-            Screen *s = it->second;
-            if (!s->m_process_events)
-                return;
-            s->key_callback_event(key, scancode, action, mods);
-        }
-    );
-
-    glfwSetCharCallback(m_glfw_window,
-        [](GLFWwindow *w, unsigned int codepoint) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-            Screen *s = it->second;
-            if (!s->m_process_events)
-                return;
-            s->char_callback_event(codepoint);
-        }
-    );
-
-    glfwSetDropCallback(m_glfw_window,
-        [](GLFWwindow *w, int count, const char **filenames) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-            Screen *s = it->second;
-            if (!s->m_process_events)
-                return;
-            s->drop_callback_event(count, filenames);
-        }
-    );
-
-    glfwSetScrollCallback(m_glfw_window,
-        [](GLFWwindow *w, double x, double y) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-            Screen *s = it->second;
-            if (!s->m_process_events)
-                return;
-            s->scroll_callback_event(x, y);
-        }
-    );
-
-    /* React to framebuffer size events -- includes window
-       size events and also catches things like dragging
-       a window from a Retina-capable screen to a normal
-       screen on Mac OS X */
-    glfwSetFramebufferSizeCallback(m_glfw_window,
-        [](GLFWwindow* w, int width, int height) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-            Screen *s = it->second;
-
-            if (!s->m_process_events)
-                return;
-
-            s->resize_callback_event(width, height);
-        }
-    );
-
-    // notify when the screen has lost focus (e.g. application switch)
-    glfwSetWindowFocusCallback(m_glfw_window,
-        [](GLFWwindow *w, int focused) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-
-            Screen *s = it->second;
-            // focus_event: 0 when false, 1 when true
-            s->focus_event(focused != 0);
-        }
-    );
-
-    // notify when the screen was maximized or restored
-    glfwSetWindowMaximizeCallback(m_glfw_window,
-        [](GLFWwindow *w, int maximized) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-
-            Screen *s = it->second;
-            // maximize_event: 0 when false, 1 when true
-            s->maximize_event(maximized != 0);
-        }
-    );
-
-    glfwSetWindowContentScaleCallback(m_glfw_window,
-        [](GLFWwindow* w, float, float) {
-            auto it = __nanogui_screens.find(w);
-            if (it == __nanogui_screens.end())
-                return;
-            Screen* s = it->second;
-
-            s->m_pixel_ratio = get_pixel_ratio(w);
-            s->resize_callback_event(s->m_size.x(), s->m_size.y());
-        }
-    );
-
-    initialize(m_glfw_window, true);
-
-#if defined(NANOGUI_USE_METAL)
-    if (depth_buffer) {
-        m_depth_stencil_texture = new Texture(
-            stencil_buffer ? Texture::PixelFormat::DepthStencil
-                           : Texture::PixelFormat::Depth,
-            Texture::ComponentFormat::Float32,
-            framebuffer_size(),
-            Texture::InterpolationMode::Bilinear,
-            Texture::InterpolationMode::Bilinear,
-            Texture::WrapMode::ClampToEdge,
-            1,
-            Texture::TextureFlags::RenderTarget
-        );
+  if (!m_glfw_window) {
+    (void) gl_major; 
+    (void) gl_minor;
+    #if defined (NANOGUI_USE_OPENGL)
+      throw std::runtime_error ("Could not create an OpenGL " +
+                                std::to_string(gl_major) + "." + std::to_string(gl_minor) + " context!");
+    #elif defined (NANOGUI_USE_GLES)
+      throw std::runtime_error ("Could not create a GLES 2 context!");
+    #elif defined (NANOGUI_USE_METAL)
+      throw std::runtime_error ( "Could not create a GLFW window for rendering using Metal!");
+    #endif
     }
-#endif
-}
+
+  #if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
+    glfwMakeContextCurrent (m_glfw_window);
+  #endif
+
+  glfwSetInputMode (m_glfw_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+  #if defined (NANOGUI_GLAD)
+    if (!glad_initialized) {
+      glad_initialized = true;
+      if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
+        throw std::runtime_error ("Could not initialize GLAD!");
+      glGetError(); // pull and ignore unhandled errors like GL_INVALID_ENUM
+      }
+  #endif
+
+  #if defined(NANOGUI_USE_OPENGL)
+    if (m_float_buffer) {
+      GLboolean float_mode;
+      CHK (glGetBooleanv (GL_RGBA_FLOAT_MODE, &float_mode));
+      if (!float_mode) {
+        fprintf (stderr, "Could not allocate floating point framebuffer\n");
+        m_float_buffer = false;
+        }
+      }
+  #endif
+
+  glfwGetFramebufferSize(m_glfw_window, &m_fbsize[0], &m_fbsize[1]);
+
+  #if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
+    CHK (glViewport (0, 0, m_fbsize[0], m_fbsize[1]));
+    CHK (glClearColor (m_background[0], m_background[1], m_background[2], m_background[3]));
+    CHK (glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+
+    glfwSwapInterval (0);
+    glfwSwapBuffers (m_glfw_window);
+  #endif
+
+  //{{{
+  #if defined (__APPLE__)
+    /* Poll for events once before starting a potentially lengthy loading process. 
+       This is needed to be classified as "interactive" by other software such as iTerm2 */
+    glfwPollEvents();
+  #endif
+  //}}}
+
+  //{{{  glfw cursorPos callback
+  glfwSetCursorPosCallback (m_glfw_window, [](GLFWwindow *w, double x, double y) {
+    auto it = __nanogui_screens.find(w);
+    if (it == __nanogui_screens.end())
+      return;
+    Screen *s = it->second;
+    if (!s->m_process_events)
+      return;
+    s->cursor_pos_callback_event(x, y);
+    });
+  //}}}
+  //{{{  glfw mouse button callback
+  glfwSetMouseButtonCallback (m_glfw_window, [](GLFWwindow *w, int button, int action, int modifiers) {
+    auto it = __nanogui_screens.find(w);
+    if (it == __nanogui_screens.end())
+      return;
+    Screen *s = it->second;
+    if (!s->m_process_events)
+      return;
+    s->mouse_button_callback_event(button, action, modifiers);
+    });
+  //}}}
+  //{{{  glfw key callback
+  glfwSetKeyCallback (m_glfw_window, [](GLFWwindow *w, int key, int scancode, int action, int mods) {
+    auto it = __nanogui_screens.find(w);
+    if (it == __nanogui_screens.end())
+        return;
+    Screen *s = it->second;
+    if (!s->m_process_events)
+        return;
+    s->key_callback_event(key, scancode, action, mods);
+    });
+  //}}}
+  //{{{  glfw char callback
+  glfwSetCharCallback (m_glfw_window, [](GLFWwindow *w, unsigned int codepoint) {
+          auto it = __nanogui_screens.find(w);
+          if (it == __nanogui_screens.end())
+              return;
+          Screen *s = it->second;
+          if (!s->m_process_events)
+              return;
+          s->char_callback_event(codepoint);
+      } );
+  //}}}
+  //{{{  glfw drop callback
+  glfwSetDropCallback (m_glfw_window, [](GLFWwindow *w, int count, const char **filenames) {
+          auto it = __nanogui_screens.find(w);
+          if (it == __nanogui_screens.end())
+              return;
+          Screen *s = it->second;
+          if (!s->m_process_events)
+              return;
+          s->drop_callback_event(count, filenames);
+      } );
+  //}}}
+  //{{{  glfw scroll callback
+  glfwSetScrollCallback (m_glfw_window, [](GLFWwindow *w, double x, double y) {
+          auto it = __nanogui_screens.find(w);
+          if (it == __nanogui_screens.end())
+              return;
+          Screen *s = it->second;
+          if (!s->m_process_events)
+              return;
+          s->scroll_callback_event(x, y);
+      } );
+  //}}}
+  //{{{  glfw frameBuffer size callback
+  // React to framebuffer size events -- includes window size events and also catches things like dragging
+  // a window from a Retina-capable screen to a normal screen on Mac OS X */
+  glfwSetFramebufferSizeCallback(m_glfw_window, [](GLFWwindow* w, int width, int height) {
+          auto it = __nanogui_screens.find(w);
+          if (it == __nanogui_screens.end())
+              return;
+          Screen *s = it->second;
+
+          if (!s->m_process_events)
+              return;
+
+          s->resize_callback_event(width, height);
+      } );
+  //}}}
+  //{{{  glfw focus callback
+  glfwSetWindowFocusCallback(m_glfw_window, [](GLFWwindow *w, int focused) {
+          auto it = __nanogui_screens.find(w);
+          if (it == __nanogui_screens.end())
+              return;
+
+          Screen *s = it->second;
+          // focus_event: 0 when false, 1 when true
+          s->focus_event(focused != 0);
+      } );
+  //}}}
+  //{{{  glfw maximise callback
+  // notify when the screen was maximized or restored
+  glfwSetWindowMaximizeCallback(m_glfw_window, [](GLFWwindow *w, int maximized) {
+          auto it = __nanogui_screens.find(w);
+          if (it == __nanogui_screens.end())
+              return;
+
+          Screen *s = it->second;
+          // maximize_event: 0 when false, 1 when true
+          s->maximize_event(maximized != 0);
+      } );
+  //}}}
+  //{{{  glfw scale callback
+  glfwSetWindowContentScaleCallback(m_glfw_window, [](GLFWwindow* w, float, float) {
+          auto it = __nanogui_screens.find(w);
+          if (it == __nanogui_screens.end())
+              return;
+          Screen* s = it->second;
+
+          s->m_pixel_ratio = get_pixel_ratio(w);
+          s->resize_callback_event(s->m_size.x(), s->m_size.y());
+      } );
+  //}}}
+
+  initialize (m_glfw_window, true);
+  //{{{
+  #if defined (NANOGUI_USE_METAL)
+    if (depth_buffer) {
+      m_depth_stencil_texture = new Texture (stencil_buffer ? Texture::PixelFormat::DepthStencil
+                                                            : Texture::PixelFormat::Depth,
+                                             Texture::ComponentFormat::Float32,
+                                             framebuffer_size(),
+                                             Texture::InterpolationMode::Bilinear,
+                                             Texture::InterpolationMode::Bilinear,
+                                             Texture::WrapMode::ClampToEdge,
+                                             1,
+                                             Texture::TextureFlags::RenderTarget);
+      }
+  #endif
+  //}}}
+  }
 //}}}
 
 //{{{
-void Screen::initialize (GLFWwindow *window, bool shutdown_glfw) {
+void Screen::initialize (GLFWwindow* window, bool shutdown_glfw) {
     m_glfw_window = window;
     m_shutdown_glfw = shutdown_glfw;
     glfwGetWindowSize(m_glfw_window, &m_size[0], &m_size[1]);
@@ -797,7 +777,7 @@ void Screen::cursor_pos_callback_event (double x, double y) {
 
       m_cursor = widget ? widget->cursor() : Cursor::Arrow;
       glfwSetCursor(m_glfw_window, m_cursors[(int)m_cursor]);
-      } 
+      }
 
     else {
       ret = m_drag_widget->mouse_drag_event (p - m_drag_widget->parent()->absolute_position(), p - m_mouse_pos,
@@ -809,7 +789,7 @@ void Screen::cursor_pos_callback_event (double x, double y) {
 
     m_mouse_pos = p;
     m_redraw |= ret;
-    } 
+    }
   catch (const std::exception &e) {
     std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
     }
@@ -886,7 +866,7 @@ void Screen::key_callback_event (int key, int scancode, int action, int mods) {
   m_last_interaction = glfwGetTime();
   try {
     m_redraw |= keyboard_event(key, scancode, action, mods);
-    } 
+    }
   catch (const std::exception &e) {
     std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
     }
@@ -898,7 +878,7 @@ void Screen::char_callback_event (unsigned int codepoint) {
   m_last_interaction = glfwGetTime();
   try {
     m_redraw |= keyboard_character_event(codepoint);
-    } 
+    }
   catch (const std::exception &e) {
     std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
     }
@@ -926,7 +906,7 @@ void Screen::scroll_callback_event (double x, double y) {
         }
       }
     m_redraw |= scroll_event(m_mouse_pos, Vector2f(x, y));
-    } 
+    }
   catch (const std::exception &e) {
     std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
     }
@@ -959,7 +939,7 @@ void Screen::resize_callback_event (int, int) {
 
   try {
     resize_event(m_size);
-    } 
+    }
   catch (const std::exception &e) {
     std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
     }
@@ -969,7 +949,7 @@ void Screen::resize_callback_event (int, int) {
 //}}}
 
 //{{{
-void Screen::update_focus (Widget *widget) {
+void Screen::update_focus (Widget* widget) {
 
   for (auto w: m_focus_path) {
     if (!w->focused())
@@ -1000,7 +980,7 @@ bool Screen::maximize_event (bool /*maximized*/) {
 //}}}
 
 //{{{
-void Screen::dispose_widget (Widget *widget) {
+void Screen::dispose_widget (Widget* widget) {
 
   if (std::find(m_focus_path.begin(), m_focus_path.end(), widget) != m_focus_path.end())
     m_focus_path.clear();
@@ -1016,7 +996,7 @@ void Screen::dispose_widget (Widget *widget) {
 //}}}
 
 //{{{
-void Screen::center_window (Window *window) {
+void Screen::center_window (Window* window) {
 
   if (window->size() == 0) {
     window->set_size(window->preferred_size(m_nvg_context));
@@ -1027,7 +1007,7 @@ void Screen::center_window (Window *window) {
   }
 //}}}
 //{{{
-void Screen::move_window_to_front (Window *window) {
+void Screen::move_window_to_front (Window* window) {
 
   m_children.erase(std::remove(m_children.begin(), m_children.end(), window), m_children.end());
   m_children.push_back(window);
@@ -1088,7 +1068,7 @@ Texture::ComponentFormat Screen::component_format() const {
 
 #if defined(NANOGUI_USE_METAL)
   //{{{
-  void *Screen::metal_layer() const {
+  void* Screen::metal_layer() const {
     return metal_window_layer(glfwGetCocoaWindow(m_glfw_window));
     }
   //}}}

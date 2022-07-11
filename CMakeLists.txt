@@ -85,7 +85,6 @@ set (NANOGUI_INSTALL OFF CACHE BOOL " " FORCE)
 add_subdirectory (nanogui)
 
 set (NANOGUI_TARGETS nanogui glfw glfw_objects)
-set_property (TARGET ${NANOGUI_TARGETS} PROPERTY FOLDER "dependencies")
 
 if (WIN32)
   # Compile DirectXTex
@@ -94,7 +93,6 @@ if (WIN32)
   set (BUILD_DX12 OFF CACHE BOOL " " FORCE)
   set (BC_USE_OPENMP OFF CACHE BOOL " " FORCE)
   add_subdirectory (DirectXTex)
-  set_property (TARGET DirectXTex PROPERTY FOLDER "dependencies")
   set (DIRECTXTEX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/DirectXTex/DirectXTex" CACHE PATH " " FORCE)
   set (DIRECTXTEX_LIBRARY DirectXTex)
   include_directories (${DIRECTXTEX_INCLUDE_DIR})
@@ -107,18 +105,8 @@ set (OPENEXR_BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
 set (ILMBASE_NAMESPACE_VERSIONING OFF CACHE BOOL " " FORCE)
 set (OPENEXR_NAMESPACE_VERSIONING OFF CACHE BOOL " " FORCE)
 add_subdirectory (openexr EXCLUDE_FROM_ALL)
-set_property (TARGET Half Iex IlmImf IlmThread Imath PROPERTY FOLDER "dependencies")
 
-# compile nanogui
-if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-  set (GLFW_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/nanogui/ext/glfw/include)
-endif()
-set (NANOGUI_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/nanogui/ext/nanovg/src
-                     ${CMAKE_CURRENT_SOURCE_DIR}/nanogui/include)
-set (NANOGUI_EXTRA_INCS ${NANOGUI_EXTRA_INCS})
-set (NANOGUI_EXTRA_DEFS ${NANOGUI_EXTRA_DEFS})
-set (NANOGUI_EXTRA_LIBS ${NANOGUI_EXTRA_LIBS})
-
+# compile openexr
 set (OPENEXR_INCLUDE_DIRS
      ${CMAKE_CURRENT_SOURCE_DIR}/openexr/IlmBase/Imath
      ${CMAKE_CURRENT_SOURCE_DIR}/openexr/IlmBase/Iex
@@ -127,8 +115,7 @@ set (OPENEXR_INCLUDE_DIRS
      ${CMAKE_CURRENT_BINARY_DIR}/openexr/OpenEXR/config
      ${CMAKE_CURRENT_BINARY_DIR}/openexr/IlmBase/config)
 
-set (CLIP_EXAMPLES OFF CACHE BOOL " " FORCE)
-set (CLIP_TESTS OFF CACHE BOOL " " FORCE)
+# compile clip
 add_subdirectory (clip)
 set (CLIP_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/clip)
 
@@ -138,11 +125,20 @@ if (WIN32)
   set (ZLIB_BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
   set (SKIP_INSTALL_ALL ON CACHE BOOL " " FORCE)
   add_subdirectory (zlib)
-  set_property (TARGET zlibstatic PROPERTY FOLDER "dependencies")
   set (ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/zlib" CACHE PATH " " FORCE)
   set (ZLIB_LIBRARY zlibstatic)
   include_directories (${ZLIB_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/zlib")
 endif()
+
+# compile nanogui
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+  set (GLFW_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/nanogui/glfw/include)
+endif()
+set (NANOGUI_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/nanogui/nanovg/src
+                     ${CMAKE_CURRENT_SOURCE_DIR}/nanogui/include)
+set (NANOGUI_EXTRA_INCS ${NANOGUI_EXTRA_INCS})
+set (NANOGUI_EXTRA_DEFS ${NANOGUI_EXTRA_DEFS})
+set (NANOGUI_EXTRA_LIBS ${NANOGUI_EXTRA_LIBS})
 
 add_compile_options (${NANOGUI_NATIVE_FLAGS})
 
