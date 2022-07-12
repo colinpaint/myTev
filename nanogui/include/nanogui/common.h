@@ -1,3 +1,4 @@
+//{{{
 /*
     NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
@@ -12,7 +13,8 @@
  *
  * \brief Common definitions used by NanoGUI.
  */
-
+//}}}
+//{{{  includes
 #pragma once
 
 #include <stdint.h>
@@ -20,46 +22,25 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-
+//}}}
 #define NANOGUI_VERSION_MAJOR 0
 #define NANOGUI_VERSION_MINOR 1
 #define NANOGUI_VERSION_PATCH 4
 
 #define NANOGUI_STRINGIFY(x) #x
 #define NANOGUI_TOSTRING(x)  NANOGUI_STRINGIFY(x)
-#define NANOGUI_VERSION                                                          \
-    (NANOGUI_TOSTRING(NANOGUI_VERSION_MAJOR) "."                                 \
-     NANOGUI_TOSTRING(NANOGUI_VERSION_MINOR) "."                                 \
+#define NANOGUI_VERSION                          \
+    (NANOGUI_TOSTRING(NANOGUI_VERSION_MAJOR) "." \
+     NANOGUI_TOSTRING(NANOGUI_VERSION_MINOR) "." \
      NANOGUI_TOSTRING(NANOGUI_VERSION_PATCH))
 
 /* Set to 1 to draw boxes around widgets */
 //#define NANOGUI_SHOW_WIDGET_BOUNDS 1
 
 #if !defined(NAMESPACE_BEGIN) || defined(DOXYGEN_DOCUMENTATION_BUILD)
-    /**
-     * \brief Convenience macro for namespace declarations
-     *
-     * The macro ``NAMESPACE_BEGIN(nanogui)`` will expand to ``namespace
-     * nanogui {``. This is done to hide the namespace scope from editors and
-     * C++ code formatting tools that may otherwise indent the entire file.
-     * The corresponding ``NAMESPACE_END`` macro also lists the namespace
-     * name for improved readability.
-     *
-     * \param name
-     *     The name of the namespace scope to open
-     */
     #define NAMESPACE_BEGIN(name) namespace name {
 #endif
 #if !defined(NAMESPACE_END) || defined(DOXYGEN_DOCUMENTATION_BUILD)
-    /**
-     * \brief Convenience macro for namespace declarations
-     *
-     * Closes a namespace (counterpart to ``NAMESPACE_BEGIN``)
-     * ``NAMESPACE_END(nanogui)`` will expand to only ``}``.
-     *
-     * \param name
-     *     The name of the namespace scope to close
-     */
     #define NAMESPACE_END(name) }
 #endif
 
@@ -76,12 +57,6 @@
 #    define NANOGUI_EXPORT
 #  endif
 #else
-     /**
-      * If the build flag ``NANOGUI_SHARED`` is defined, this directive will expand
-      * to be the platform specific shared library import / export command depending
-      * on the compilation stage.  If undefined, it expands to nothing. **Do not**
-      * define this directive on your own.
-      */
 #    define NANOGUI_EXPORT
 #endif
 
@@ -187,9 +162,9 @@ class ToolButton;
 class VScrollPanel;
 class Widget;
 class Window;
-
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 
+//{{{
 /**
  * Static initialization; should be called once before invoking **any** NanoGUI
  * functions **if** you are having NanoGUI manage OpenGL / GLFW.  This method
@@ -202,10 +177,12 @@ class Window;
  * \endrst
  */
 extern NANOGUI_EXPORT void init();
-
+//}}}
+//{{{
 /// Static shutdown; should be called before the application terminates.
 extern NANOGUI_EXPORT void shutdown();
-
+//}}}
+//{{{
 /**
  * \brief Enter the application main loop
  *
@@ -243,13 +220,16 @@ extern NANOGUI_EXPORT void shutdown();
  *     environments back into their initial configuration.
  */
 extern NANOGUI_EXPORT void mainloop(float refresh = -1.f);
-
+//}}}
+//{{{
 /// Request the application main loop to terminate (e.g. if you detached mainloop).
 extern NANOGUI_EXPORT void leave();
-
+//}}}
+//{{{
 /// Return whether or not a main loop is currently active
 extern NANOGUI_EXPORT bool active();
-
+//}}}
+//{{{
 /**
  * \brief Enqueue a function to be executed executed before
  * the application is redrawn the next time.
@@ -258,7 +238,9 @@ extern NANOGUI_EXPORT bool active();
  * for queuing up UI-related state changes from other threads.
  */
 extern NANOGUI_EXPORT void async(const std::function<void()> &func);
-
+//}}}
+extern NANOGUI_EXPORT std::string
+//{{{
 /**
  * \brief Open a native file open/save dialog.
  *
@@ -270,11 +252,11 @@ extern NANOGUI_EXPORT void async(const std::function<void()> &func);
  *     Set to ``true`` if you would like subsequent file dialogs to open
  *     at whatever folder they were in when they close this one.
  */
-extern NANOGUI_EXPORT std::string
 file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes,
             bool save);
 
-
+//}}}
+//{{{
 /**
  * \brief Check for the availability of displays with 10-bit color and/or
  * extended dynamic range (EDR), i.e. the ability to reproduce intensities
@@ -289,7 +271,9 @@ file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes,
  * 10-bit color support, and the second indicates EDR support.
  */
 extern NANOGUI_EXPORT std::pair<bool, bool> test_10bit_edr_support();
-
+//}}}
+extern NANOGUI_EXPORT std::vector<std::string>
+//{{{
 /**
  * \brief Open a native file open dialog, which allows multiple selection.
  *
@@ -305,20 +289,10 @@ extern NANOGUI_EXPORT std::pair<bool, bool> test_10bit_edr_support();
  *     Set to ``true`` if you would like to be able to select multiple
  *     files at once. May not be simultaneously true with \p save.
  */
-extern NANOGUI_EXPORT std::vector<std::string>
 file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes,
             bool save, bool multiple);
-
-#if defined(__APPLE__) || defined(DOXYGEN_DOCUMENTATION_BUILD)
-/**
- * \brief Move to the application bundle's parent directory
- *
- * This is function is convenient when deploying .app bundles on OSX. It
- * adjusts the file path to the parent directory containing the bundle.
- */
-extern NANOGUI_EXPORT void chdir_to_bundle_parent();
-#endif
-
+//}}}
+//{{{
 /**
  * \brief Convert a single UTF32 character code to UTF8.
  *
@@ -331,21 +305,23 @@ extern NANOGUI_EXPORT void chdir_to_bundle_parent();
  *     The UTF32 character to be converted.
  */
 extern NANOGUI_EXPORT std::string utf8(uint32_t c);
-
+//}}}
+//{{{
 /// Load a directory of PNG images and upload them to the GPU (suitable for use with ImagePanel)
 extern NANOGUI_EXPORT std::vector<std::pair<int, std::string>>
     load_image_directory(NVGcontext *ctx, const std::string &path);
-
+//}}}
+//{{{
 /// Convenience function for instanting a PNG icon from the application's data segment (via bin2c)
 #define nvgImageIcon(ctx, name) nanogui::__nanogui_get_image(ctx, #name, name##_png, name##_png_size)
 /// Helper function used by nvg_image_icon
-extern NANOGUI_EXPORT int __nanogui_get_image(NVGcontext *ctx, const std::string &name,
-                                              uint8_t *data, uint32_t size);
+extern NANOGUI_EXPORT int __nanogui_get_image(NVGcontext *ctx, const std::string &name, uint8_t *data, uint32_t size);
+//}}}
 
 NAMESPACE_END(nanogui)
 
 NAMESPACE_BEGIN(enoki)
-/// Base class of all Enoki arrays
-template <typename Value_, bool IsMask_, typename Derived_> struct ArrayBase;
+  /// Base class of all Enoki arrays
+  template <typename Value_, bool IsMask_, typename Derived_> struct ArrayBase;
 NAMESPACE_END(enoki)
 

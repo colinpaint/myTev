@@ -1,3 +1,4 @@
+//{{{
 /*
     nanogui/screen.h -- Top-level widget and interface between NanoGUI and GLFW
 
@@ -11,26 +12,30 @@
     BSD-style license that can be found in the LICENSE.txt file.
 */
 /** \file */
-
+//}}}
+//{{{  includes
 #pragma once
 
 #include <nanogui/widget.h>
 #include <nanogui/texture.h>
+//}}}
 
 NAMESPACE_BEGIN(nanogui)
-
 class Texture;
 
+//{{{
 /**
  * \class Screen screen.h nanogui/screen.h
  *
  * \brief Represents a display surface (i.e. a full-screen or windowed GLFW window)
  * and forms the root element of a hierarchy of nanogui widgets.
  */
+//}}}
 class NANOGUI_EXPORT Screen : public Widget {
     friend class Widget;
     friend class Window;
 public:
+    //{{{
     /**
      * Create a new Screen instance
      *
@@ -89,31 +94,44 @@ public:
         unsigned int gl_major = 3,
         unsigned int gl_minor = 2
     );
-
+    //}}}
+    //{{{
     /// Release all resources
     virtual ~Screen();
+    //}}}
 
+    //{{{
     /// Get the window title bar caption
     const std::string &caption() const { return m_caption; }
-
+    //}}}
+    //{{{
     /// Set the window title bar caption
     void set_caption(const std::string &caption);
+    //}}}
 
+    //{{{
     /// Return the screen's background color
     const Color &background() const { return m_background; }
-
+    //}}}
+    //{{{
     /// Set the screen's background color
     void set_background(const Color &background) { m_background = background; }
+    //}}}
 
+    //{{{
     /// Set the top-level window visibility (no effect on full-screen windows)
     void set_visible(bool visible);
-
+    //}}}
+    //{{{
     /// Set window size
     void set_size(const Vector2i& size);
-
+    //}}}
+    //{{{
     /// Return the framebuffer size (potentially larger than size() on high-DPI screens)
     const Vector2i &framebuffer_size() const { return m_fbsize; }
+    //}}}
 
+    //{{{
     /// Send an event that will cause the screen to be redrawn at the next event loop iteration
     void redraw();
 
@@ -127,7 +145,9 @@ public:
      * \sa redraw
      */
     virtual void draw_all();
+    //}}}
 
+    //{{{
     /**
      * \brief Clear the screen with the background color (glClearColor, glClear, etc.)
      *
@@ -136,6 +156,8 @@ public:
      */
     virtual void clear();
 
+    //}}}
+    //{{{
     /**
      * \brief Prepare the graphics pipeline for the next frame
      *
@@ -146,10 +168,12 @@ public:
      * by \ref draw_all(), which is executed by the run loop.
      */
     virtual void draw_setup();
-
+    //}}}
+    //{{{
     /// Calls clear() and draws the window contents --- put your rendering code here.
     virtual void draw_contents();
-
+    //}}}
+    //{{{
     /**
      * \brief Wrap up drawing of the current frame
      *
@@ -160,72 +184,94 @@ public:
      * by \ref draw_all(), which is executed by the run loop.
      */
     virtual void draw_teardown();
+    //}}}
 
+    //{{{
     /// Return the ratio between pixel and device coordinates (e.g. >= 2 on Mac Retina displays)
     float pixel_ratio() const { return m_pixel_ratio; }
+    //}}}
 
+    //{{{
     /// Handle a file drop event
     virtual bool drop_event(const std::vector<std::string> & /* filenames */) {
         return false; /* To be overridden */
     }
-
+    //}}}
+    //{{{
     /// Default keyboard event handler
     virtual bool keyboard_event(int key, int scancode, int action, int modifiers);
-
+    //}}}
+    //{{{
     /// Text input event handler: codepoint is native endian UTF-32 format
     virtual bool keyboard_character_event(unsigned int codepoint);
-
+    //}}}
+    //{{{
     /// Window resize event handler
     virtual bool resize_event(const Vector2i& size);
-
+    //}}}
+    //{{{
     /// Set the resize callback
     std::function<void(Vector2i)> resize_callback() const { return m_resize_callback; }
     void set_resize_callback(const std::function<void(Vector2i)> &callback) {
         m_resize_callback = callback;
     }
-
+    //}}}
     virtual bool maximize_event(bool maximized);
 
+    //{{{
     /// Return the last observed mouse position value
     Vector2i mouse_pos() const { return m_mouse_pos; }
-
+    //}}}
+    //{{{
     /// Return a pointer to the underlying GLFW window data structure
     GLFWwindow *glfw_window() const { return m_glfw_window; }
-
+    //}}}
+    //{{{
     /// Return a pointer to the underlying NanoVG draw context
     NVGcontext *nvg_context() const { return m_nvg_context; }
+    //}}}
 
+    //{{{
     /// Return the component format underlying the screen
     Texture::ComponentFormat component_format() const;
-
+    //}}}
+    //{{{
     /// Return the pixel format underlying the screen
     Texture::PixelFormat pixel_format() const;
+    //}}}
 
+    //{{{
     /// Does the framebuffer have a depth buffer
     bool has_depth_buffer() const { return m_depth_buffer; }
-
+    //}}}
+    //{{{
     /// Does the framebuffer have a stencil buffer
     bool has_stencil_buffer() const { return m_stencil_buffer; }
-
+    //}}}
+    //{{{
     /// Does the framebuffer use a floating point representation
     bool has_float_buffer() const { return m_float_buffer; }
+    //}}}
+    //{{{
+    #if defined(NANOGUI_USE_METAL)
+        /// Return the associated CAMetalLayer object
+        void *metal_layer() const;
 
-#if defined(NANOGUI_USE_METAL)
-    /// Return the associated CAMetalLayer object
-    void *metal_layer() const;
+        /// Return the texure of the currently active Metal drawable (or NULL)
+        void *metal_texture() const { return m_metal_texture; }
 
-    /// Return the texure of the currently active Metal drawable (or NULL)
-    void *metal_texture() const { return m_metal_texture; }
-
-    /// Return the associated depth/stencil texture
-    Texture *depth_stencil_texture() { return m_depth_stencil_texture; }
-#endif
+        /// Return the associated depth/stencil texture
+        Texture *depth_stencil_texture() { return m_depth_stencil_texture; }
+    #endif
+    //}}}
 
     /// Flush all queued up NanoVG rendering commands
     void nvg_flush();
 
+    //{{{
     /// Shut down GLFW when the window is closed?
     void set_shutdown_glfw(bool v) { m_shutdown_glfw = v; }
+    //}}}
     bool shutdown_glfw() { return m_shutdown_glfw; }
 
     /// Is a tooltip currently fading in?
@@ -233,10 +279,12 @@ public:
 
     using Widget::perform_layout;
 
+    //{{{
     /// Compute the layout of all widgets
     void perform_layout() {
         this->perform_layout(m_nvg_context);
     }
+    //}}}
 
 public:
     /********* API for applications which manage GLFW themselves *********/

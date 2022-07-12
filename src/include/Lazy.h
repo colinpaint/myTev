@@ -8,10 +8,9 @@
 #include <functional>
 #include <future>
 //}}}
-
 TEV_NAMESPACE_BEGIN
 
-// Encapsulates a lazy, potentially asynchronous computation of some value. 
+// Encapsulates a lazy, potentially asynchronous computation of some value.
 // The public interface of this object is not thread-safe, i.e. it is expected to never be used from multiple threads at once.
 template <typename T> class Lazy {
 public:
@@ -40,7 +39,7 @@ public:
 
     if (mAsyncValue.valid()) {
       mValue = mAsyncValue.get();
-      } 
+      }
     else {
       mValue = compute();
       }
@@ -71,7 +70,7 @@ public:
 
     if (!isReady()) {
       return std::chrono::steady_clock::now();
-      } 
+      }
     else {
       return mBecameReadyAt;
       }
@@ -87,7 +86,7 @@ public:
 
     if (mThreadPool) {
       mAsyncValue = mThreadPool->enqueueTask([this]() { return compute(); }, priority);
-      } 
+      }
     else {
       mAsyncValue = std::async(std::launch::async, [this]() { return compute(); });
       }

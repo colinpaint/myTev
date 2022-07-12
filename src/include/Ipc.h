@@ -7,7 +7,6 @@
 #include <list>
 #include <vector>
 //}}}
-
 TEV_NAMESPACE_BEGIN
 
 //{{{

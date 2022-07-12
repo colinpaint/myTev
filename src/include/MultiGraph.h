@@ -2,10 +2,11 @@
 // by Wenzel Jakob <wenzel.jakob@epfl.ch> and based on the NanoVG demo application
 // by Mikko Mononen. Modifications were developed by Thomas Müller <thomas94@gmx.net>.
 // This file is published under the BSD 3-Clause License within the LICENSE file.
+//{{{  includes
 #pragma once
 #include <Common.h>
 #include <nanogui/widget.h>
-
+//}}}
 TEV_NAMESPACE_BEGIN
 
 class MultiGraph : public nanogui::Widget {

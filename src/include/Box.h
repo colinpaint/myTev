@@ -7,7 +7,6 @@
 TEV_NAMESPACE_BEGIN
 
 template <typename T, uint32_t N_DIMS> struct Box {
-
   using Vector = nanogui::Array<T, N_DIMS>;
 
   Box (const Vector& min, const Vector& max) : min{min}, max{max} {}
