@@ -14,12 +14,12 @@
 #include <sstream>
 
 #ifdef _WIN32
-#   define NOMINMAX
-#   include <Windows.h>
-#   undef NOMINMAX
+  #define NOMINMAX
+  #include <Windows.h>
+  #undef NOMINMAX
 #else
-#   include <sys/ioctl.h>
-#   include <unistd.h>
+  #include <sys/ioctl.h>
+  #include <unistd.h>
 #endif
 //}}}
 namespace tlog {
@@ -28,18 +28,18 @@ namespace tlog {
   //{{{
   inline std::string padFromLeft (std::string str, size_t length, const char paddingChar = ' ') {
 
-    if (length > str.size()) {
+    if (length > str.size()) 
       str.insert(0, length - str.size(), paddingChar);
-      }
+
     return str;
     }
   //}}}
   //{{{
   inline std::string padFromRight (std::string str, size_t length, const char paddingChar = ' ') {
 
-    if (length > str.size()) {
+    if (length > str.size())
       str.resize(length, paddingChar);
-      }
+
     return str;
     }
   //}}}
@@ -47,16 +47,15 @@ namespace tlog {
   inline std::string timeToString (const std::string& fmt, time_t time) {
 
     char timeStr[128];
-    if (std::strftime(timeStr, 128, fmt.c_str(), localtime(&time)) == 0) {
-      throw std::runtime_error{"Could not render local time."};
-      }
+    if (std::strftime (timeStr, 128, fmt.c_str(), localtime (&time)) == 0) 
+      throw std::runtime_error {"Could not render local time."};
 
     return timeStr;
     }
   //}}}
   //{{{
   inline std::string nowToString (const std::string& fmt) {
-    return timeToString(fmt, std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+    return timeToString (fmt, std::chrono::system_clock::to_time_t (std::chrono::system_clock::now()));
     }
   //}}}
   //{{{
@@ -70,7 +69,7 @@ namespace tlog {
     auto m = duration_cast<minutes>(dur -= h);
     auto s = duration_cast<seconds>(dur -= m);
 
-    if (d.count() > 0) 
+    if (d.count() > 0)
       return std::to_string(d.count()) + 'd' +
                padFromLeft(std::to_string(h.count()), 2, '0') + 'h' +
                padFromLeft(std::to_string(m.count()), 2, '0') + 'm' +
@@ -171,8 +170,8 @@ namespace tlog {
   //{{{
   class IOutput {
   public:
-    virtual void writeLine(const std::string& scope, ESeverity severity, const std::string& line) = 0;
-    virtual void writeProgress(const std::string& scope, uint64_t current, uint64_t total, duration_t duration) = 0;
+    virtual void writeLine (const std::string& scope, ESeverity severity, const std::string& line) = 0;
+    virtual void writeProgress (const std::string& scope, uint64_t current, uint64_t total, duration_t duration) = 0;
     };
   //}}}
 
@@ -224,7 +223,7 @@ namespace tlog {
     }
     //}}}
     //{{{
-    void writeLine(const std::string& scope, ESeverity severity, const std::string& line) override {
+    void writeLine (const std::string& scope, ESeverity severity, const std::string& line) override {
         std::string textOut;
         if (severity != ESeverity::None) {
             textOut += nowToString("%H:%M:%S ");
@@ -279,7 +278,7 @@ namespace tlog {
     }
     //}}}
     //{{{
-    void writeProgress(const std::string& scope, uint64_t current, uint64_t total, duration_t duration) override {
+    void writeProgress (const std::string& scope, uint64_t current, uint64_t total, duration_t duration) override {
         int progressBarWidth = consoleWidth() - 18; // 18 is the width of the time string and severity
 
         if (!scope.empty()) {
@@ -351,16 +350,15 @@ namespace tlog {
   //{{{
   class FileOutput : public IOutput {
   public:
-
-    FileOutput(const char* filename) : mFile{filename} {}
-    FileOutput(const std::string& filename) : mFile{filename} {}
+    FileOutput (const char* filename) : mFile{filename} {}
+    FileOutput (const std::string& filename) : mFile{filename} {}
     #ifdef _WIN32
-      FileOutput(const std::wstring& filename) : mFile{filename} {}
+      FileOutput (const std::wstring& filename) : mFile{filename} {}
     #endif
 
     // GCC <5 has a buggy std implementation where ostream does not have
     // a move constructor even though it should according to C++11 spec.
-    #if !defined(__GNUC__) || __GNUC__ >= 5
+    #if !defined (__GNUC__) || __GNUC__ >= 5
       FileOutput (std::ofstream&& file) : mFile{std::move(file)} {}
     #endif
 
@@ -399,25 +397,24 @@ namespace tlog {
   //{{{
   class Stream {
   public:
-      Stream(Logger* logger, ESeverity severity)
+    Stream(Logger* logger, ESeverity severity)
       : mLogger{logger}, mSeverity{severity}, mText{new std::ostringstream{}} {}
 
-      Stream(Stream&& other) = default;
-      ~Stream();
+    Stream(Stream&& other) = default;
+    ~Stream();
 
-      Stream& operator=(Stream&& other) = default;
+    Stream& operator=(Stream&& other) = default;
 
-      template <typename T>
-      Stream& operator<<(const T& elem) {
-          *mText << elem;
-          return *this;
+    template <typename T> Stream& operator<<(const T& elem) {
+      *mText << elem;
+      return *this;
       }
 
   private:
-      Logger* mLogger;
-      ESeverity mSeverity;
-      std::unique_ptr<std::ostringstream> mText;
-  };
+    Logger* mLogger;
+    ESeverity mSeverity;
+    std::unique_ptr<std::ostringstream> mText;
+    };
   //}}}
   //{{{
   class Progress {
@@ -446,90 +443,94 @@ namespace tlog {
   //{{{
   class Logger {
   public:
-      Logger(std::string scope = "", std::set<std::shared_ptr<IOutput>> outputs = {ConsoleOutput::global()})
+    //{{{
+    Logger (std::string scope = "", std::set<std::shared_ptr<IOutput>> outputs = {ConsoleOutput::global()})
       : mOutputs{outputs}, mScope{scope} {
       #ifdef NDEBUG
           hideSeverity(ESeverity::Debug);
       #endif
       }
+    //}}}
+    Logger (std::set<std::shared_ptr<IOutput>> outputs) : Logger("", outputs) {}
 
-      Logger(std::set<std::shared_ptr<IOutput>> outputs) : Logger("", outputs) {}
+    //{{{
+    static std::unique_ptr<Logger>& global() {
+      static auto logger = std::unique_ptr<Logger>(new Logger({ConsoleOutput::global()}));
+      return logger;
+      }
+    //}}}
+    Stream log (ESeverity severity) { return Stream{this, severity}; }
 
-      static std::unique_ptr<Logger>& global() {
-          static auto logger = std::unique_ptr<Logger>(new Logger({ConsoleOutput::global()}));
-          return logger;
+    Stream none()    { return log(ESeverity::None);    }
+    Stream info()    { return log(ESeverity::Info);    }
+    Stream debug()   { return log(ESeverity::Debug);   }
+    Stream warning() { return log(ESeverity::Warning); }
+    Stream error()   { return log(ESeverity::Error);   }
+    Stream success() { return log(ESeverity::Success); }
+
+    //{{{
+    void log (ESeverity severity, const std::string& line) {
+      if (mHiddenSeverities.count(severity)) {
+        return;
+        }
+
+      for (auto& output : mOutputs) {
+        output->writeLine(mScope, severity, line);
+        }
+      }
+    //}}}
+
+    void none(const std::string& line)    { log(ESeverity::None,    line); }
+    void info(const std::string& line)    { log(ESeverity::Info,    line); }
+    void debug(const std::string& line)   { log(ESeverity::Debug,   line); }
+    void warning(const std::string& line) { log(ESeverity::Warning, line); }
+    void error(const std::string& line)   { log(ESeverity::Error,   line); }
+    void success(const std::string& line) { log(ESeverity::Success, line); }
+
+    Progress progress(uint64_t total) {
+      return Progress{this, total};
       }
 
-      Stream log(ESeverity severity) { return Stream{this, severity}; }
+    //{{{
+    template <typename T> void progress(uint64_t current, uint64_t total, T duration) {
 
-      Stream none()    { return log(ESeverity::None);    }
-      Stream info()    { return log(ESeverity::Info);    }
-      Stream debug()   { return log(ESeverity::Debug);   }
-      Stream warning() { return log(ESeverity::Warning); }
-      Stream error()   { return log(ESeverity::Error);   }
-      Stream success() { return log(ESeverity::Success); }
+      if (mHiddenSeverities.count(ESeverity::Progress)) 
+        return;
 
-      void log(ESeverity severity, const std::string& line) {
-          if (mHiddenSeverities.count(severity)) {
-              return;
-          }
-
-          for (auto& output : mOutputs) {
-              output->writeLine(mScope, severity, line);
-          }
+      duration_t dur = std::chrono::duration_cast<duration_t>(duration);
+        for (auto& output : mOutputs)
+          output->writeProgress (mScope, current, total, dur);
       }
+    //}}}
 
-      void none(const std::string& line)    { log(ESeverity::None,    line); }
-      void info(const std::string& line)    { log(ESeverity::Info,    line); }
-      void debug(const std::string& line)   { log(ESeverity::Debug,   line); }
-      void warning(const std::string& line) { log(ESeverity::Warning, line); }
-      void error(const std::string& line)   { log(ESeverity::Error,   line); }
-      void success(const std::string& line) { log(ESeverity::Success, line); }
+    void hideSeverity (ESeverity severity) { mHiddenSeverities.insert(severity); }
+    void showSeverity (ESeverity severity) { mHiddenSeverities.erase(severity); }
+    const std::set<ESeverity>& hiddenSeverities() const { return mHiddenSeverities; }
 
-      Progress progress(uint64_t total) {
-          return Progress{this, total};
-      }
+    void addOutput (std::shared_ptr<IOutput>& output) { mOutputs.insert(output); }
+    void removeOutput (std::shared_ptr<IOutput>& output) { mOutputs.erase(output); }
+    const std::set<std::shared_ptr<IOutput>>& outputs() const { return mOutputs; }
 
-      template <typename T>
-      void progress(uint64_t current, uint64_t total, T duration) {
-          if (mHiddenSeverities.count(ESeverity::Progress)) {
-              return;
-          }
-
-          duration_t dur = std::chrono::duration_cast<duration_t>(duration);
-          for (auto& output : mOutputs) {
-              output->writeProgress(mScope, current, total, dur);
-          }
-      }
-
-      void hideSeverity(ESeverity severity) { mHiddenSeverities.insert(severity); }
-      void showSeverity(ESeverity severity) { mHiddenSeverities.erase(severity); }
-      const std::set<ESeverity>& hiddenSeverities() const { return mHiddenSeverities; }
-
-      void addOutput(std::shared_ptr<IOutput>& output) { mOutputs.insert(output); }
-      void removeOutput(std::shared_ptr<IOutput>& output) { mOutputs.erase(output); }
-      const std::set<std::shared_ptr<IOutput>>& outputs() const { return mOutputs; }
-
-      void setScope(const std::string& scope) { mScope = scope; }
-      const std::string& scope() const { return mScope; }
+    void setScope(const std::string& scope) { mScope = scope; }
+    const std::string& scope() const { return mScope; }
 
   private:
-      std::set<ESeverity> mHiddenSeverities;
-      std::set<std::shared_ptr<IOutput>> mOutputs;
-      std::string mScope;
-  };
+    std::set<ESeverity> mHiddenSeverities;
+    std::set<std::shared_ptr<IOutput>> mOutputs;
+    std::string mScope;
+    };
   //}}}
 
   //{{{
   inline Stream::~Stream() {
 
-    if (mText) {
-      mLogger->log(mSeverity, mText->str());
-      }
+    if (mText)
+      mLogger->log (mSeverity, mText->str());
     }
   //}}}
   //{{{
   inline void Progress::update (uint64_t current) {
+
     mCurrent = current;
     mLogger->progress (current, mTotal, duration());
     }
@@ -545,8 +546,8 @@ namespace tlog {
 
   //{{{
   inline void log (ESeverity severity, const std::string& line) {
-      Logger::global()->log(severity, line);
-  }
+    Logger::global()->log (severity, line);
+    }
   //}}}
   inline void none (const std::string& line)    { Logger::global()->none(line);    }
   inline void info (const std::string& line)    { Logger::global()->info(line);    }
@@ -559,7 +560,7 @@ namespace tlog {
 
   //{{{
   template <typename T> void progress (uint64_t current, uint64_t total, T duration) {
-    Logger::global()->progress(current, total, duration);
+    Logger::global()->progress (current, total, duration);
     }
   //}}}
   }

@@ -302,19 +302,14 @@ if (NANOGUI_INSTALL)
   endif()
 
   install (TARGETS nanogui EXPORT nanoguiTargets)
-
   set (NANOGUI_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_DATAROOTDIR}/cmake/nanogui")
-
   configure_package_config_file (resources/nanoguiConfig.cmake.in nanoguiConfig.cmake
                                  INSTALL_DESTINATION ${NANOGUI_CMAKECONFIG_INSTALL_DIR})
-
   write_basic_package_version_file (nanoguiConfigVersion.cmake
                                     VERSION ${PROJECT_VERSION}
                                     COMPATIBILITY AnyNewerVersion
                                     ARCH_INDEPENDENT)
-
   install (EXPORT nanoguiTargets DESTINATION ${NANOGUI_CMAKECONFIG_INSTALL_DIR})
-
   install (FILES ${CMAKE_CURRENT_BINARY_DIR}/nanoguiConfigVersion.cmake
                  ${CMAKE_CURRENT_BINARY_DIR}/nanoguiConfig.cmake
            DESTINATION ${NANOGUI_CMAKECONFIG_INSTALL_DIR})
