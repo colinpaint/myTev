@@ -1,3 +1,4 @@
+//{{{
 /*
     NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
@@ -6,7 +7,8 @@
     All rights reserved. Use of this source code is governed by a
     BSD-style license that can be found in the LICENSE.txt file.
 */
-
+//}}}
+//{{{  includes
 #pragma once
 
 #include <nanogui/common.h>
@@ -15,208 +17,234 @@
 #include <cmath>
 #include <iosfwd>
 #include <string.h> // memset
+//}}}
 
 NAMESPACE_BEGIN(nanogui)
 
+//{{{
 template <typename Value_, size_t Size_> struct Array {
-    static constexpr bool IsNanoGUI = true;
-    static constexpr bool IsMatrix  = false;
-    static constexpr size_t Size = Size_;
-    using Value = Value_;
+  static constexpr bool IsNanoGUI = true;
+  static constexpr bool IsMatrix  = false;
+  static constexpr size_t Size = Size_;
+  using Value = Value_;
 
-    Array() { }
+  Array() { }
 
-    Array(const Array &) = default;
-    Array& operator=(const Array &) = default;
+  Array(const Array &) = default;
+  Array& operator=(const Array &) = default;
 
-    template <typename T,
-              std::enable_if_t<T::Size == Size &&
-                               std::is_same_v<typename T::Value, Value>, int> = 0>
-    Array(const T &a) {
-        for (size_t i = 0; i < Size; ++i)
-            v[i] = (Value) a[i];
-    }
+  //{{{
+  template <typename T, std::enable_if_t<T::Size == Size && std::is_same_v<typename T::Value, Value>, int> = 0> Array(const T &a) {
+      for (size_t i = 0; i < Size; ++i)
+          v[i] = (Value) a[i];
+  }
+  //}}}
+  //{{{
+  template <typename T> Array(const Array<T, Size> &a) {
+      for (size_t i = 0; i < Size; ++i)
+          v[i] = (Value) a.v[i];
+  }
+  //}}}
 
-    template <typename T>
-    Array(const Array<T, Size> &a) {
-        for (size_t i = 0; i < Size; ++i)
-            v[i] = (Value) a.v[i];
-    }
+  //{{{
+  Array(Value s) {
+      for (size_t i = 0; i < Size; ++i)
+          v[i] = s;
+  }
+  //}}}
 
-    Array(Value s) {
-        for (size_t i = 0; i < Size; ++i)
-            v[i] = s;
-    }
+  //{{{
+  template <size_t S = Size, std::enable_if_t<S == 2, int> = 0> Array(Value v0, Value v1) {
+      v[0] = v0; v[1] = v1;
+  }
+  //}}}
+  //{{{
+  template <size_t S = Size, std::enable_if_t<S == 3, int> = 0> Array(Value v0, Value v1, Value v2) {
+      v[0] = v0; v[1] = v1; v[2] = v2;
+  }
+  //}}}
+  //{{{
+  template <size_t S = Size, std::enable_if_t<S == 4, int> = 0> Array(Value v0, Value v1, Value v2, Value v3) {
+      v[0] = v0; v[1] = v1; v[2] = v2; v[3] = v3;
+  }
+  //}}}
 
-    template <size_t S = Size, std::enable_if_t<S == 2, int> = 0>
-    Array(Value v0, Value v1) {
-        v[0] = v0; v[1] = v1;
-    }
+  //{{{
+  Array operator-() const {
+      Array result;
+      for (size_t i = 0; i < Size; ++i)
+          result[i] = -v[i];
+      return result;
+  }
+  //}}}
 
-    template <size_t S = Size, std::enable_if_t<S == 3, int> = 0>
-    Array(Value v0, Value v1, Value v2) {
-        v[0] = v0; v[1] = v1; v[2] = v2;
-    }
+  //{{{
+  friend Array operator+(const Array &a, const Array &b) {
+      Array result;
+      for (size_t i = 0; i < Size; ++i)
+          result[i] = a.v[i] + b.v[i];
+      return result;
+  }
+  //}}}
+  //{{{
+  Array& operator+=(const Array &a) {
+      for (size_t i = 0; i < Size; ++i)
+          v[i] += a.v[i];
+      return *this;
+  }
+  //}}}
 
-    template <size_t S = Size, std::enable_if_t<S == 4, int> = 0>
-    Array(Value v0, Value v1, Value v2, Value v3) {
-        v[0] = v0; v[1] = v1; v[2] = v2; v[3] = v3;
-    }
+  //{{{
+  friend Array operator-(const Array &a, const Array &b) {
+      Array result;
+      for (size_t i = 0; i < Size; ++i)
+          result[i] = a.v[i] - b.v[i];
+      return result;
+  }
+  //}}}
+  //{{{
+  Array& operator-=(const Array &a) {
+      for (size_t i = 0; i < Size; ++i)
+          v[i] -= a.v[i];
+      return *this;
+  }
+  //}}}
 
-    Array operator-() const {
-        Array result;
-        for (size_t i = 0; i < Size; ++i)
-            result[i] = -v[i];
-        return result;
-    }
+  //{{{
+  friend Array operator*(const Array &a, const Array &b) {
+      Array result;
+      for (size_t i = 0; i < Size; ++i)
+          result[i] = a.v[i] * b.v[i];
+      return result;
+  }
+  //}}}
+  //{{{
+  Array& operator*=(const Array &a) {
+      for (size_t i = 0; i < Size; ++i)
+          v[i] *= a.v[i];
+      return *this;
+  }
+  //}}}
 
-    friend Array operator+(const Array &a, const Array &b) {
-        Array result;
-        for (size_t i = 0; i < Size; ++i)
-            result[i] = a.v[i] + b.v[i];
-        return result;
-    }
+  //{{{
+  friend Array operator/(const Array &a, const Array &b) {
+      Array result;
+      for (size_t i = 0; i < Size; ++i)
+          result[i] = a.v[i] / b.v[i];
+      return result;
+  }
 
-    Array& operator+=(const Array &a) {
-        for (size_t i = 0; i < Size; ++i)
-            v[i] += a.v[i];
-        return *this;
-    }
+  //}}}
+  //{{{
+  Array& operator/=(const Array &a) {
+      for (size_t i = 0; i < Size; ++i)
+          v[i] /= a.v[i];
+      return *this;
+  }
+  //}}}
 
-    friend Array operator-(const Array &a, const Array &b) {
-        Array result;
-        for (size_t i = 0; i < Size; ++i)
-            result[i] = a.v[i] - b.v[i];
-        return result;
-    }
+  //{{{
+  bool operator==(const Array &a) const {
+      for (size_t i = 0; i < Size; ++i) {
+          if (v[i] != a.v[i])
+              return false;
+      }
+      return true;
+  }
+  //}}}
+  //{{{
+  bool operator!=(const Array &a) const {
+      return !operator==(a);
+  }
+  //}}}
 
-    Array& operator-=(const Array &a) {
-        for (size_t i = 0; i < Size; ++i)
-            v[i] -= a.v[i];
-        return *this;
-    }
+  //{{{
+  const Value &operator[](size_t i) const {
+      assert(i < Size);
+      return v[i];
+  }
+  //}}}
+  //{{{
+  Value &operator[](size_t i) {
+      assert(i < Size);
+      return v[i];
+  }
+  //}}}
 
-    friend Array operator*(const Array &a, const Array &b) {
-        Array result;
-        for (size_t i = 0; i < Size; ++i)
-            result[i] = a.v[i] * b.v[i];
-        return result;
-    }
+  template <size_t S = Size, std::enable_if_t<(S >= 1), int> = 0> const Value &x() const { return v[0]; }
+  template <size_t S = Size, std::enable_if_t<(S >= 1), int> = 0> Value &x() { return v[0]; }
 
-    Array& operator*=(const Array &a) {
-        for (size_t i = 0; i < Size; ++i)
-            v[i] *= a.v[i];
-        return *this;
-    }
+  template <size_t S = Size, std::enable_if_t<(S >= 2), int> = 0> const Value &y() const { return v[1]; }
+  template <size_t S = Size, std::enable_if_t<(S >= 2), int> = 0> Value &y() { return v[1]; }
 
-    friend Array operator/(const Array &a, const Array &b) {
-        Array result;
-        for (size_t i = 0; i < Size; ++i)
-            result[i] = a.v[i] / b.v[i];
-        return result;
-    }
+  template <size_t S = Size, std::enable_if_t<(S >= 3), int> = 0> const Value &z() const { return v[2]; }
+  template <size_t S = Size, std::enable_if_t<(S >= 3), int> = 0> Value &z() { return v[2]; }
 
-    Array& operator/=(const Array &a) {
-        for (size_t i = 0; i < Size; ++i)
-            v[i] /= a.v[i];
-        return *this;
-    }
+  template <size_t S = Size, std::enable_if_t<(S >= 4), int> = 0> const Value &w() const { return v[3]; }
+  template <size_t S = Size, std::enable_if_t<(S >= 4), int> = 0> Value &w() { return v[3]; }
 
-    bool operator==(const Array &a) const {
-        for (size_t i = 0; i < Size; ++i) {
-            if (v[i] != a.v[i])
-                return false;
-        }
-        return true;
-    }
+  Value v[Size];
+  };
+//}}}
 
-    bool operator!=(const Array &a) const {
-        return !operator==(a);
-    }
+//{{{
+template <typename Value, size_t Size> Value dot(const Array<Value, Size> &a1, const Array<Value, Size> &a2) {
 
-    const Value &operator[](size_t i) const {
-        assert(i < Size);
-        return v[i];
-    }
+  Value result = a1.v[0] * a2.v[0];
+  for (size_t i = 1; i < Size; ++i)
+    result += a1.v[i] * a2.v[i];
+  return result;
+  }
+//}}}
+//{{{
+template <typename Value, size_t Size> Value squared_norm(const Array<Value, Size> &a) {
 
-    Value &operator[](size_t i) {
-        assert(i < Size);
-        return v[i];
-    }
+  Value result = a.v[0] * a.v[0];
+  for (size_t i = 1; i < Size; ++i)
+    result += a.v[i] * a.v[i];
+  return result;
+  }
+//}}}
+//{{{
+template <typename Value, size_t Size> Value norm(const Array<Value, Size> &a) {
+  return std::sqrt(squared_norm(a));
+  }
+//}}}
 
-    template <size_t S = Size, std::enable_if_t<(S >= 1), int> = 0>
-    const Value &x() const { return v[0]; }
-    template <size_t S = Size, std::enable_if_t<(S >= 1), int> = 0>
-    Value &x() { return v[0]; }
+//{{{
+template <typename Value, size_t Size> Array<Value, Size> normalize(const Array<Value, Size> &a) {
+  return a / norm(a);
+  }
+//}}}
+//{{{
+template <typename Value> Array<Value, 3> cross(const Array<Value, 3> &a, const Array<Value, 3> &b) {
 
-    template <size_t S = Size, std::enable_if_t<(S >= 2), int> = 0>
-    const Value &y() const { return v[1]; }
-    template <size_t S = Size, std::enable_if_t<(S >= 2), int> = 0>
-    Value &y() { return v[1]; }
+  return Array<Value, 3>(
+      a.y()*b.z() - a.z()*b.y(),
+      a.z()*b.x() - a.x()*b.z(),
+      a.x()*b.y() - a.y()*b.x()
+      );
+  }
+//}}}
 
-    template <size_t S = Size, std::enable_if_t<(S >= 3), int> = 0>
-    const Value &z() const { return v[2]; }
-    template <size_t S = Size, std::enable_if_t<(S >= 3), int> = 0>
-    Value &z() { return v[2]; }
+//{{{
+template <typename Value, size_t Size> Array<Value, Size> max(const Array<Value, Size> &a1, const Array<Value, Size> &a2) {
 
-    template <size_t S = Size, std::enable_if_t<(S >= 4), int> = 0>
-    const Value &w() const { return v[3]; }
-    template <size_t S = Size, std::enable_if_t<(S >= 4), int> = 0>
-    Value &w() { return v[3]; }
+  Array<Value, Size> result;
+  for (size_t i = 0; i < Size; ++i)
+    result.v[i] = std::max(a1.v[i], a2.v[i]);
+  return result;
+  }
+//}}}
+//{{{
+template <typename Value, size_t Size> Array<Value, Size> min(const Array<Value, Size> &a1, const Array<Value, Size> &a2) {
 
-    Value v[Size];
-};
-
-template <typename Value, size_t Size>
-Value dot(const Array<Value, Size> &a1, const Array<Value, Size> &a2) {
-    Value result = a1.v[0] * a2.v[0];
-    for (size_t i = 1; i < Size; ++i)
-        result += a1.v[i] * a2.v[i];
-    return result;
-}
-
-template <typename Value, size_t Size>
-Value squared_norm(const Array<Value, Size> &a) {
-    Value result = a.v[0] * a.v[0];
-    for (size_t i = 1; i < Size; ++i)
-        result += a.v[i] * a.v[i];
-    return result;
-}
-
-template <typename Value, size_t Size>
-Value norm(const Array<Value, Size> &a) {
-    return std::sqrt(squared_norm(a));
-}
-
-template <typename Value, size_t Size>
-Array<Value, Size> normalize(const Array<Value, Size> &a) {
-    return a / norm(a);
-}
-
-template <typename Value>
-Array<Value, 3> cross(const Array<Value, 3> &a, const Array<Value, 3> &b) {
-    return Array<Value, 3>(
-        a.y()*b.z() - a.z()*b.y(),
-        a.z()*b.x() - a.x()*b.z(),
-        a.x()*b.y() - a.y()*b.x()
-    );
-}
-
-template <typename Value, size_t Size>
-Array<Value, Size> max(const Array<Value, Size> &a1, const Array<Value, Size> &a2) {
-    Array<Value, Size> result;
-    for (size_t i = 0; i < Size; ++i)
-        result.v[i] = std::max(a1.v[i], a2.v[i]);
-    return result;
-}
-
-template <typename Value, size_t Size>
-Array<Value, Size> min(const Array<Value, Size> &a1, const Array<Value, Size> &a2) {
-    Array<Value, Size> result;
-    for (size_t i = 0; i < Size; ++i)
-        result.v[i] = std::min(a1.v[i], a2.v[i]);
-    return result;
-}
+  Array<Value, Size> result;
+  for (size_t i = 0; i < Size; ++i)
+    result.v[i] = std::min(a1.v[i], a2.v[i]);
+  return result;
+  }
+//}}}
 
 // Import some common Enoki types
 using Vector2f     = Array<float, 2>;
@@ -226,6 +254,7 @@ using Vector2i     = Array<int32_t, 2>;
 using Vector3i     = Array<int32_t, 3>;
 using Vector4i     = Array<int32_t, 4>;
 
+//{{{
 /**
  * \class Color common.h nanogui/common.h
  *
@@ -249,166 +278,201 @@ using Vector4i     = Array<int32_t, 4>;
  * +---------+-------------+----------------+-------------+
  * \endrst
  */
+//}}}
 class Color : public Vector4f {
 public:
-    using Vector4f::Vector4f;
-    using Vector4f::operator=;
+  using Vector4f::Vector4f;
+  using Vector4f::operator=;
 
-    /// Default constructor: represents black (``r, g, b, a = 0``)
-    Color() : Color(0, 0, 0, 0) { }
+  //{{{
+  /// Default constructor: represents black (``r, g, b, a = 0``)
+  Color() : Color(0, 0, 0, 0) { }
+  //}}}
+  //{{{
+  /// Initialize from a 4D vector
+  Color (const Vector4f &color) : Vector4f(color) {}
 
-    /// Initialize from a 4D vector
-    Color(const Vector4f &color) : Vector4f(color) { }
+  //}}}
+  //{{{
+  /**
+   * Copies (x, y, z) from the input vector, and uses the value specified by
+   * the ``alpha`` parameter for this Color object's alpha component.
+   *
+   * \param color
+   * The three dimensional float vector being copied.
+   *
+   * \param alpha
+   * The value to set this object's alpha component to.
+   */
+  Color (const Vector3f &color, float alpha)
+      : Color(color[0], color[1], color[2], alpha) { }
+  //}}}
+  //{{{
+  /**
+   * Copies (x, y, z) from the input vector, casted as floats first and then
+   * divided by ``255.0``, and uses the value specified by the ``alpha``
+   * parameter, casted to a float and divided by ``255.0`` as well, for this
+   * Color object's alpha component.
+   *
+   * \param color
+   * The three dimensional integer vector being copied, will be divided by ``255.0``.
+   *
+   * \param alpha
+   * The value to set this object's alpha component to, will be divided by ``255.0``.
+   */
+  Color (const Vector3i &color, int alpha)
+      : Color(Vector3f(color) / 255.f, alpha / 255.f) { }
+  //}}}
+  //{{{
+  /**
+   * Copies (x, y, z) from the input vector, and sets the alpha of this color
+   * to be ``1.0``.
+   *
+   * \param color
+   * The three dimensional float vector being copied.
+   */
+  Color (const Vector3f &color) : Color(color, 1.0f) {}
+  //}}}
+  //{{{
+  /**
+   * Copies (x, y, z) from the input vector, casting to floats and dividing by
+   * ``255.0``.  The alpha of this color will be set to ``1.0``.
+   *
+   * \param color
+   * The three dimensional integer vector being copied, will be divided by ``255.0``.
+   */
+  Color (const Vector3i &color)
+      : Color(Vector3f(color) / 255.f, 1.f) { }
+  //}}}
+  //{{{
+  /**
+   * Copies (x, y, z, w) from the input vector, casting to floats and dividing
+   * by ``255.0``.
+   *
+   * \param color
+   * The three dimensional integer vector being copied, will be divided by ``255.0``.
+   */
+  Color (const Vector4i &color)
+      : Color(Vector4f(color) / 255.f) { }
+  //}}}
+  //{{{
+  /**
+   * Creates the Color ``(intensity, intensity, intensity, alpha)``.
+   *
+   * \param intensity
+   * The value to be used for red, green, and blue.
+   *
+   * \param alpha
+   * The alpha component of the color.
+   */
+  Color (float intensity, float alpha)
+      : Color(Vector3f(intensity), alpha) { }
+  //}}}
+  //{{{
+  /**
+   * Creates the Color ``(intensity, intensity, intensity, alpha) / 255.0``.
+   * Values are casted to floats before division.
+   *
+   * \param intensity
+   * The value to be used for red, green, and blue, will be divided by ``255.0``.
+   *
+   * \param alpha
+   * The alpha component of the color, will be divided by ``255.0``.
+   */
+  Color (int intensity, int alpha)
+      : Color(Vector3i(intensity), alpha) { }
+  //}}}
+  //{{{
+  /**
+   * Explicit constructor: creates the Color ``(r, g, b, a)``.
+   *
+   * \param r
+   * The red component of the color.
+   *
+   * \param g
+   * The green component of the color.
+   *
+   * \param b
+   * The blue component of the color.
+   *
+   * \param a
+   * The alpha component of the color.
+   */
+  Color (float r, float g, float b, float a) : Color(Vector4f(r, g, b, a)) {}
+  //}}}
+  //{{{
+  /**
+   * Explicit constructor: creates the Color ``(r, g, b, a) / 255.0``.
+   * Values are casted to floats before division.
+   *
+   * \param r
+   * The red component of the color, will be divided by ``255.0``.
+   *
+   * \param g
+   * The green component of the color, will be divided by ``255.0``.
+   *
+   * \param b
+   * The blue component of the color, will be divided by ``255.0``.
+   *
+   * \param a
+   * The alpha component of the color, will be divided by ``255.0``.
+   */
+  Color (int r, int g, int b, int a) : Color(Vector4f((float) r, (float) g, (float) b, (float) a) / 255.f) {}
+  //}}}
 
-    /**
-     * Copies (x, y, z) from the input vector, and uses the value specified by
-     * the ``alpha`` parameter for this Color object's alpha component.
-     *
-     * \param color
-     * The three dimensional float vector being copied.
-     *
-     * \param alpha
-     * The value to set this object's alpha component to.
-     */
-    Color(const Vector3f &color, float alpha)
-        : Color(color[0], color[1], color[2], alpha) { }
+  //{{{
+  /// Return a reference to the red channel
+  float &r() { return x(); }
+  //}}}
+  //{{{
+  /// Return a reference to the red channel (const version)
+  const float &r() const { return x(); }
+  //}}}
+  //{{{
+  /// Return a reference to the green channel
+  float &g() { return y(); }
+  //}}}
+  //{{{
+  /// Return a reference to the green channel (const version)
+  const float &g() const { return y(); }
+  //}}}
+  //{{{
+  /// Return a reference to the blue channel
+  float &b() { return z(); }
+  //}}}
+  //{{{
+  /// Return a reference to the blue channel (const version)
+  const float &b() const { return z(); }
+  //}}}
+  //{{{
+  /// Return a reference to the alpha channel
+  float &a() { return w(); }
+  //}}}
+  //{{{
+  /// Return a reference to the alpha channel (const version)
+  const float &a() const { return w(); }
+  //}}}
 
-    /**
-     * Copies (x, y, z) from the input vector, casted as floats first and then
-     * divided by ``255.0``, and uses the value specified by the ``alpha``
-     * parameter, casted to a float and divided by ``255.0`` as well, for this
-     * Color object's alpha component.
-     *
-     * \param color
-     * The three dimensional integer vector being copied, will be divided by ``255.0``.
-     *
-     * \param alpha
-     * The value to set this object's alpha component to, will be divided by ``255.0``.
-     */
-    Color(const Vector3i &color, int alpha)
-        : Color(Vector3f(color) / 255.f, alpha / 255.f) { }
-
-    /**
-     * Copies (x, y, z) from the input vector, and sets the alpha of this color
-     * to be ``1.0``.
-     *
-     * \param color
-     * The three dimensional float vector being copied.
-     */
-    Color(const Vector3f &color) : Color(color, 1.0f) {}
-
-    /**
-     * Copies (x, y, z) from the input vector, casting to floats and dividing by
-     * ``255.0``.  The alpha of this color will be set to ``1.0``.
-     *
-     * \param color
-     * The three dimensional integer vector being copied, will be divided by ``255.0``.
-     */
-    Color(const Vector3i &color)
-        : Color(Vector3f(color) / 255.f, 1.f) { }
-
-    /**
-     * Copies (x, y, z, w) from the input vector, casting to floats and dividing
-     * by ``255.0``.
-     *
-     * \param color
-     * The three dimensional integer vector being copied, will be divided by ``255.0``.
-     */
-    Color(const Vector4i &color)
-        : Color(Vector4f(color) / 255.f) { }
-
-    /**
-     * Creates the Color ``(intensity, intensity, intensity, alpha)``.
-     *
-     * \param intensity
-     * The value to be used for red, green, and blue.
-     *
-     * \param alpha
-     * The alpha component of the color.
-     */
-    Color(float intensity, float alpha)
-        : Color(Vector3f(intensity), alpha) { }
-
-    /**
-     * Creates the Color ``(intensity, intensity, intensity, alpha) / 255.0``.
-     * Values are casted to floats before division.
-     *
-     * \param intensity
-     * The value to be used for red, green, and blue, will be divided by ``255.0``.
-     *
-     * \param alpha
-     * The alpha component of the color, will be divided by ``255.0``.
-     */
-    Color(int intensity, int alpha)
-        : Color(Vector3i(intensity), alpha) { }
-
-    /**
-     * Explicit constructor: creates the Color ``(r, g, b, a)``.
-     *
-     * \param r
-     * The red component of the color.
-     *
-     * \param g
-     * The green component of the color.
-     *
-     * \param b
-     * The blue component of the color.
-     *
-     * \param a
-     * The alpha component of the color.
-     */
-    Color(float r, float g, float b, float a) : Color(Vector4f(r, g, b, a)) { }
-
-    /**
-     * Explicit constructor: creates the Color ``(r, g, b, a) / 255.0``.
-     * Values are casted to floats before division.
-     *
-     * \param r
-     * The red component of the color, will be divided by ``255.0``.
-     *
-     * \param g
-     * The green component of the color, will be divided by ``255.0``.
-     *
-     * \param b
-     * The blue component of the color, will be divided by ``255.0``.
-     *
-     * \param a
-     * The alpha component of the color, will be divided by ``255.0``.
-     */
-    Color(int r, int g, int b, int a) : Color(Vector4f((float) r, (float) g, (float) b, (float) a) / 255.f) { }
-
-    /// Return a reference to the red channel
-    float &r() { return x(); }
-    /// Return a reference to the red channel (const version)
-    const float &r() const { return x(); }
-    /// Return a reference to the green channel
-    float &g() { return y(); }
-    /// Return a reference to the green channel (const version)
-    const float &g() const { return y(); }
-    /// Return a reference to the blue channel
-    float &b() { return z(); }
-    /// Return a reference to the blue channel (const version)
-    const float &b() const { return z(); }
-    /// Return a reference to the alpha channel
-    float &a() { return w(); }
-    /// Return a reference to the alpha channel (const version)
-    const float &a() const { return w(); }
-
-    /**
-     * Computes the luminance as ``l = 0.299r + 0.587g + 0.144b + 0.0a``.  If
-     * the luminance is less than 0.5, white is returned.  If the luminance is
-     * greater than or equal to 0.5, black is returned.  Both returns will have
-     * an alpha component of 1.0.
-     */
-    Color contrasting_color() const {
-        float luminance = dot(*this, Color(0.299f, 0.587f, 0.144f, 0.f));
-        return Color(luminance < 0.5f ? 1.f : 0.f, 1.f);
+  //{{{
+  /**
+   * Computes the luminance as ``l = 0.299r + 0.587g + 0.144b + 0.0a``.  If
+   * the luminance is less than 0.5, white is returned.  If the luminance is
+   * greater than or equal to 0.5, black is returned.  Both returns will have
+   * an alpha component of 1.0.
+   */
+  Color contrasting_color() const {
+    float luminance = dot(*this, Color(0.299f, 0.587f, 0.144f, 0.f));
+    return Color(luminance < 0.5f ? 1.f : 0.f, 1.f);
     }
+  //}}}
 
-    /// Allows for conversion between this Color and NanoVG's representation.
-    inline operator const NVGcolor &() const;
-};
+  //{{{
+  /// Allows for conversion between this Color and NanoVG's representation.
+  inline operator const NVGcolor &() const;
+  //}}}
+  };
 
+//{{{
 /// Simple matrix class with column-major storage
 template <typename Value_, size_t Size_> struct Matrix {
     static constexpr bool IsNanoGUI = true;
@@ -559,13 +623,13 @@ template <typename Value_, size_t Size_> struct Matrix {
 
     Value m[Size][Size];
 };
-
+//}}}
 using Matrix2f = Matrix<float, 2>;
 using Matrix3f = Matrix<float, 3>;
 using Matrix4f = Matrix<float, 4>;
 
-template <typename Stream, typename Value, size_t Size,
-          std::enable_if_t<std::is_base_of_v<std::ostream, Stream>, int> = 0>
+//{{{
+template <typename Stream, typename Value, size_t Size, std::enable_if_t<std::is_base_of_v<std::ostream, Stream>, int> = 0>
 Stream& operator<<(Stream &os, const Array<Value, Size> &v) {
     os << '[';
     for (size_t i = 0; i < Size; ++i) {
@@ -576,9 +640,9 @@ Stream& operator<<(Stream &os, const Array<Value, Size> &v) {
     os << ']';
     return os;
 }
-
-template <typename Stream, typename Value, size_t Size,
-          std::enable_if_t<std::is_base_of_v<std::ostream, Stream>, int> = 0>
+//}}}
+//{{{
+template <typename Stream, typename Value, size_t Size, std::enable_if_t<std::is_base_of_v<std::ostream, Stream>, int> = 0>
 Stream& operator<<(Stream &os, const Matrix<Value, Size> &m) {
     os << '[';
     for (size_t i = 0; i < Size; ++i) {
@@ -597,5 +661,6 @@ Stream& operator<<(Stream &os, const Matrix<Value, Size> &m) {
     os << ']';
     return os;
 }
+//}}}
 
 NAMESPACE_END(nanogui)

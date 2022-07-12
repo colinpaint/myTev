@@ -1,3 +1,4 @@
+//{{{
 /*
     NanoGUI was developed by Wenzel Jakob <wenzel.jakob@epfl.ch>.
     The widget drawing code is based on the NanoVG demo application
@@ -13,17 +14,19 @@
  * \brief Defines abstractions for shaders that work with OpenGL,
  * OpenGL ES, and Metal.
  */
-
+//}}}
+//{{{  includes
 #pragma once
 
 #include <nanogui/object.h>
 #include <nanogui/traits.h>
 #include <unordered_map>
-
+//}}}
 NAMESPACE_BEGIN(nanogui)
 
 class NANOGUI_EXPORT Shader : public Object {
 public:
+    //{{{
     /// The type of geometry that should be rendered
     enum class PrimitiveType {
         Point,
@@ -32,13 +35,16 @@ public:
         Triangle,
         TriangleStrip
     };
-
+    //}}}
+    //{{{
     /// Alpha blending mode
     enum class BlendMode {
         None,
         AlphaBlend // alpha * new_color + (1 - alpha) * old_color
     };
+    //}}}
 
+    //{{{
     /**
      * \brief Initialize the shader using the specified source strings.
      *
@@ -60,16 +66,23 @@ public:
            const std::string &vertex_shader,
            const std::string &fragment_shader,
            BlendMode blend_mode = BlendMode::None);
+    //}}}
 
+    //{{{
     /// Return the render pass associated with this shader
-    RenderPass *render_pass() { return m_render_pass; }
-
+    RenderPass* render_pass() { return m_render_pass; }
+    //}}}
+    //{{{
     /// Return the name of this shader
     const std::string &name() const { return m_name; }
+    //}}}
 
+    //{{{
     /// Return the blending mode of this shader
     BlendMode blend_mode() const { return m_blend_mode; }
+    //}}}
 
+    //{{{
     /**
      * \brief Upload a buffer (e.g. vertex positions) that will be associated
      * with a named shader parameter.
@@ -80,19 +93,21 @@ public:
      *
      * The buffer will be replaced if it is already present.
      */
-    void set_buffer(const std::string &name, VariableType type, size_t ndim,
+    void set_buffer (const std::string &name, VariableType type, size_t ndim,
                     const size_t *shape, const void *data);
-
-    void set_buffer(const std::string &name, VariableType type,
+    //}}}
+    //{{{
+    void set_buffer (const std::string &name, VariableType type,
                     std::initializer_list<size_t> shape, const void *data) {
         set_buffer(name, type, shape.end() - shape.begin(), shape.begin(), data);
     }
-
+    //}}}
+    //{{{
     /**
      * \brief Upload a uniform variable (e.g. a vector or matrix) that will be
      * associated with a named shader parameter.
      */
-    template <typename Array> void set_uniform(const std::string &name,
+    template <typename Array> void set_uniform (const std::string &name,
                                                const Array &value) {
         size_t shape[3] = { 1, 1, 1 };
         size_t ndim = (size_t) -1;
@@ -137,14 +152,16 @@ public:
 
         set_buffer(name, vtype, ndim, shape, data);
     }
-
+    //}}}
+    //{{{
     /**
      * \brief Associate a texture with a named shader parameter
      *
      * The association will be replaced if it is already present.
      */
-    void set_texture(const std::string &name, Texture *texture);
-
+    void set_texture (const std::string &name, Texture *texture);
+    //}}}
+    //{{{
     /**
      * \brief Begin drawing using this shader
      *
@@ -156,10 +173,12 @@ public:
      * statement.
      */
     void begin();
-
+    //}}}
+    //{{{
     /// End drawing using this shader
     void end();
-
+    //}}}
+    //{{{
     /**
      * \brief Render geometry arrays, either directly or
      * using an index array.
@@ -180,21 +199,23 @@ public:
      *     \c uint32_t valued buffer with name \c indices
      *     must have been uploaded using \ref set().
      */
-    void draw_array(PrimitiveType primitive_type,
+    void draw_array (PrimitiveType primitive_type,
                     size_t offset, size_t count,
                     bool indexed = false);
+    //}}}
 
-#if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
-    uint32_t shader_handle() const { return m_shader_handle; }
-#elif defined(NANOGUI_USE_METAL)
-    void *pipeline_state() const { return m_pipeline_state; }
-#endif
+    #if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
+      uint32_t shader_handle() const { return m_shader_handle; }
+    #elif defined(NANOGUI_USE_METAL)
+      void* pipeline_state() const { return m_pipeline_state; }
+    #endif
 
-#if defined(NANOGUI_USE_OPENGL)
-    uint32_t vertex_array_handle() const { return m_vertex_array_handle; }
-#endif
+    #if defined(NANOGUI_USE_OPENGL)
+      uint32_t vertex_array_handle() const { return m_vertex_array_handle; }
+    #endif
 
 protected:
+    //{{{
     enum BufferType {
         Unknown = 0,
         VertexBuffer,
@@ -206,7 +227,8 @@ protected:
         UniformBuffer,
         IndexBuffer,
     };
-
+    //}}}
+    //{{{
     struct Buffer {
         void *buffer = nullptr;
         BufferType type = Unknown;
@@ -219,24 +241,25 @@ protected:
 
         std::string to_string() const;
     };
-
+    //}}}
+    //{{{
     /// Release all resources
     virtual ~Shader();
+    //}}}
 
-protected:
     RenderPass* m_render_pass;
     std::string m_name;
     std::unordered_map<std::string, Buffer> m_buffers;
     BlendMode m_blend_mode;
 
     #if defined(NANOGUI_USE_OPENGL) || defined(NANOGUI_USE_GLES)
-        uint32_t m_shader_handle = 0;
-    #  if defined(NANOGUI_USE_OPENGL)
+      uint32_t m_shader_handle = 0;
+      #if defined(NANOGUI_USE_OPENGL)
         uint32_t m_vertex_array_handle = 0;
         bool m_uses_point_size = false;
-    #  endif
+      #endif
     #elif defined(NANOGUI_USE_METAL)
-        void *m_pipeline_state;
+      void* m_pipeline_state;
     #endif
 };
 
@@ -245,12 +268,11 @@ protected:
 
 /// Access a shader stored in nanogui_resources.cpp
 #if defined(NANOGUI_USE_OPENGL)
-#  define NANOGUI_SHADER(name) NANOGUI_RESOURCE_STRING(name##_gl)
+  #define NANOGUI_SHADER(name) NANOGUI_RESOURCE_STRING(name##_gl)
 #elif defined(NANOGUI_USE_GLES)
-#  define NANOGUI_SHADER(name) NANOGUI_RESOURCE_STRING(name##_gles)
+  #define NANOGUI_SHADER(name) NANOGUI_RESOURCE_STRING(name##_gles)
 #elif defined(NANOGUI_USE_METAL)
-#  define NANOGUI_SHADER(name) NANOGUI_RESOURCE_STRING(name##_metallib)
+  #define NANOGUI_SHADER(name) NANOGUI_RESOURCE_STRING(name##_metallib)
 #endif
-
 
 NAMESPACE_END(nanogui)
