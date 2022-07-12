@@ -17,8 +17,8 @@ UberShader::UberShader (RenderPass* renderPass) {
       std::string preamble = R"(#version 110)";
     #elif defined(NANOGUI_USE_GLES)
       std::string preamble =
-          R"(#version 100
-             precision highp float;)";
+        R"(#version 100
+           precision highp float;)";
     #endif
     //{{{
     auto vertexShader = preamble +
@@ -99,7 +99,7 @@ UberShader::UberShader (RenderPass* renderPass) {
           sRGB = abs(sRGB);
           if (sRGB <= 0.04045) {
             return outSign * sRGB / 12.92;
-            } 
+            }
           else {
             return outSign * pow((sRGB + 0.055) / 1.055, 2.4);
             }
@@ -110,7 +110,7 @@ UberShader::UberShader (RenderPass* renderPass) {
           linear = abs(linear);
           if (linear < 0.0031308) {
             return outSign * 12.92 * linear;
-            } 
+            }
           else {
             return outSign * 1.055 * pow(linear, 0.41666) - 0.055;
             }
@@ -233,16 +233,12 @@ void UberShader::draw (const Vector2f& pixelSize, const Vector2f& checkerSize, T
                        bool clipToLdr, ETonemap tonemap, EMetric metric) {
 
   bool hasImage = textureImage;
-  if (!hasImage) {
-    // Just to have _some_ valid texture to bind. Will be ignored.
+  if (!hasImage) // Just to have _some_ valid texture to bind. Will be ignored.
     textureImage = mColorMap.get();
-    }
 
   bool hasReference = textureReference;
-  if (!hasReference) {
-    // Just to have _some_ valid texture to bind. Will be ignored.
+  if (!hasReference) // Just to have _some_ valid texture to bind. Will be ignored.
     textureReference = textureImage;
-    }
 
   bindCheckerboardData (pixelSize, checkerSize);
   bindImageData (textureImage, transformImage, exposure, offset, gamma, tonemap);
@@ -261,9 +257,9 @@ void UberShader::draw (const Vector2f& pixelSize, const Vector2f& checkerSize, T
 //{{{
 void UberShader::bindCheckerboardData (const Vector2f& pixelSize, const Vector2f& checkerSize) {
 
-  mShader->set_uniform("pixelSize", pixelSize);
-  mShader->set_uniform("checkerSize", checkerSize);
-  mShader->set_uniform("bgColor", mBackgroundColor);
+  mShader->set_uniform ("pixelSize", pixelSize);
+  mShader->set_uniform ("checkerSize", checkerSize);
+  mShader->set_uniform ("bgColor", mBackgroundColor);
   }
 //}}}
 //{{{
@@ -274,16 +270,16 @@ void UberShader::bindImageData (Texture* textureImage,
                                 float gamma,
                                 ETonemap tonemap) {
 
-  mShader->set_texture("image", textureImage);
-  mShader->set_uniform("imageScale", Vector2f{transformImage.m[0][0], transformImage.m[1][1]});
-  mShader->set_uniform("imageOffset", Vector2f{transformImage.m[2][0], transformImage.m[2][1]});
+  mShader->set_texture ("image", textureImage);
+  mShader->set_uniform ("imageScale", Vector2f{transformImage.m[0][0], transformImage.m[1][1]});
+  mShader->set_uniform ("imageOffset", Vector2f{transformImage.m[2][0], transformImage.m[2][1]});
 
-  mShader->set_uniform("exposure", exposure);
-  mShader->set_uniform("offset", offset);
-  mShader->set_uniform("gamma", gamma);
-  mShader->set_uniform("tonemap", static_cast<int>(tonemap));
+  mShader->set_uniform ("exposure", exposure);
+  mShader->set_uniform ("offset", offset);
+  mShader->set_uniform ("gamma", gamma);
+  mShader->set_uniform ("tonemap", static_cast<int>(tonemap));
 
-  mShader->set_texture("colormap", mColorMap.get());
+  mShader->set_texture ("colormap", mColorMap.get());
   }
 //}}}
 //{{{
@@ -291,11 +287,11 @@ void UberShader::bindReferenceData (Texture* textureReference,
                                     const Matrix3f& transformReference,
                                     EMetric metric) {
 
-  mShader->set_texture("reference", textureReference);
-  mShader->set_uniform("referenceScale", Vector2f{transformReference.m[0][0], transformReference.m[1][1]});
-  mShader->set_uniform("referenceOffset", Vector2f{transformReference.m[2][0], transformReference.m[2][1]});
+  mShader->set_texture ("reference", textureReference);
+  mShader->set_uniform ("referenceScale", Vector2f{transformReference.m[0][0], transformReference.m[1][1]});
+  mShader->set_uniform ("referenceOffset", Vector2f{transformReference.m[2][0], transformReference.m[2][1]});
 
-   mShader->set_uniform("metric", static_cast<int>(metric));
+  mShader->set_uniform ("metric", static_cast<int>(metric));
   }
 //}}}
 
