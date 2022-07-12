@@ -86,8 +86,8 @@ add_subdirectory (nanogui)
 
 set (NANOGUI_TARGETS nanogui glfw glfw_objects)
 
+# Compile DirectXTex
 if (WIN32)
-  # Compile DirectXTex
   set (BUILD_TOOLS OFF CACHE BOOL " " FORCE)
   set (BUILD_DX11 OFF CACHE BOOL " " FORCE)
   set (BUILD_DX12 OFF CACHE BOOL " " FORCE)
@@ -119,8 +119,8 @@ set (OPENEXR_INCLUDE_DIRS
 add_subdirectory (clip)
 set (CLIP_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/clip)
 
+# Compile zlib
 if (WIN32)
-  # Compile zlib
   set (ZLIB_BUILD_STATIC_LIBS ON CACHE BOOL " " FORCE)
   set (ZLIB_BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
   set (SKIP_INSTALL_ALL ON CACHE BOOL " " FORCE)
@@ -142,58 +142,37 @@ set (NANOGUI_EXTRA_LIBS ${NANOGUI_EXTRA_LIBS})
 
 add_compile_options (${NANOGUI_NATIVE_FLAGS})
 
-# Enable more warnings
-if (MSVC)
-  if (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-    string (REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  else()
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-  endif()
-
-  # Disable warnings that are present in dependencies and irrelevant to us
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4100") # unused arguments
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd5054") # deprecated enum & operator
-
-  # wildcards in command-line path on windows, link wsetargv.obj http://msdn.microsoft.com/en-us/library/8bch7bkk.aspx
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} wsetargv.obj")
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
-  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-anonymous-struct -Wno-c99-extensions -Wno-nested-anon-types -Wno-deprecated-register -Wno-deprecated-anon-enum-enum-conversion")
-  endif()
-  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-misleading-indentation -Wno-deprecated-declarations")
-  endif()
-endif()
-
-# Coroutines need to be explicitly enabled on g++
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
-endif()
-
-set (TEV_LIBS clip IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
-if (MSVC)
-  set (TEV_LIBS ${TEV_LIBS} zlibstatic DirectXTex wsock32 ws2_32)
-endif()
-
+# includes
+include_directories (${CLIP_INCLUDE}
+                     ${DIRECTXTEX_INCLUDE}
+                     ${GLFW_INCLUDE}
+                     ${NANOGUI_EXTRA_INCS}
+                     ${NANOGUI_INCLUDE}
+                     ${OPENEXR_INCLUDE_DIRS}
+                     ${QOI_INCLUDE}
+                     ${UTILS_INCLUDE}
+                     ${UTFCPP_INCLUDE}
+                     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+                     "${CMAKE_CURRENT_SOURCE_DIR}/src/include")
+# main sources
 set (TEV_SOURCES
      src/main.cpp
-     src/Box.h src/Box.cpp
-     src/Channel.h src/Channel.cpp
-     src/Common.h src/Common.cpp
-     src/FalseColor.h src/FalseColor.cpp
-     src/HelpWindow.h src/HelpWindow.cpp
-     src/Image.h src/Image.cpp
-     src/ImageButton.h src/ImageButton.cpp
-     src/ImageCanvas.h src/ImageCanvas.cpp
-     src/ImageViewer.h src/ImageViewer.cpp
-     src/Ipc.h src/Ipc.cpp
-     src/Lazy.h src/Lazy.cpp
-     src/MultiGraph.h src/MultiGraph.cpp
-     src/SharedQueue.h src/SharedQueue.cpp
-     src/Task.h src/Task.cpp
-     src/ThreadPool.h src/ThreadPool.cpp
-     src/UberShader.h src/UberShader.cpp
+     src/include/Box.h src/Box.cpp
+     src/include/Channel.h src/Channel.cpp
+     src/include/Common.h src/Common.cpp
+     src/include/FalseColor.h src/FalseColor.cpp
+     src/include/HelpWindow.h src/HelpWindow.cpp
+     src/include/Image.h src/Image.cpp
+     src/include/ImageButton.h src/ImageButton.cpp
+     src/include/ImageCanvas.h src/ImageCanvas.cpp
+     src/include/ImageViewer.h src/ImageViewer.cpp
+     src/include/Ipc.h src/Ipc.cpp
+     src/include/Lazy.h src/Lazy.cpp
+     src/include/MultiGraph.h src/MultiGraph.cpp
+     src/include/SharedQueue.h src/SharedQueue.cpp
+     src/include/Task.h src/Task.cpp
+     src/include/ThreadPool.h src/ThreadPool.cpp
+     src/include/UberShader.h src/UberShader.cpp
      src/imageio/ClipboardImageLoader.h src/imageio/ClipboardImageLoader.cpp
      src/imageio/EmptyImageLoader.h src/imageio/EmptyImageLoader.cpp
      src/imageio/ExrImageLoader.h src/imageio/ExrImageLoader.cpp
@@ -208,31 +187,50 @@ set (TEV_SOURCES
      src/imageio/StbiLdrImageSaver.h src/imageio/StbiLdrImageSaver.cpp
      )
 
+# link libs
+set (TEV_LIBS clip IlmImf nanogui ${NANOGUI_EXTRA_LIBS})
+
+# warnings
 if (MSVC)
+  if (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    string (REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  else()
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+  endif()
+
+  # disable warnings
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4100") # unused arguments
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd5054") # deprecated enum & operator
+
+  # commandLine wildcards, link wsetargv.obj http://msdn.microsoft.com/en-us/library/8bch7bkk.aspx
+  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} wsetargv.obj")
+
   set (TEV_SOURCES ${TEV_SOURCES} resources/icon.rc)
   set (TEV_SOURCES ${TEV_SOURCES} resources/tev.manifest)
   set (TEV_SOURCES ${TEV_SOURCES} src/imageio/DdsImageLoader.h src/imageio/DdsImageLoader.cpp)
+  set (TEV_LIBS ${TEV_LIBS} zlibstatic DirectXTex wsock32 ws2_32)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
+        CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-anonymous-struct -Wno-c99-extensions -Wno-nested-anon-types -Wno-deprecated-register -Wno-deprecated-anon-enum-enum-conversion")
+  endif()
+  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-misleading-indentation -Wno-deprecated-declarations")
+  endif()
+endif()
+
+# Coroutines need to be explicitly enabled on g++
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
 endif()
 
 add_executable (tev ${TEV_SOURCES})
-
-include_directories (${CLIP_INCLUDE}
-                     ${DIRECTXTEX_INCLUDE}
-                     ${GLFW_INCLUDE}
-                     ${NANOGUI_EXTRA_INCS}
-                     ${NANOGUI_INCLUDE}
-                     ${OPENEXR_INCLUDE_DIRS}
-                     ${QOI_INCLUDE}
-                     ${UTILS_INCLUDE}
-                     ${UTFCPP_INCLUDE}
-                     "${CMAKE_CURRENT_SOURCE_DIR}/src")
-
 set (TEV_DEFINITIONS -DTEV_VERSION="${TEV_VERSION}")
-
 add_definitions (${TEV_DEFINITIONS} ${NANOGUI_EXTRA_DEFS})
-
 target_link_libraries (tev ${TEV_LIBS})
 
+# install
 if (WIN32)
   install (TARGETS tev RUNTIME DESTINATION "bin")
 else()

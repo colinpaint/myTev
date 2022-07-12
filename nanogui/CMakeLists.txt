@@ -1,12 +1,13 @@
 cmake_minimum_required (VERSION 3.13..3.18)
+set (CMAKE_CXX_STANDARD 17)
 
-# Extract project version from source
+# version faff
 file (STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/include/nanogui/common.h" nanogui_version_defines
       REGEX "#define NANOGUI_VERSION_(MAJOR|MINOR|PATCH) ")
 
 foreach (ver ${nanogui_version_defines})
   if (ver MATCHES [[#define NANOGUI_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$]])
-      set(NANOGUI_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}")
+      set (NANOGUI_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}")
   endif()
 endforeach()
 
@@ -18,11 +19,8 @@ string (REGEX MATCH "^[0-9]+" NANOGUI_VERSION_PATCH "${NANOGUI_VERSION_PATCH}")
 set (NANOGUI_VERSION "${NANOGUI_VERSION_MAJOR}.${NANOGUI_VERSION_MINOR}.${NANOGUI_VERSION_PATCH}")
 message (STATUS "NanoGUI v${NANOGUI_VERSION} ${NANOGUI_VERSION_TYPE}")
 
+# main project
 project (nanogui DESCRIPTION "NanoGUI" LANGUAGES CXX C VERSION ${NANOGUI_VERSION} )
-
-if (NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/glfw/src")
-  message (FATAL_ERROR "The NanoGUI dependency repositories (GLFW, etc.) are missing! ")
-endif()
 
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message (STATUS "default to Release build")
@@ -30,11 +28,6 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property (CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 string (TOUPPER "${CMAKE_BUILD_TYPE}" U_CMAKE_BUILD_TYPE)
-
-set (NANOGUI_MASTER_PROJECT OFF)
-if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
-  set (NANOGUI_MASTER_PROJECT ON)
-endif()
 
 if (WIN32)
   set (NANOGUI_BUILD_GLAD_DEFAULT ON)
@@ -78,8 +71,6 @@ endif()
 set_property (CACHE NANOGUI_BACKEND PROPERTY STRINGS "OpenGL" "GLES 2" "GLES 3")
 
 # Required libraries, flags, and include files for compiling and linking against nanogui (all targets)
-set (NANOGUI_EXTRA_INCS "")
-
 include (CheckCXXCompilerFlag)
 include (CheckCXXSourceRuns)
 
@@ -92,13 +83,11 @@ macro (CHECK_CXX_COMPILER_AND_LINKER_FLAGS _RESULT _CXX_FLAGS _LINKER_FLAGS)
   set (CMAKE_REQUIRED_LIBRARIES "")
 endmacro()
 
-if (NANOGUI_BACKEND MATCHES "(OpenGL|GLES 2|GLES 3)")
-  list (APPEND NANOGUI_EXTRA src/texture_gl.cpp
-                             src/shader_gl.cpp
-                             src/renderpass_gl.cpp
-                             src/opengl.cpp
-                             src/opengl_check.h )
-endif()
+set (NANOVG_SRC src/texture_gl.cpp
+                src/shader_gl.cpp
+                src/renderpass_gl.cpp
+                src/opengl.cpp
+                src/opengl_check.h )
 
 if (NANOGUI_BACKEND STREQUAL "OpenGL")
   set (NANOGUI_BACKEND_DEFS -DNANOGUI_USE_OPENGL)
@@ -117,23 +106,17 @@ endif()
 add_compile_options (${NANOGUI_NATIVE_FLAGS})
 
 if (MSVC)
-  # Disable annoying MSVC warnings (all targets)
   add_definitions (/D "_CRT_SECURE_NO_WARNINGS")
-
-  # Parallel build on MSVC (all targets)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP") # parallel build
   if (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     string (REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   else()
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
   endif()
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
+        CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 endif()
-
-# Use C++17, visibility=hidden by default, interprocedural optimization
-set (CMAKE_CXX_STANDARD 17)
 
 # Prefer libc++ in conjunction with Clang
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_CXX_FLAGS MATCHES "-stdlib=libc\\+\\+")
@@ -165,21 +148,16 @@ if (NANOGUI_BUILD_GLFW)
   set (GLFW_INSTALL OFF CACHE BOOL " " FORCE)
   set (GLFW_USE_CHDIR OFF CACHE BOOL " " FORCE)
   set (BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
-
   if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # Quench annoying deprecation warnings when compiling GLFW on OSX
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-deprecated-declarations")
   endif()
 
   add_subdirectory (glfw)
 
-  # Two targets have now been defined: `glfw_objects`, which will be merged into
-  # NanoGUI at the end, and `glfw`.  The `glfw` target is the library itself
-  # (e.g., libglfw.so), but can be skipped as we do not need to link against it
-  # (because we merge `glfw_objects` into NanoGUI).  Skipping is required for
-  # XCode, but preferable for all build systems (reduces build artifacts).
-  set_target_properties(glfw PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
-
+  # Two targets have now been defined: `glfw_objects`, which will be merged into # NanoGUI at the end, and `glfw`.
+  # The `glfw` target is the library itself # (e.g., libglfw.so), but can be skipped as we do not need to link against it
+  # because we merge `glfw_objects` into NanoGUI
+  set_target_properties (glfw PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
   mark_as_advanced (GLFW_BUILD_DOCS GLFW_BUILD_EXAMPLES GLFW_BUILD_INSTALL GLFW_BUILD_TESTS
                     GLFW_DOCUMENT_INTERNALS GLFW_INSTALL GLFW_USE_CHDIR GLFW_USE_MENUBAR
                     GLFW_USE_OSMESA GLFW_VULKAN_STATIC GLFW_USE_RETINA GLFW_USE_MIR
@@ -188,20 +166,11 @@ endif()
 
 if (NANOGUI_BUILD_GLAD)
   # Build and include GLAD on Windows
-  list (APPEND NANOGUI_EXTRA glad/src/glad.c
-                             glad/include/glad/glad.h
-                             glad/include/KHR/khrplatform.h)
+  list (APPEND NANOVG_SRC glad/src/glad.c
+                          glad/include/glad/glad.h
+                          glad/include/KHR/khrplatform.h)
   if (MSVC)
     set_source_files_properties (glad/src/glad.c PROPERTIES COMPILE_FLAGS /wd4055)
-  endif()
-endif()
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "BSD")
-  include_directories (/usr/local/include)
-  link_directories (/usr/local/lib)
-  if (${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
-    include_directories (/usr/X11R6/include/)
-    link_directories (/usr/X11R6/lib)
   endif()
 endif()
 
@@ -210,81 +179,46 @@ if (${CMAKE_CXX_COMPILER_ID} MATCHES "Emscripten")
   # No dependencies
 elseif (WIN32)
   list (APPEND NANOGUI_LIBS opengl32)
-elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
-  list (APPEND NANOGUI_LIBS X11 pthread)
+elseif (CMAKE_SYSTEM MATCHES "Linux")
+  list (APPEND NANOGUI_LIBS dl X11 pthread)
   if (NANOGUI_BACKEND STREQUAL "OpenGL")
     list (APPEND NANOGUI_LIBS GL)
   elseif (NANOGUI_BACKEND STREQUAL "GLES 2")
     list(APPEND NANOGUI_LIBS GLESv2)
   elseif (NANOGUI_BACKEND STREQUAL "GLES 3")
-    list(APPEND NANOGUI_LIBS GLESv3)
-  endif()
-  if (NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
-    list (APPEND NANOGUI_LIBS rt)
-  endif()
-  if (CMAKE_SYSTEM MATCHES "Linux")
-    list (APPEND NANOGUI_LIBS dl)
+    list (APPEND NANOGUI_LIBS GLESv3)
   endif()
 endif()
 
-# Run simple cmake converter to put font files into the data segment
-
-# Glob up resource files
+# run cmake converter convert fonts,shader to c, concat fileNames to comma separated string
 file (GLOB resources "${CMAKE_CURRENT_SOURCE_DIR}/resources/*.ttf" "${NANOGUI_GLOB}")
-file (MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/resources")
-
-# Precompile .metal shaders to .metallib files
-foreach (fname_in IN LISTS resources)
-  if (NANOGUI_BACKEND STREQUAL "Metal" AND fname_in MATCHES "\\.metal")
-    get_filename_component(fname_out ${fname_in} NAME)
-    set (fname_out "${CMAKE_CURRENT_BINARY_DIR}/resources/${fname_out}lib")
-    add_custom_command (OUTPUT ${fname_out}
-                        DEPENDS ${fname_in}
-                        COMMAND xcrun -sdk macosx metal -std=osx-metal2.0 -O3 "${fname_in}" -o "${fname_out}"
-                        VERBATIM
-    )
-  else()
-    set (fname_out "${fname_in}")
-  endif()
-  list (APPEND resources_processed ${fname_out})
-endforeach()
-
-# Concatenate resource files into a comma separated string
-string (REGEX REPLACE "([^\\]|^);" "\\1," resources_string "${resources_processed}")
+string (REGEX REPLACE "([^\\]|^);" "\\1," resources_string "${resources}")
 string (REGEX REPLACE "[\\](.)" "\\1" resources_string "${resources_string}")
-
-# Create command line for running bin2c cmake script
+message (STATUS "${resources_string}")
 set (bin2c_cmdline -DOUTPUT_C=nanogui_resources.cpp
                    -DOUTPUT_H=nanogui_resources.h
                    "-DINPUT_FILES=${resources_string}"
                    -P "${CMAKE_CURRENT_SOURCE_DIR}/resources/bin2c.cmake")
-
-# Run bin2c on resource files
+message (STATUS "${bin2c_cmdline}")
 add_custom_command (OUTPUT nanogui_resources.cpp nanogui_resources.h
                     COMMAND ${CMAKE_COMMAND} ARGS ${bin2c_cmdline}
                     DEPENDS ${resources} ${resources_processed}
                     COMMENT "Running bin2c"
                     PRE_BUILD VERBATIM)
 
-# Needed to generated files
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
 set (NANOGUI_LIBRARY_TYPE "STATIC")
 
 if (NANOGUI_BUILD_GLFW)
-  list(APPEND NANOGUI_EXTRA $<TARGET_OBJECTS:glfw_objects>)
+  list (APPEND NANOVG_SRC $<TARGET_OBJECTS:glfw_objects>)
 endif()
 
 # Compile main NanoGUI library
 add_library (nanogui ${NANOGUI_LIBRARY_TYPE}
-  # Merge NanoVG into the NanoGUI library
-  nanovg/src/nanovg.c
-  nanovg/src/stb_image.h
-
-  # Merge GLAD into the NanoGUI library (only if needed)
-  ${NANOGUI_EXTRA}
-
-  # Fonts etc.
+  nanovg/nanovg.c
+  nanovg/stb_image.h
+  ${NANOVG_SRC}
   nanogui_resources.cpp
   include/nanogui/common.h src/common.cpp
   include/nanogui/widget.h src/widget.cpp
@@ -325,17 +259,17 @@ add_library (nanogui ${NANOGUI_LIBRARY_TYPE}
 target_compile_definitions (nanogui PUBLIC ${NANOGUI_BACKEND_DEFS}
                                     PRIVATE -DNANOGUI_BUILD -DNVG_STB_IMAGE_IMPLEMENTATION )
 
-target_include_directories(nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                                          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-                                   PRIVATE nanovg/src ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories (nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                                           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+                                    PRIVATE nanovg ${CMAKE_CURRENT_BINARY_DIR})
 
-target_include_directories (nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/nanovg/src>
+target_include_directories (nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/nanovg>
                                            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/nanovg>)
 
 if (NANOGUI_BUILD_GLAD)
-  target_compile_definitions(nanogui PUBLIC -DNANOGUI_GLAD)
-  target_include_directories(nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/glad/include>
-                                            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/glad>)
+  target_compile_definitions (nanogui PUBLIC -DNANOGUI_GLAD)
+  target_include_directories (nanogui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/glad/include>
+                                             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/glad>)
 endif()
 
 if (NANOGUI_BUILD_GLFW)
@@ -349,12 +283,13 @@ if (EXISTS /opt/vc/include)
   target_include_directories (nanogui PUBLIC /opt/vc/include)
 endif()
 
+# install
 if (NANOGUI_INSTALL)
   install (TARGETS nanogui LIBRARY
            DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
   install (DIRECTORY include/nanogui
            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
-  install (DIRECTORY nanovg/src/
+  install (DIRECTORY nanovg/
            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nanovg FILES_MATCHING PATTERN "*.h")
 
   if (NANOGUI_BUILD_GLFW)
@@ -385,9 +320,9 @@ if (NANOGUI_INSTALL)
            DESTINATION ${NANOGUI_CMAKECONFIG_INSTALL_DIR})
 endif()
 
-# Quench warnings while compiling NanoVG
+# warnings
 if (CMAKE_COMPILER_IS_GNUCC)
-  set_source_files_properties (nanovg/src/nanovg.c PROPERTIES COMPILE_FLAGS -Wno-unused-result)
+  set_source_files_properties (nanovg/nanovg.c PROPERTIES COMPILE_FLAGS -Wno-unused-result)
 elseif (MSVC)
-  set_source_files_properties (nanovg/src/nanovg.c PROPERTIES COMPILE_FLAGS "/wd4005 /wd4456 /wd4457")
+  set_source_files_properties (nanovg/nanovg.c PROPERTIES COMPILE_FLAGS "/wd4005 /wd4456 /wd4457")
 endif()
